@@ -535,7 +535,7 @@ window.TRIP_DATA.weatherLocations = [
 ];
 
 window.TRIP_DATA.sourceLinks = {
-  weather: { label: "Open weather source", url: "https://open-meteo.com/" },
+  weather: { label: "Open weather source", url: "https://open-meteo.com/en/docs?timezone=America%2FChicago&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,cloud_cover,wind_speed_10m,wind_gusts_10m,cape,convective_inhibition&forecast_hours=12&models=best_match&daily=sunrise,sunset,daylight_duration&location_mode=bounding_box&bounding_box=-90,-180,90,180" },
   gatewayArch: { label: "Open official NPS Gateway Arch page", url: "https://www.nps.gov/jeff/index.htm" },
   brownBoard: { label: "Open official NPS Brown v. Board page", url: "https://www.nps.gov/brvb/planyourvisit/index.htm" },
   indianaDunes: { label: "Open official NPS Indiana Dunes page", url: "https://www.nps.gov/indu/planyourvisit/things2do.htm" },

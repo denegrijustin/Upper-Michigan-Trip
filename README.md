@@ -9,14 +9,14 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 - Google Maps JavaScript API route map using the same dynamic import pattern as `googlemaps/js-api-loader`
 - Self-contained illustrated route images, so key content visuals still work offline
 - Browser GPS controls with off/requesting/active/error states, accuracy, last updated, and Mom/Dad detail
-- Open-Meteo weather with no API key, 30-minute local cache, source status, and profile-specific guidance
+- Open-Meteo weather with no API key, 30-minute local cache, GPS-following location, 12-hour hourly outlook, and imperial units
 - Ferry section with Plaunt Transportation official link and honest schedule fallback
 - STARZ/stargazing guidance using Clear Dark Sky as the verification source and Open-Meteo cloud risk
 - Trip Shortlist replacing decorative favorites
 - Family Vote choices: Yes, Maybe, Skip
 - Captured photo/video trip story with delete buttons and local size safeguards
 - Data-driven badge catalog with 60 starter badges, including 30+ route/place/milestone badges
-- Service worker cache bumped to `elskatemm-trip-v6`
+- Service worker cache bumped to `elskatemm-trip-v7`
 - Wrangler deployment using a generated `dist` folder
 
 ## File Structure
@@ -61,7 +61,7 @@ Working settings:
 
 Primary weather source: Open-Meteo.
 
-No API key is required. The app fetches current/hourly/daily forecast data for:
+No API key is required. The app fetches current, 12-hour hourly, and daily sunrise/sunset/daylight forecast data in Fahrenheit, mph, and inches for:
 
 - Olathe / home
 - South Bend

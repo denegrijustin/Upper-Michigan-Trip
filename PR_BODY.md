@@ -35,7 +35,7 @@ Completes a major static-app optimization pass for the Elskatemm Travel Companio
 7. Cloudflare/Deployment Agent
 - Preserved flat static app.
 - Kept Wrangler deployment through `dist`.
-- Updated service worker cache to `elskatemm-trip-v6`.
+- Updated service worker cache to `elskatemm-trip-v7`.
 
 8. QA/Performance Agent
 - Kept lazy images.

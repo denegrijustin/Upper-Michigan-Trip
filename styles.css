@@ -850,6 +850,51 @@ dd {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.weather-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.weather-metrics span,
+.hourly-pill {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffdf7;
+  padding: 8px;
+}
+
+.weather-metrics small,
+.hourly-pill small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.weather-metrics strong,
+.hourly-pill span {
+  display: block;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.sun-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hourly-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(108px, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
 .jules-card {
   font-size: 1.05rem;
 }
@@ -941,12 +986,17 @@ dd {
   .dashboard-grid,
   .weather-grid,
   .source-grid,
-  .badge-grid {
+  .badge-grid,
+  .weather-metrics {
     grid-template-columns: 1fr;
   }
 
   .countdown-grid {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .sun-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

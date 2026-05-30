@@ -185,10 +185,10 @@
     const current = weather.current;
     const daily = weather.daily || {};
     const flags = [];
-    const rain = Number(daily.precipitation_probability_max?.[0] || 0);
+    const rain = Number(current.precipitation_probability ?? weather.hourly?.precipitation_probability?.[0] ?? 0);
     const gust = Number(current.wind_gusts_10m || daily.wind_gusts_10m_max?.[0] || 0);
     const temp = Number(current.temperature_2m || 0);
-    const cloud = Number(weather.hourly?.cloud_cover?.[0] || 0);
+    const cloud = Number(current.cloud_cover ?? weather.hourly?.cloud_cover?.[0] ?? 0);
     if (rain >= 45) flags.push("Rain likely");
     if (gust >= 25) flags.push("Windy ferry concern");
     if (cloud >= 65) flags.push("Stargazing risk");
@@ -201,7 +201,9 @@
   function weatherSummaryFor(profile, weather, locationName) {
     const flags = weatherFlags(weather);
     const current = weather?.current;
-    const base = current ? `${locationName}: ${Math.round(current.temperature_2m)} degrees, ${weatherCodeText(current.weather_code)}, wind ${Math.round(current.wind_speed_10m || 0)} mph.` : `${locationName}: weather is not available yet.`;
+    const rainChance = current ? Number(current.precipitation_probability ?? weather.hourly?.precipitation_probability?.[0] ?? 0) : 0;
+    const humidity = current ? Number(current.relative_humidity_2m ?? weather.hourly?.relative_humidity_2m?.[0] ?? 0) : 0;
+    const base = current ? `${locationName}: ${Math.round(current.temperature_2m)} F, ${weatherCodeText(current.weather_code)}, wind ${Math.round(current.wind_speed_10m || 0)} mph, gusts ${Math.round(current.wind_gusts_10m || 0)} mph, humidity ${humidity}%, rain chance ${rainChance}%.` : `${locationName}: weather is not available yet.`;
     const flagText = flags.join(", ");
     const copy = {
       elsie: `Sky and animal watch: ${base} Look for how clouds, wind, birds, and small animals change. ${flagText}.`,
@@ -214,22 +216,118 @@
     return copy[profile.id] || copy.elsie;
   }
 
+  function formatWeatherTime(value) {
+    if (!value) return "--";
+    return new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  function formatDaylight(seconds) {
+    if (!Number.isFinite(Number(seconds))) return "--";
+    const hours = Math.floor(Number(seconds) / 3600);
+    const minutes = Math.round((Number(seconds) % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  }
+
+  function weatherMetricList(weather) {
+    const current = weather?.current || {};
+    const hourly = weather?.hourly || {};
+    if (!weather?.current && !hourly?.time?.length) return [];
+    const precipitation = Number(current.precipitation ?? hourly.precipitation?.[0] ?? 0);
+    const rain = Number(current.rain ?? hourly.rain?.[0] ?? 0);
+    const showers = Number(current.showers ?? hourly.showers?.[0] ?? 0);
+    const cloud = Number(current.cloud_cover ?? hourly.cloud_cover?.[0] ?? 0);
+    const humidity = Number(current.relative_humidity_2m ?? hourly.relative_humidity_2m?.[0] ?? 0);
+    const cape = Number(hourly.cape?.[0] ?? 0);
+    const cin = Number(hourly.convective_inhibition?.[0] ?? 0);
+    return [
+      ["Temp", `${Math.round(current.temperature_2m ?? hourly.temperature_2m?.[0] ?? 0)} F`],
+      ["Humidity", `${humidity}%`],
+      ["Precip", `${precipitation.toFixed(2)} in`],
+      ["Rain", `${rain.toFixed(2)} in`],
+      ["Showers", `${showers.toFixed(2)} in`],
+      ["Clouds", `${cloud}%`],
+      ["Wind", `${Math.round(current.wind_speed_10m ?? hourly.wind_speed_10m?.[0] ?? 0)} mph`],
+      ["Gusts", `${Math.round(current.wind_gusts_10m ?? hourly.wind_gusts_10m?.[0] ?? 0)} mph`],
+      ["CAPE", `${Math.round(cape)} J/kg`],
+      ["CIN", `${Math.round(cin)} J/kg`]
+    ];
+  }
+
+  function weatherSunList(weather) {
+    const daily = weather?.daily || {};
+    if (!daily.sunrise?.length && !daily.sunset?.length && !daily.daylight_duration?.length) return [];
+    return [
+      ["Sunrise", formatWeatherTime(daily.sunrise?.[0])],
+      ["Sunset", formatWeatherTime(daily.sunset?.[0])],
+      ["Daylight", formatDaylight(daily.daylight_duration?.[0])]
+    ];
+  }
+
+  function renderHourlyWeather(weather) {
+    const hourly = weather?.hourly;
+    if (!hourly?.time?.length) return `<p class="map-caption">12-hour forecast will appear after refresh.</p>`;
+    return `
+      <div class="hourly-strip" aria-label="12 hour weather forecast">
+        ${hourly.time.slice(0, 12).map((time, index) => `
+          <div class="hourly-pill">
+            <strong>${formatWeatherTime(time)}</strong>
+            <span>${Math.round(hourly.temperature_2m?.[index] ?? 0)} F</span>
+            <small>${hourly.precipitation_probability?.[index] ?? 0}% rain</small>
+            <small>${Number(hourly.precipitation?.[index] ?? 0).toFixed(2)} in</small>
+            <small>${Math.round(hourly.wind_speed_10m?.[index] ?? 0)} mph</small>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderWeatherMetrics(weather) {
+    const metrics = weatherMetricList(weather);
+    if (!metrics.length) return "";
+    return `<div class="weather-metrics">${metrics.map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`).join("")}</div>`;
+  }
+
+  function renderSunMetrics(weather) {
+    const metrics = weatherSunList(weather);
+    if (!metrics.length) return "";
+    return `<div class="weather-metrics sun-metrics">${metrics.map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`).join("")}</div>`;
+  }
+
   function weatherUrl(location) {
-    const current = "temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m";
-    const hourly = "temperature_2m,precipitation_probability,cloud_cover,wind_speed_10m,wind_gusts_10m,weather_code";
-    const daily = "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max";
-    return `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=${current}&hourly=${hourly}&daily=${daily}&timezone=auto`;
+    const current = "temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m";
+    const hourly = "temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,cloud_cover,wind_speed_10m,wind_gusts_10m,cape,convective_inhibition";
+    const daily = "sunrise,sunset,daylight_duration";
+    const params = new URLSearchParams({
+      latitude: location.lat,
+      longitude: location.lon,
+      current,
+      hourly,
+      daily,
+      forecast_hours: "12",
+      models: "best_match",
+      temperature_unit: "fahrenheit",
+      wind_speed_unit: "mph",
+      precipitation_unit: "inch",
+      timezone: "America/Chicago"
+    });
+    return `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+  }
+
+  function weatherCacheFresh(cached, location) {
+    if (!cached || Date.now() - cached.fetchedAt >= WEATHER_TTL) return false;
+    if (location.id !== "gps" || !cached.location) return true;
+    return haversineMiles(cached.location, location) < 2;
   }
 
   async function getWeather(location) {
     ensureCollections();
     const cached = state.weather[location.id];
-    if (cached && Date.now() - cached.fetchedAt < WEATHER_TTL) return { ...cached, sourceStatus: "Cached recent" };
+    if (weatherCacheFresh(cached, location)) return { ...cached, sourceStatus: "Cached recent" };
     try {
       const response = await fetch(weatherUrl(location));
       if (!response.ok) throw new Error("Weather unavailable");
       const payload = await response.json();
-      const next = { ...payload, location, fetchedAt: Date.now(), sourceStatus: "Live from Open-Meteo" };
+      const next = { ...payload, location: { ...location }, fetchedAt: Date.now(), sourceStatus: "Live from Open-Meteo, imperial units" };
       state.weather[location.id] = next;
       saveState();
       return next;
@@ -255,6 +353,16 @@
       state.phase === "return" ? ["cheboygan", "southBend", "olathe"] : ["boisBlanc", "cheboygan"];
     const live = state.lastPosition ? [{ id: "gps", name: "Current GPS location", lat: state.lastPosition.lat, lon: state.lastPosition.lon, role: "Live GPS" }] : [];
     return [...live, ...ids.map((id) => data.weatherLocations.find((location) => location.id === id)).filter(Boolean)];
+  }
+
+  function refreshGpsWeatherIfNeeded() {
+    if (!state.lastPosition) return;
+    const location = { id: "gps", name: "Current GPS location", lat: state.lastPosition.lat, lon: state.lastPosition.lon, role: "Live GPS" };
+    if (weatherCacheFresh(state.weather?.gps, location)) return;
+    getWeather(location).then(() => {
+      const container = byId("weatherBlocks");
+      if (container) renderWeatherBlocks(weatherLocationsForContext().map((item) => state.weather[item.id] || { location: item, sourceStatus: "Not available" }));
+    });
   }
 
   function activeRouteUrl() {
@@ -557,6 +665,7 @@
     offerNearbyBadges(point);
     saveState();
     render();
+    refreshGpsWeatherIfNeeded();
   }
 
   function offerNearbyBadges(point) {
@@ -1131,7 +1240,7 @@
     return `
       <div class="choice-card">
         <strong>Weather source status</strong>
-        <p>Open-Meteo is used with no API key. Data is cached for 30 minutes and labeled when cached.</p>
+        <p>Open-Meteo is used with no API key. Data is cached for 30 minutes, follows live GPS when location is enabled, and displays Fahrenheit, mph, and inches.</p>
         <div class="action-row"><button type="button" id="refreshWeather" data-weather-refresh="true">Refresh weather</button><a class="external-link" href="${data.sourceLinks.weather.url}" target="_blank" rel="noopener">Open weather source</a></div>
       </div>
       <div id="weatherBlocks" class="weather-grid">${renderWeatherBlocksMarkup(profile, weatherLocationsForContext().map((location) => state.weather[location.id] || { location, sourceStatus: "Not available" }))}</div>
@@ -1148,6 +1257,9 @@
       <article class="choice-card">
         <strong>${weather.location?.name || "Weather"}</strong>
         <p>${weatherSummaryFor(profile, weather, weather.location?.name || "Location")}</p>
+        ${renderWeatherMetrics(weather)}
+        ${renderSunMetrics(weather)}
+        ${renderHourlyWeather(weather)}
         <p><strong>Status:</strong> ${weather.sourceStatus || "Cached"}${weather.fetchedAt ? `, updated ${new Date(weather.fetchedAt).toLocaleString()}` : ""}</p>
         <ul>${weatherFlags(weather).map((flag) => `<li>${flag}</li>`).join("")}</ul>
       </article>
