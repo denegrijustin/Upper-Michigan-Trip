@@ -313,11 +313,54 @@ button:hover {
 }
 
 .controls-strip,
+.progress-band,
 .profile-section,
 .grid-section,
 .map-and-panel {
   max-width: 1180px;
   margin: 0 auto 16px;
+}
+
+.progress-band {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.progress-band article {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--glass);
+  box-shadow: 0 10px 28px rgba(24, 35, 29, 0.08);
+  padding: 14px;
+}
+
+.progress-band article > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.progress-band span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.progress-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(20, 32, 26, 0.12);
+}
+
+.progress-track span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--forest), var(--lake));
+  transition: width 260ms ease;
 }
 
 .controls-strip {
@@ -355,6 +398,7 @@ button:hover {
 }
 
 .route-map {
+  position: relative;
   min-height: 280px;
   background:
     radial-gradient(circle at 76% 24%, rgba(31, 120, 164, 0.20), transparent 28%),
@@ -362,9 +406,24 @@ button:hover {
 }
 
 .route-map svg {
+  display: none;
   width: 100%;
   height: 100%;
   min-height: 280px;
+}
+
+.leaflet-map {
+  min-height: 360px;
+  width: 100%;
+  z-index: 1;
+}
+
+.route-map.using-fallback svg {
+  display: block;
+}
+
+.route-map.using-fallback .leaflet-map {
+  display: none;
 }
 
 .route-shadow {
@@ -656,6 +715,7 @@ dd {
   }
 
   .hero-band,
+  .progress-band,
   .map-and-panel,
   .profile-grid,
   .grid-section {

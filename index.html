@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#1f4f3a">
     <title>Elskatemm Travel Companion</title>
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -58,6 +59,17 @@
           </div>
         </section>
 
+        <section class="progress-band" aria-label="Trip progress">
+          <article>
+            <div><strong id="primaryProgressLabel">Launch countdown</strong><span id="primaryProgressText">--</span></div>
+            <div class="progress-track"><span id="primaryProgressBar"></span></div>
+          </article>
+          <article>
+            <div><strong id="phaseProgressLabel">Current phase</strong><span id="phaseProgressText">--</span></div>
+            <div class="progress-track"><span id="phaseProgressBar"></span></div>
+          </article>
+        </section>
+
         <section class="controls-strip" aria-label="Trip controls">
           <button id="useLocation" type="button">Start Live GPS</button>
           <button id="stopLocation" type="button">Stop GPS</button>
@@ -71,9 +83,10 @@
           <div class="map-panel">
             <div class="map-toolbar">
               <strong>Route Map</strong>
-              <span id="mapMode">Cached route view</span>
+              <span id="mapMode">Live map when online</span>
             </div>
             <div id="map" class="route-map" role="img" aria-label="Simplified route map">
+              <div id="leafletMap" class="leaflet-map" aria-label="Live OpenStreetMap route"></div>
               <svg id="routeSvg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
           </div>
@@ -129,6 +142,7 @@
       </nav>
     </div>
     <script src="/trip-data.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

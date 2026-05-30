@@ -37,6 +37,106 @@ window.TRIP_DATA = {
       { id: "cheboygan", label: "Cheboygan", lat: 45.6469, lon: -84.4745, type: "ferry" },
       { id: "bois-blanc", label: "Bois Blanc", lat: 45.7465, lon: -84.4948, type: "arrival" }
     ],
+    routePlaces: [
+      {
+        name: "Brown v. Board of Education National Historical Park",
+        place: "Topeka, Kansas",
+        day: "2026-07-31",
+        why: "A real civil-rights landmark about school segregation and the Supreme Court decision that changed American education.",
+        profiles: {
+          elsie: "Teacher lens: this is about why schools should be fair for children. Think about how you would explain fairness to kindergarteners.",
+          katrina: "Historical-fiction lens: imagine being a student walking into a school where adults were arguing about whether you belonged there.",
+          emma: "Everyday-life lens: this is about school, families, classrooms, and how rules affect real kids.",
+          eliette: "Detail lens: look for classroom objects, signs, photos, and small details that show what school felt like then.",
+          jules: "Why lens: people fought to change a rule because it was unfair. The reason was simple: kids should be treated fairly.",
+          momdad: "Good meaningful stop if timing allows; not a quick bathroom stop. Best as context content if not stopping."
+        }
+      },
+      {
+        name: "Gateway Arch",
+        place: "St. Louis, Missouri",
+        day: "2026-07-31",
+        why: "A 630-foot monument on the Mississippi River tied to westward expansion and river travel.",
+        profiles: {
+          elsie: "Suspense-light angle: giant metal arch, river crossings, and old travel stories make this feel dramatic without being scary.",
+          katrina: "Random fact: the Arch is as wide as it is tall. Ask why a monument about movement is shaped like a doorway.",
+          emma: "Big-picture angle: St. Louis grew because rivers, roads, and people all connected there.",
+          eliette: "Shiny thing alert: stainless steel outside, river views, and souvenir possibilities.",
+          jules: "Big build question: how did people build something that tall and curved without it falling over?",
+          momdad: "Potential visual landmark rather than required stop; downtown detour may cost time."
+        }
+      },
+      {
+        name: "Notre Dame",
+        place: "South Bend, Indiana",
+        day: "2026-07-31",
+        why: "A famous university town stop with campus, sports history, architecture, and dinner nearby.",
+        profiles: {
+          elsie: "Look for campus details that feel like a story setting: old buildings, symbols, and quiet paths.",
+          katrina: "Ask what makes a college become famous over generations: sports, traditions, buildings, people, or stories?",
+          emma: "Sports and everyday-life angle: college towns revolve around games, students, food, and routines.",
+          eliette: "Look for bookstore/souvenir possibilities, pretty architecture, and small details on signs or buildings.",
+          jules: "Football place. Big field energy. Captain question: would you pick food first or a quick look around first?",
+          momdad: "Good dinner-area anchor for July 31; keep meal goal protected."
+        }
+      },
+      {
+        name: "Studebaker National Museum",
+        place: "South Bend, Indiana",
+        day: "2026-07-31",
+        why: "A museum about vehicles and the Studebaker company, from wagons to cars.",
+        profiles: {
+          elsie: "Cause-and-effect: wagons became cars because people needed better ways to move families and goods.",
+          katrina: "Great random-fact stop: a company can change from one kind of transportation to another as the world changes.",
+          emma: "Everyday-life angle: transportation changes how people work, shop, travel, and play.",
+          eliette: "Look for shiny car details, logos, colors, handles, and old-fashioned design choices.",
+          jules: "Vehicles. Wheels. Big machine history. This is a strong Jules stop if time and energy allow.",
+          momdad: "Good backup if arriving early in South Bend or needing an indoor activity."
+        }
+      },
+      {
+        name: "Indiana Dunes National Park",
+        place: "Lake Michigan shoreline",
+        day: "2026-08-01",
+        why: "A National Park on Lake Michigan with dunes, beaches, wetlands, and biodiversity.",
+        profiles: {
+          elsie: "Animal habitat lens: dunes, wetlands, birds, and small creatures all use different layers of the shoreline.",
+          katrina: "Why question: how can wind and water build giant hills of sand?",
+          emma: "Big-picture angle: this is where lake, beach, plants, animals, weather, and people all meet.",
+          eliette: "Texture hunt: sand patterns, beach colors, shells, stones, and tiny visual details.",
+          jules: "Giant sand hills. Wind built them. Captain choice: would you climb, spot birds, or inspect sand first?",
+          momdad: "Potential detour depending route and timing; watch ferry-day schedule."
+        }
+      },
+      {
+        name: "Mackinac Bridge / Straits of Mackinac",
+        place: "Northern Michigan",
+        day: "2026-08-01",
+        why: "The bridge connects Michigan’s peninsulas across the Straits, where Lakes Michigan and Huron meet.",
+        profiles: {
+          elsie: "Suspense-light engineering: huge bridge, deep water, wind, and stories of crossing the Straits.",
+          katrina: "Random fact angle: this is a place where geography forced people to solve a huge transportation problem.",
+          emma: "Connection lens: bridges change daily life by connecting work, school, food, sports, and travel.",
+          eliette: "Look for views, water color, bridge cables, signs, and souvenir stops nearby.",
+          jules: "Big bridge, big trucks, big water. Why did people build it? So they did not always have to ferry across.",
+          momdad: "Relevant if route crosses/approaches the Straits; weather and traffic matter."
+        }
+      },
+      {
+        name: "Plaunt Transportation Ferry",
+        place: "Cheboygan to Bois Blanc Island",
+        day: "2026-08-01",
+        why: "The ferry is the practical link between mainland Cheboygan and Bois Blanc Island.",
+        profiles: {
+          elsie: "Observation only: boats, gulls, waves, and how island life depends on water. Adults handle timing.",
+          katrina: "Why question: what has to be planned differently when groceries, cars, mail, and people cross by ferry?",
+          emma: "Everyday-life angle: this is how normal island routines connect to mainland errands.",
+          eliette: "Look for small ferry details: signs, ropes, vehicle loading, water sparkle, and souvenir possibilities later.",
+          jules: "Captain Jules big-machine moment: cars go on a boat. That is the whole headline.",
+          momdad: "Adult logistics: schedule, reservation/check-in, weather, vehicle loading, and supplies before boarding."
+        }
+      }
+    ],
     stops: [
       { id: "olathe", name: "Olathe, Kansas", milesFromStart: 0, type: "start" },
       { id: "south-bend", name: "South Bend dinner / overnight", milesFromStart: 575, type: "dinner" },
@@ -232,6 +332,38 @@ window.TRIP_DATA = {
       bestFor: ["jules"]
     }
   ],
+  dailyProfileFeatures: {
+    elsie: [
+      { title: "Teacher Fact", text: "Brown v. Board is a real school-history stop about fairness for children and classrooms.", lookFor: "A sign, school image, or story you could explain simply." },
+      { title: "Suspense-Lite Watch", text: "Great Lakes travel has real shipwreck and storm stories; suspense here comes from weather, water, and choices.", lookFor: "Water, fog, old boats, or dramatic shoreline." },
+      { title: "Small Creature Science", text: "Squirrels and chipmunks survive by reading habitat: trees, food, hiding places, and people.", lookFor: "Tracks, nests, nuts, holes, or quick movement." }
+    ],
+    katrina: [
+      { title: "Why It Matters", text: "Routes are history: towns grow where people can cross rivers, trade, stop, eat, and sleep.", lookFor: "Old downtowns, bridges, rail lines, and signs." },
+      { title: "Fact Collector", text: "The Gateway Arch is 630 feet tall and 630 feet wide, which makes it a monument shaped like a perfect crossing.", lookFor: "A shape that means movement." },
+      { title: "Historical Fiction Seed", text: "Imagine arriving at an island by ferry before phones made everything easy. What would you bring?", lookFor: "Objects people depend on: fuel, food, mail, tools." }
+    ],
+    emma: [
+      { title: "Real-Life Lens", text: "Every place on the route has routines: school, work, sports, dinner, errands, weather, and getting around.", lookFor: "Where local people gather." },
+      { title: "Sports Town Watch", text: "South Bend is tied to Notre Dame, where sports shape weekends, restaurants, traffic, and traditions.", lookFor: "Team colors, fields, signs, and campus energy." },
+      { title: "How Island Life Works", text: "On an island, normal errands depend on timing, boats, weather, and planning.", lookFor: "Stores, docks, delivery vehicles, and ferry routines." }
+    ],
+    eliette: [
+      { title: "Tiny Treasure", text: "The best trip details are often small: signs, textures, stones, stickers, postcards, and handmade objects.", lookFor: "Something shiny, textured, or easy to miss." },
+      { title: "Story Object", text: "Pick one object at a stop and invent the story of how it got there.", lookFor: "Old signs, souvenirs, ropes, rocks, tools, or photos." },
+      { title: "Nicknack Radar", text: "Visitor centers, ferry towns, and local stores are good places to find small keepsakes.", lookFor: "Patches, pins, postcards, stones, or local crafts." }
+    ],
+    jules: [
+      { title: "Captain Reason", text: "Big things are built for reasons: bridges cross water, ferries carry cars, trucks move supplies.", lookFor: "One big machine and the job it does." },
+      { title: "Dino Brain", text: "Rocks are old clues. Some places tell stories from before people, roads, and cars.", lookFor: "Big rocks, layers, sand, or anything that looks ancient." },
+      { title: "Super Gecko Power", text: "Animals survive by climbing, hiding, gripping, spotting, and waiting.", lookFor: "A place a gecko would hide or climb." }
+    ],
+    momdad: [
+      { title: "Parent Operating Note", text: "Use kid-specific facts as stop filters: one meaningful kid win can make a long road segment better.", lookFor: "Clean restrooms, time cost, and the child most likely to light up." },
+      { title: "Timing Note", text: "Protect South Bend dinner on July 31 and ferry buffer on August 1.", lookFor: "Stops that solve a need without stealing the day." },
+      { title: "Flex Note", text: "Island days should not be over-scheduled. Let kids vote, then parents approve.", lookFor: "Weather, effort, supplies, and backup options." }
+    ]
+  },
   stars: {
     checklist: ["Red-light flashlight", "Blankets or chairs", "Bug spray", "Layers", "Closed-toe shoes", "Binoculars", "Tripod", "Battery pack", "Water and snacks"],
     tonight: "Check twilight, moonlight, clouds, and the northern horizon before committing."
