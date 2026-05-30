@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "roadtrip",
+  "name": "upper-michigan-trip",
   "compatibility_date": "2026-05-30",
   "observability": {
     "enabled": true
