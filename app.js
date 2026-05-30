@@ -287,6 +287,38 @@
     return "Open official source";
   }
 
+  function routeVisualForPlace(place) {
+    const title = place.name.replace(" / ", "\n").replace(" National Historical Park", "").replace(" Transportation", "");
+    const subtitle = place.place || "Trip stop";
+    const kind = place.name.includes("Notre") ? "campus" :
+      place.name.includes("Studebaker") ? "vehicles" :
+      place.name.includes("Dunes") ? "dunes" :
+      place.name.includes("Mackinac") ? "bridge" :
+      place.name.includes("Plaunt") ? "ferry" :
+      place.name.includes("Gateway") ? "arch" : "history";
+    const palette = {
+      campus: ["#174a7c", "#f6d483", "M 190 330 L 300 210 L 410 330 Z M 245 330 V 250 H 355 V 330"],
+      vehicles: ["#284f3b", "#e9b44c", "M 160 315 H 440 L 405 250 H 235 Z M 210 330 a 28 28 0 1 0 1 0 M 390 330 a 28 28 0 1 0 1 0"],
+      dunes: ["#2b6f7f", "#f3d28a", "M 0 335 C 120 260 235 355 360 290 S 520 285 600 225 V 420 H 0 Z"],
+      bridge: ["#1f4f3a", "#8bc0d6", "M 85 330 H 515 M 160 330 V 180 M 440 330 V 180 M 160 190 C 255 250 345 250 440 190"],
+      ferry: ["#205f86", "#f4f0df", "M 135 300 H 465 L 430 350 H 170 Z M 190 265 H 380 V 300 H 190 Z"],
+      arch: ["#244d66", "#d7dde3", "M 185 340 C 210 125 390 125 415 340 M 225 340 C 250 205 350 205 375 340"],
+      history: ["#5b4aa0", "#f4d7a1", "M 190 170 H 410 V 340 H 190 Z M 230 220 H 370 M 230 260 H 370 M 230 300 H 335"]
+    }[kind];
+    const [bg, accent, path] = palette;
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+        <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${bg}"/><stop offset="1" stop-color="#f9f5e8"/></linearGradient></defs>
+        <rect width="900" height="520" fill="url(#g)"/>
+        <circle cx="720" cy="120" r="70" fill="${accent}" opacity=".85"/>
+        <path d="${path}" fill="none" stroke="#fffdf7" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="46" y="348" width="808" height="118" rx="22" fill="rgba(255,253,247,.9)"/>
+        <text x="78" y="397" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="#17211b">${escapeHtml(title)}</text>
+        <text x="78" y="440" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#536159">${escapeHtml(subtitle)}</text>
+      </svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
   function badgeOwner(profileId = activeProfile) {
     return profileId || "elsie";
   }
@@ -752,7 +784,7 @@
   function placeCard(place, profile) {
     return `
       <article class="choice-card place-preview">
-        <img src="${place.image || ""}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.style.display='none'">
+        <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.name)}" loading="lazy">
         <div>
           <strong>${place.name}</strong>
           <p>${place.place}. ${place.why}</p>
@@ -781,7 +813,7 @@
         </div>
         <div class="feature-strip">${data.route.routePlaces.slice(0, 4).map((place) => `
           <button type="button" class="feature-card" data-detail="${escapeHtml(place.name)}">
-            <img src="${place.image}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.style.display='none'">
+            <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.name)}" loading="lazy">
             <span>${place.name}</span>
           </button>
         `).join("")}</div>
@@ -870,7 +902,7 @@
     const place = selectedDetailPlace();
     return `
       <article class="choice-card detail-hero">
-        <img src="${place.image || ""}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.style.display='none'">
+        <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.name)}" loading="lazy">
         <div>
           <p class="eyebrow">${place.place}</p>
           <h3>${place.name}</h3>

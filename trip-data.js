@@ -300,7 +300,7 @@ window.TRIP_DATA = {
     }
   ],
   days: [
-    { date: "2026-07-31", title: "Launch Day", mood: "Road-trip energy", outlook: "Use live GPS, protect the South Bend dinner goal, and bank fun facts along the route.", accent: "#1f4f3a" },
+    { date: "2026-07-31", title: "Launch Day", mood: "Road-trip energy", outlook: "Track the road to South Bend, watch for real landmarks, and keep the dinner goal visible without crowding the screen.", accent: "#1f4f3a" },
     { date: "2026-08-01", title: "Ferry and Arrival", mood: "South Bend to Cheboygan", outlook: "Morning road miles first, then Cheboygan timing, Plaunt ferry buffer, island orientation, first sunset and stars.", accent: "#236c8f" },
     { date: "2026-08-02", title: "Build Today's Adventure", mood: "Open island day", outlook: "No fixed plan. Vote on beaches, shops, local taste, slow exploring, or a low-energy backup.", accent: "#6c8a4b" },
     { date: "2026-08-03", title: "Stories and History", mood: "Great Lakes context", outlook: "Use history as a menu: ferry stories, island life, lighthouses, shipwrecks, and old routes.", accent: "#8b5e34" },

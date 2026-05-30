@@ -6,7 +6,7 @@ Completes a major static-app optimization pass for the Elskatemm Travel Companio
 
 1. Route/GPS Agent
 - Added Google Maps route links for outbound, day-one, ferry-day, and return.
-- Relabeled Leaflet/OpenStreetMap as approximate route context only.
+- Replaced the old context map with Google route links and an optional Google Maps Embed panel.
 - Improved GPS status, accuracy, destination distance, and Mom/Dad detail.
 
 2. Data/Source-Link Agent
@@ -108,7 +108,7 @@ Optional future Google Maps Embed API support can be added later, but current ro
 - [ ] Ferry details are simplified for child views and complete for Mom/Dad.
 - [ ] Google Maps route link works.
 - [ ] Return route link works.
-- [ ] Leaflet/SVG fallback is clearly labeled approximate/context only.
+- [ ] Google route fallback opens the correct road-accurate map.
 - [ ] GPS permission denied state works.
 - [ ] GPS active state works.
 - [ ] GPS stop tracking works.

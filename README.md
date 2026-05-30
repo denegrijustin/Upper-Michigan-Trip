@@ -6,8 +6,8 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 
 - Hash-routed profile dashboards for Elsie, Katrina, Emma Grace, Eliette, and Mom/Dad
 - Simple scroll-based Jules flow with short captain-style cards
-- Google Maps road-accurate route links for outbound, day-one, ferry-day, and return routes
-- Leaflet/OpenStreetMap context map clearly labeled as approximate route context
+- Google Maps road-accurate route links and an optional Google Maps Embed API panel
+- Self-contained illustrated route images, so key content visuals still work offline
 - Browser GPS controls with off/requesting/active/error states, accuracy, last updated, and Mom/Dad detail
 - Open-Meteo weather with no API key, 30-minute local cache, source status, and profile-specific guidance
 - Ferry section with Plaunt Transportation official link and honest schedule fallback
@@ -16,7 +16,7 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 - Family Vote choices: Yes, Maybe, Skip
 - Captured photo/video trip story with delete buttons and local size safeguards
 - Data-driven badge catalog with 60 starter badges, including 30+ route/place/milestone badges
-- Service worker cache bumped to `elskatemm-trip-v3`
+- Service worker cache bumped to `elskatemm-trip-v5`
 - Wrangler deployment using a generated `dist` folder
 
 ## File Structure
@@ -75,7 +75,7 @@ Future optional enhancement: National Weather Service alerts.
 
 ## Maps And GPS
 
-Google Maps links provide road-accurate directions. Leaflet/OpenStreetMap remains an approximate context map only.
+Google Maps links provide road-accurate directions. If you add a restricted Google Maps Embed API key in `trip-data.js`, the app also renders the Google map panel in place.
 
 GPS uses browser geolocation. If permission is denied, the app stays useful with route-phase context and source links.
 
@@ -148,7 +148,7 @@ Route/GPS/weather:
 
 - [ ] Google Maps route link works.
 - [ ] Return route link works.
-- [ ] Leaflet fallback is labeled approximate/context only.
+- [ ] Google route fallback opens the correct road-accurate map.
 - [ ] GPS denied, active, and stop states work.
 - [ ] Weather fetch from Open-Meteo works.
 - [ ] Weather cached fallback is labeled.
