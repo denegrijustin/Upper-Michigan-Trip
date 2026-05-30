@@ -18,7 +18,7 @@
       </div>
       <div class="splash-content">
         <p class="eyebrow">Elskatemm road trip</p>
-        <h1 id="splashTitle">Who’s viewing?</h1>
+        <h1 id="splashTitle">Who's viewing?</h1>
         <p class="splash-copy">Choose your name first. The app will open a version of the trip made for that person, with Mom/Dad context included where it matters.</p>
         <div id="splashProfiles" class="splash-profiles" aria-label="Choose traveler"></div>
       </div>
@@ -26,35 +26,39 @@
 
     <div class="app-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow" id="onlineStatus">Checking connection</p>
-          <h1>Family Trip</h1>
+        <div class="topbar-identity">
+          <h1 id="topbarTitle">Family Trip</h1>
+          <p class="topbar-meta" id="topbarMeta">Choose a traveler to begin</p>
         </div>
         <div class="top-actions">
+          <span id="onlineStatus" class="status-pill">Checking</span>
           <button id="activeTraveler" class="traveler-chip" type="button">Choose traveler</button>
         </div>
       </header>
 
       <main>
-        <section class="hero-band" aria-labelledby="heroTitle">
-          <div class="hero-copy">
+        <section class="today-summary-card" aria-labelledby="heroTitle">
+          <div class="today-summary-left">
             <p class="eyebrow" id="phaseLabel">Pre-trip</p>
             <h2 id="heroTitle">Bois Blanc Bound</h2>
             <p id="heroText" hidden></p>
+            <div class="today-stats">
+              <span><strong id="daysUntil">--</strong><small>days to launch</small></span>
+              <span><strong id="milesLeft">--</strong><small>miles left</small></span>
+              <span><strong id="percentLeft">--</strong><small>route left</small></span>
+            </div>
           </div>
-          <div class="countdown-grid" aria-label="Trip countdowns">
-            <article>
-              <span id="daysUntil">--</span>
-              <small>days until launch</small>
-            </article>
-            <article>
-              <span id="milesLeft">--</span>
-              <small>miles left</small>
-            </article>
-            <article>
-              <span id="percentLeft">--</span>
-              <small>route left</small>
-            </article>
+          <div class="today-summary-right">
+            <div class="next-action-card">
+              <p class="eyebrow">Next action</p>
+              <p id="nextStop">Trip has not started.</p>
+              <div id="kidTravelUpdate" class="kid-travel-update-compact"></div>
+              <div class="today-primary-actions">
+                <button id="useLocation" type="button" class="primary-action">Start GPS</button>
+                <button type="button" class="today-route-btn" data-nav-global="route">Route</button>
+                <button type="button" class="today-plan-btn" data-nav-global="today">Today's Plan</button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -69,50 +73,11 @@
           </article>
         </section>
 
-        <section class="map-and-panel">
-          <div class="map-panel">
-            <div class="map-toolbar">
-              <strong>Live Route Map</strong>
-              <span id="mapMode">Open map with live GPS</span>
-            </div>
-            <div id="map" class="route-map maplibre-panel" aria-label="Live route map">
-              <div id="routeMapPanel" class="maplibre-panel"></div>
-            </div>
-            <div id="routeQuest" class="route-quest"></div>
-          </div>
-
-          <aside class="status-panel">
-            <h3>Next Stop</h3>
-            <p id="nextStop">Dinner target: South Bend.</p>
-            <div id="kidTravelUpdate" class="kid-travel-update"></div>
-            <div id="actionStatus" class="action-status">No action yet.</div>
-            <dl>
-              <div><dt>Location</dt><dd id="gpsStatus">Not requested</dd></div>
-              <div><dt>Destination</dt><dd id="destinationStatus">Not set</dd></div>
-              <div><dt>Tracking</dt><dd id="trackingStatus">Off</dd></div>
-            </dl>
-            <div class="quick-actions">
-              <button data-need="Bathroom now" type="button">Bathroom now</button>
-              <button data-need="Gas now" type="button">Gas now</button>
-              <button data-need="Food now" type="button">Food now</button>
-            </div>
-            <div id="needResults" class="need-results"></div>
-            <div class="trip-controls" aria-label="Trip controls">
-              <button id="useLocation" type="button">Start GPS</button>
-              <button id="stopLocation" type="button">Stop GPS</button>
-              <button id="startTrip" type="button">We Left</button>
-              <button id="markArrived" type="button">On Island</button>
-              <button id="startReturn" type="button">Return</button>
-              <button id="completeTrip" type="button">Complete</button>
-            </div>
-          </aside>
-        </section>
-
         <section class="profile-section" aria-labelledby="profileTitle">
           <div class="section-head">
             <div>
               <p class="eyebrow">Personal views</p>
-              <h2 id="profileTitle">Today’s experience</h2>
+              <h2 id="profileTitle">Today's experience</h2>
             </div>
             <select id="daySelect" aria-label="Choose trip day"></select>
           </div>
@@ -121,14 +86,18 @@
 
       </main>
 
-      <nav class="bottom-nav" aria-label="Primary navigation">
-        <a href="#/elsie/home" data-page="home">Home</a>
-        <a href="#/elsie/route" data-page="route">Route</a>
-        <a href="#/elsie/weather" data-page="weather">Weather</a>
-        <a href="#/elsie/badges" data-page="badges">Badges</a>
-        <a href="#/elsie/photos" data-page="photos">Photos</a>
-      </nav>
+      <nav class="bottom-nav" id="bottomNav" aria-label="Primary navigation"></nav>
     </div>
+
+    <!-- Hidden panels used by GPS/trip controls subpage only -->
+    <div id="statusPanelData" hidden>
+      <div id="actionStatus"></div>
+      <div id="gpsStatus"></div>
+      <div id="destinationStatus"></div>
+      <div id="trackingStatus"></div>
+      <div id="needResults"></div>
+    </div>
+
     <input id="captureInput" type="file" accept="image/*,video/*" capture="environment" multiple hidden>
     <script src="/trip-data.js"></script>
     <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
