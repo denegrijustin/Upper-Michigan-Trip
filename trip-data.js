@@ -200,6 +200,38 @@ window.TRIP_DATA = {
     "Verify The Outpost and Bob-Lo Tavern hours before leaving.",
     "Use Cheboygan, Mackinac City, and St. Ignace as mainland fallback event areas."
   ],
+  preTripGame: [
+    {
+      title: "Ferry Brain",
+      prompt: "Why does an island need a ferry?",
+      answer: "Because people, vehicles, mail, food, and supplies need a way across the water.",
+      bestFor: ["emma", "jules", "katrina"]
+    },
+    {
+      title: "Great Lakes Mystery",
+      prompt: "What makes the Great Lakes feel almost like inland seas?",
+      answer: "They are huge, deep, windy, and powerful enough to shape weather, travel, shipping, and local stories.",
+      bestFor: ["katrina", "elsie"]
+    },
+    {
+      title: "Tiny Treasure Scout",
+      prompt: "What tiny details might you look for on an island walk?",
+      answer: "Patterns in rocks, shells, leaves, animal tracks, shiny bits, signs, boats, and old objects.",
+      bestFor: ["eliette", "elsie"]
+    },
+    {
+      title: "Road Trip Spot-It",
+      prompt: "What changes as we drive from Kansas toward Michigan?",
+      answer: "Land, trees, towns, road signs, food stops, weather, water, and how close we feel to the Great Lakes.",
+      bestFor: ["all"]
+    },
+    {
+      title: "Captain Choice",
+      prompt: "If you were in charge for one stop, would you pick trucks, snacks, rocks, or boats?",
+      answer: "Any pick works if the captain can explain why.",
+      bestFor: ["jules"]
+    }
+  ],
   stars: {
     checklist: ["Red-light flashlight", "Blankets or chairs", "Bug spray", "Layers", "Closed-toe shoes", "Binoculars", "Tripod", "Battery pack", "Water and snacks"],
     tonight: "Check twilight, moonlight, clouds, and the northern horizon before committing."

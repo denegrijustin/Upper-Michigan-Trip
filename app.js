@@ -15,14 +15,84 @@
 
   function loadState() {
     try {
-      return JSON.parse(localStorage.getItem("tripState")) || { phase: "pretrip", progress: 0, packDownloaded: false };
+      return JSON.parse(localStorage.getItem("tripState")) || defaultState();
     } catch {
-      return { phase: "pretrip", progress: 0, packDownloaded: false };
+      return defaultState();
     }
   }
 
+  function defaultState() {
+    return {
+      phase: "pretrip",
+      progress: 0,
+      packDownloaded: false,
+      favorites: {},
+      votes: {},
+      approved: [],
+      dismissed: [],
+      completed: [],
+      actionMessage: "No action yet."
+    };
+  }
+
+  function ensureCollections() {
+    state.favorites ||= {};
+    state.votes ||= {};
+    state.approved ||= [];
+    state.dismissed ||= [];
+    state.completed ||= [];
+  }
+
   function saveState() {
+    ensureCollections();
     localStorage.setItem("tripState", JSON.stringify(state));
+  }
+
+  function setAction(message) {
+    state.actionMessage = message;
+    saveState();
+    render();
+  }
+
+  function itemKey(name) {
+    return `${activeProfile}:${selectedDayDate()}:${name}`;
+  }
+
+  function toggleFavorite(name) {
+    ensureCollections();
+    const key = itemKey(name);
+    if (state.favorites[key]) {
+      delete state.favorites[key];
+      setAction(`Removed ${name} from ${currentProfile().name}'s favorites.`);
+      return;
+    }
+    state.favorites[key] = { name, profile: activeProfile, date: selectedDayDate(), addedAt: new Date().toISOString() };
+    setAction(`Saved ${name} for ${currentProfile().name}.`);
+  }
+
+  function voteFor(name) {
+    ensureCollections();
+    const key = itemKey(name);
+    state.votes[key] = (state.votes[key] || 0) + 1;
+    setAction(`${currentProfile().name} voted for ${name}.`);
+  }
+
+  function approvePlan(name) {
+    ensureCollections();
+    const key = itemKey(name);
+    if (!state.approved.includes(key)) state.approved.push(key);
+    setAction(`Mom/Dad approved ${name} for the real plan.`);
+  }
+
+  function dismissItem(name) {
+    ensureCollections();
+    const key = itemKey(name);
+    if (!state.dismissed.includes(key)) state.dismissed.push(key);
+    setAction(`Skipped ${name} for now.`);
+  }
+
+  function currentProfile() {
+    return data.profiles.find((item) => item.id === activeProfile) || data.profiles[0];
   }
 
   function byId(id) {
@@ -122,12 +192,18 @@
     };
   }
 
+  function preTripGameFor(profile) {
+    const options = data.preTripGame.filter((item) => item.bestFor.includes(profile.id) || item.bestFor.includes("all"));
+    return options[(new Date(selectedDayDate()).getDate() + profile.name.length) % options.length] || data.preTripGame[0];
+  }
+
   function setPhase(phase) {
     state.phase = phase;
     if (phase === "outbound") state.startedAt = new Date().toISOString();
     if (phase === "island") state.progress = 100;
     if (phase === "return") state.returnStartedAt = new Date().toISOString();
     if (phase === "complete") state.progress = 100;
+    state.actionMessage = `Trip mode changed to ${phaseLabels[phase]}.`;
     saveState();
     render();
   }
@@ -189,7 +265,7 @@
 
   function nextStopText() {
     if (state.needNow) return `${state.needNow}: showing best cached options first.`;
-    if (state.phase === "pretrip") return "Download trip pack, then start when leaving home.";
+    if (state.phase === "pretrip") return "Trip has not started yet. Play countdown games, learn the route, and download the trip pack.";
     if (state.phase === "outbound" && travelStage() === "road-to-south-bend") return "Next goal: clean stop rhythm, light lunch, and dinner in South Bend. No ferry logic today.";
     if (state.phase === "outbound") return "Next goal: road miles to Cheboygan, top-off stop, then Plaunt ferry.";
     if (state.phase === "island") return "Build today's adventure. Nothing is locked until parents approve it.";
@@ -259,11 +335,12 @@
   }
 
   function renderTripStatus() {
-    const profile = data.profiles.find((item) => item.id === activeProfile) || data.profiles[0];
+    const profile = currentProfile();
     const line = childTravelLine(profile);
     byId("onlineStatus").textContent = navigator.onLine ? "Online" : "Offline - using cached trip data";
     byId("nextStop").textContent = nextStopText();
     byId("kidTravelUpdate").innerHTML = `<strong>${line.title}</strong><p>${line.text}</p>`;
+    byId("actionStatus").textContent = state.actionMessage || "No action yet.";
     byId("packStatus").textContent = state.packDownloaded
       ? `${state.packStatus === "partial" ? "Partial cache" : "Ready"} - ${new Date(state.packDownloaded).toLocaleString()}`
       : "Not downloaded";
@@ -320,14 +397,54 @@
 
   function renderProfile() {
     const day = selectedDay();
-    const profile = data.profiles.find((item) => item.id === activeProfile) || data.profiles[0];
+    const profile = currentProfile();
     const adventure = data.adventureOptions.find((item) => item.bestFor.includes(profile.id)) || data.adventureOptions[0];
     const isJules = profile.id === "jules";
     const locationContext = currentRouteContext();
     const ferryHidden = profile.suppressFerryLogistics && isFerryRelevant();
     const profilePrompt = profile.prompts[(new Date(day.date).getDate() + profile.name.length) % profile.prompts.length];
     const travelLine = childTravelLine(profile);
+    const preGame = preTripGameFor(profile);
     byId("profileView").style.setProperty("--profile-accent", profile.accent || "#1f78a4");
+    if (state.phase === "pretrip") {
+      byId("profileView").innerHTML = `
+        <div class="profile-grid">
+          <div>
+            <p class="eyebrow">Pre-trip game mode - ${profile.name}</p>
+            <h3>Countdown Quest</h3>
+            <p>${profile.lens}</p>
+            <div class="choice-card kid-travel-update">
+              <strong>${preGame.title}</strong>
+              <p>${preGame.prompt}</p>
+              <div class="action-row">
+                <button type="button" data-complete-prompt="${preGame.title}: ${preGame.answer}">Reveal / learned it</button>
+                <button type="button" data-favorite="${preGame.title}">Save game</button>
+              </div>
+            </div>
+            <div class="choice-card">
+              <strong>What ${profile.name} should watch for on the trip</strong>
+              <ul>${profile.routeInterests.map((item) => `<li>${item}</li>`).join("")}</ul>
+            </div>
+            <div class="choice-card parent-callout">
+              <strong>Mom/Dad setup</strong>
+              <p>${profile.parentNote}</p>
+              <p>Use this before departure to build excitement without starting live travel mode.</p>
+            </div>
+          </div>
+          <aside>
+            <h3>Before we leave</h3>
+            <p><strong>Goal:</strong> learn one thing, save one idea, and download the trip pack.</p>
+            <div class="action-row">
+              <button type="button" data-vote="${preGame.title}">Vote for this game</button>
+              <button type="button" data-favorite="What ${profile.name} wants to see">Save watch list</button>
+            </div>
+            ${renderSavedSummary()}
+          </aside>
+        </div>
+      `;
+      byId("activeTraveler").textContent = `${profile.name}'s view`;
+      return;
+    }
     byId("profileView").innerHTML = `
       <div class="profile-grid">
         <div>
@@ -338,6 +455,10 @@
           <div class="choice-card">
             <strong>${isJules ? "Captain Jules mission" : `${profile.name}'s prompt`}</strong>
             <p>${profilePrompt}</p>
+            <div class="action-row">
+              <button type="button" data-save-prompt="${profilePrompt}">Save prompt</button>
+              <button type="button" data-complete-prompt="${profilePrompt}">Did it</button>
+            </div>
           </div>
           <div class="choice-card kid-travel-update">
             <strong>${travelLine.title}</strong>
@@ -351,6 +472,10 @@
           <div class="choice-card">
             <strong>Stop along the route for ${profile.name}</strong>
             <ul>${profile.routeInterests.map((item) => `<li>${item}</li>`).join("")}</ul>
+            <div class="action-row">
+              <button type="button" data-favorite="Route stop for ${profile.name}">Save route idea</button>
+              <button type="button" data-vote="Route stop for ${profile.name}">Vote for this</button>
+            </div>
           </div>
           ${ferryHidden ? `
             <div class="choice-card">
@@ -364,6 +489,12 @@
           <p><strong>${adventure.name}</strong></p>
           <p>${adventure.why}</p>
           <ul>${profile.islandInterests.map((item) => `<li>${item}</li>`).join("")}</ul>
+          <div class="action-row">
+            <button type="button" data-favorite="${adventure.name}">Favorite</button>
+            <button type="button" data-vote="${adventure.name}">Vote</button>
+            <button type="button" data-approve="${adventure.name}">Approve</button>
+            <button type="button" data-dismiss="${adventure.name}">Skip</button>
+          </div>
           <div class="choice-card parent-callout">
             <strong>Why this fits ${profile.name}</strong>
             <p>${profile.parentNote}</p>
@@ -393,16 +524,33 @@
 
   function renderCards() {
     const day = selectedDay();
-    const profile = data.profiles.find((item) => item.id === activeProfile) || data.profiles[0];
+    const profile = currentProfile();
     const travelStops = data.route.restStops.filter((stop) => stop.date === day.date);
-    const stopsMarkup = isTravelDay(day.date)
+    const preGame = preTripGameFor(profile);
+    const stopsMarkup = state.phase === "pretrip"
+      ? `<p>Trip has not started. Stop planning is in preview mode: learn what the route will feel like before live travel begins.</p>
+        <div class="choice-card">
+          <strong>Pre-trip route game</strong>
+          <p>${preGame.prompt}</p>
+          <div class="action-row">
+            <button type="button" data-complete-prompt="${preGame.title}: ${preGame.answer}">Reveal / learned it</button>
+            <button type="button" data-favorite="${preGame.title}">Save game</button>
+          </div>
+        </div>`
+      : isTravelDay(day.date)
       ? `<p>Specific to ${day.title}: these are planning windows, not generic stops.</p>
         <ul>${travelStops.map((stop) => `<li><strong>${stop.name}</strong> <span class="map-caption">${stop.timing}</span><br>${stop.note}</li>`).join("")}</ul>`
       : `<p>No road-stop planner today. This only appears on travel days so island days stay open and flexible.</p>`;
     byId("stopsCard").innerHTML = `
       <p class="eyebrow">Smart stops</p>
-      <h3>${isTravelDay(day.date) ? "Route-specific stop plan" : "Island mode"}</h3>
+      <h3>${state.phase === "pretrip" ? "Pre-trip route games" : isTravelDay(day.date) ? "Route-specific stop plan" : "Island mode"}</h3>
       ${stopsMarkup}
+      <div class="action-row">
+        <button type="button" data-need="Bathroom now">Bathroom now</button>
+        <button type="button" data-need="Gas now">Gas now</button>
+        <button type="button" data-need="Food now">Food now</button>
+        <button type="button" data-favorite="${isTravelDay(day.date) ? `${day.title} stop plan` : "Island open day"}">Save stop plan</button>
+      </div>
     `;
     const ferryForElsie = profile.suppressFerryLogistics;
     const ferryRelevant = isFerryRelevant();
@@ -412,6 +560,10 @@
       <p>${ferryForElsie ? "Adults handle timing. This view keeps ferry logistics out of Elsie's experience." : data.ferry.terminal}</p>
       ${ferryForElsie ? `<div class="choice-card parent-callout"><strong>Mom/Dad note</strong><p>Elsie does not need ferry schedule pressure. Keep schedule/check-in decisions in the adult view and offer her observation prompts instead.</p></div>` : ""}
       <ul>${(ferryForElsie ? ["Look for boats, gulls, waves, and shoreline changes.", "Think about how islands depend on ferries.", "Save suspense for shipwreck stories, not schedule stress."] : data.ferry.reminders).map((item) => `<li>${item}</li>`).join("")}</ul>
+      <div class="action-row">
+        <button type="button" data-favorite="${ferryForElsie ? "Water crossing facts" : "Plaunt ferry plan"}">Save</button>
+        ${profile.id === "momdad" ? `<button type="button" data-approve="Plaunt ferry plan">Approve ferry plan</button>` : ""}
+      </div>
     ` : `
       <p class="eyebrow">Ferry</p>
       <h3>Not today</h3>
@@ -426,6 +578,10 @@
       <h3>Night-sky guide</h3>
       <p>${data.stars.tonight}</p>
       <ul>${data.stars.checklist.slice(0, 5).map((item) => `<li>${item}</li>`).join("")}</ul>
+      <div class="action-row">
+        <button type="button" data-favorite="Night-sky blanket session">Favorite stars</button>
+        <button type="button" data-vote="Night-sky blanket session">Vote</button>
+      </div>
     `;
     byId("adventureCard").innerHTML = `
       <p class="eyebrow">Island</p>
@@ -435,15 +591,25 @@
         <div class="choice-card">
           <strong>${item.name}</strong>
           <p>${item.why}</p>
-          <button type="button" data-favorite="${item.name}">Favorite</button>
+          <div class="action-row">
+            <button type="button" data-favorite="${item.name}">Favorite</button>
+            <button type="button" data-vote="${item.name}">Vote</button>
+            <button type="button" data-approve="${item.name}">Approve</button>
+            <button type="button" data-dismiss="${item.name}">Skip</button>
+          </div>
         </div>
       `).join("")}
+      ${renderSavedSummary()}
     `;
     byId("eventsCard").innerHTML = `
       <p class="eyebrow">Current events</p>
       <h3>What is happening</h3>
       <p>Cached sources and freshness labels will keep this honest when service is weak.</p>
       <ul>${data.eventsFallback.map((item) => `<li>${item}</li>`).join("")}</ul>
+      <div class="action-row">
+        <button type="button" data-favorite="Check local events">Save event check</button>
+        <button type="button" data-complete-prompt="Checked local events">Mark checked</button>
+      </div>
     `;
     byId("journalCard").innerHTML = `
       <p class="eyebrow">Journal</p>
@@ -451,11 +617,62 @@
       <p>Save favorite facts, stops, family votes, sky sessions, and photos.</p>
       <textarea id="journalNote" rows="5" placeholder="Today's best moment"></textarea>
       <div class="action-row"><button id="saveJournal" type="button">Save note</button><span id="journalSaved"></span></div>
+      ${renderSavedSummary()}
     `;
     const save = byId("saveJournal");
     save.addEventListener("click", () => {
       localStorage.setItem(`journal-${selectedDay().date}`, byId("journalNote").value);
       byId("journalSaved").textContent = "Saved on this device";
+      state.actionMessage = "Journal note saved.";
+      saveState();
+      renderTripStatus();
+    });
+    wireDynamicActions();
+  }
+
+  function renderSavedSummary() {
+    ensureCollections();
+    const favorites = Object.values(state.favorites).filter((item) => item.profile === activeProfile && item.date === selectedDayDate());
+    const approved = state.approved.filter((key) => key.startsWith(`${activeProfile}:${selectedDayDate()}:`));
+    if (!favorites.length && !approved.length) {
+      return `<div class="saved-list"><span class="saved-pill">No saved picks yet</span></div>`;
+    }
+    return `
+      <div class="saved-list">
+        ${favorites.map((item) => `<span class="saved-pill">Saved: ${item.name}</span>`).join("")}
+        ${approved.map((key) => `<span class="saved-pill">Approved: ${key.split(":").slice(2).join(":")}</span>`).join("")}
+      </div>
+    `;
+  }
+
+  function wireDynamicActions() {
+    document.querySelectorAll("[data-favorite]").forEach((button) => {
+      button.onclick = () => toggleFavorite(button.dataset.favorite);
+    });
+    document.querySelectorAll("[data-vote]").forEach((button) => {
+      button.onclick = () => voteFor(button.dataset.vote);
+    });
+    document.querySelectorAll("[data-approve]").forEach((button) => {
+      button.onclick = () => approvePlan(button.dataset.approve);
+    });
+    document.querySelectorAll("[data-dismiss]").forEach((button) => {
+      button.onclick = () => dismissItem(button.dataset.dismiss);
+    });
+    document.querySelectorAll("[data-save-prompt]").forEach((button) => {
+      button.onclick = () => toggleFavorite(button.dataset.savePrompt);
+    });
+    document.querySelectorAll("[data-complete-prompt]").forEach((button) => {
+      button.onclick = () => {
+        ensureCollections();
+        state.completed.push({ text: button.dataset.completePrompt, profile: activeProfile, date: selectedDayDate(), at: new Date().toISOString() });
+        setAction(`Marked complete for ${currentProfile().name}.`);
+      };
+    });
+    document.querySelectorAll("[data-need]").forEach((button) => {
+      button.onclick = () => {
+        state.needNow = button.dataset.need;
+        setAction(`${button.dataset.need} selected. Showing cached best-fit guidance.`);
+      };
     });
   }
 
@@ -482,11 +699,13 @@
         if (registration.active) registration.active.postMessage({ type: "CACHE_TRIP_PACK" });
       }
       state.packStatus = "ready";
+      state.actionMessage = "Trip Pack Ready. Offline basics are saved on this device.";
       saveState();
       button.textContent = "Trip Pack Ready";
     } catch (error) {
       state.packStatus = "partial";
       state.packError = "Some files could not be cached. Try again while online.";
+      state.actionMessage = state.packError;
       saveState();
       button.textContent = "Try Download Again";
     } finally {
@@ -543,13 +762,6 @@
     byId("markArrived").addEventListener("click", () => setPhase("island"));
     byId("startReturn").addEventListener("click", () => setPhase("return"));
     byId("completeTrip").addEventListener("click", () => setPhase("complete"));
-    document.querySelectorAll("[data-need]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.needNow = button.dataset.need;
-        saveState();
-        renderTripStatus();
-      });
-    });
     window.addEventListener("online", renderTripStatus);
     window.addEventListener("offline", renderTripStatus);
   }

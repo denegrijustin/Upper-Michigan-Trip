@@ -467,6 +467,16 @@ dd {
   margin: 6px 0 0;
 }
 
+.action-status {
+  border: 1px solid rgba(31, 120, 164, 0.24);
+  border-radius: 16px;
+  background: #edf7fa;
+  color: #16465c;
+  font-weight: 800;
+  margin: 12px 0;
+  padding: 12px;
+}
+
 .section-head {
   display: flex;
   justify-content: space-between;
@@ -560,6 +570,12 @@ dd {
   margin-top: 12px;
 }
 
+.action-row button[data-active="true"] {
+  background: var(--forest);
+  color: white;
+  border-color: var(--forest);
+}
+
 .choice-card {
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -580,6 +596,21 @@ dd {
 
 .parent-callout strong {
   color: #12392f;
+}
+
+.saved-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.saved-pill {
+  border: 1px solid rgba(20, 32, 26, 0.12);
+  border-radius: 999px;
+  background: #fffdf7;
+  padding: 7px 10px;
+  font-size: 0.88rem;
+  font-weight: 800;
 }
 
 .bottom-nav {
