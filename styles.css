@@ -759,6 +759,130 @@ dd {
   font-weight: 800;
 }
 
+.profile-dashboard,
+.subpage,
+.jules-flow {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-hero {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fffdf7;
+  padding: 18px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-tile {
+  min-height: 124px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px;
+  text-align: left;
+}
+
+.dashboard-tile strong {
+  color: var(--forest);
+  font-size: 1.05rem;
+}
+
+.dashboard-tile span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.subpage-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.subpage-head h3 {
+  margin: 0;
+}
+
+.route-actions,
+.badge-shelf,
+.weather-grid,
+.source-grid,
+.badge-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.route-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.badge-shelf {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(148px, 1fr);
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.badge-pill,
+.badge-card {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  gap: 3px;
+  border-color: rgba(31, 120, 164, 0.22);
+  background: #eef8fb;
+}
+
+.badge-pill span,
+.badge-card strong {
+  font-weight: 900;
+}
+
+.badge-pill small,
+.badge-card small,
+.badge-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.badge-pill.is-locked,
+.badge-card.is-locked {
+  background: #f4f2ea;
+  opacity: 0.82;
+}
+
+.weather-grid,
+.source-grid,
+.badge-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.jules-card {
+  font-size: 1.05rem;
+}
+
+.jules-card h3 {
+  font-size: 1.55rem;
+}
+
+.summary-tile button {
+  width: calc(100% - 16px);
+  margin: 0 8px 8px;
+}
+
 .choice-card strong {
   display: block;
   color: var(--forest);
@@ -834,7 +958,11 @@ dd {
   .progress-band,
   .map-and-panel,
   .profile-grid,
-  .grid-section {
+  .grid-section,
+  .dashboard-grid,
+  .weather-grid,
+  .source-grid,
+  .badge-grid {
     grid-template-columns: 1fr;
   }
 

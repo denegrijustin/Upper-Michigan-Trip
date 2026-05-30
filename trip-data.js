@@ -515,3 +515,98 @@ window.TRIP_DATA = {
     { maxMiles: 9999, joke: "Big drive energy. Buckle up: the highway has chosen us." }
   ]
 };
+
+window.TRIP_DATA.googleMaps = {
+  outboundUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=Bois%20Blanc%20Island%2C%20MI&waypoints=South%20Bend%2C%20IN%7CPlaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",
+  dayOneUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=South%20Bend%2C%20IN&travelmode=driving",
+  ferryDayUrl: "https://www.google.com/maps/dir/?api=1&origin=South%20Bend%2C%20IN&destination=Plaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",
+  returnUrl: "https://www.google.com/maps/dir/?api=1&origin=Bois%20Blanc%20Island%2C%20MI&destination=Olathe%2C%20KS&travelmode=driving"
+};
+
+window.TRIP_DATA.weatherLocations = [
+  { id: "olathe", name: "Olathe / home", lat: 38.8562, lon: -94.7878, role: "Start" },
+  { id: "southBend", name: "South Bend", lat: 41.6764, lon: -86.2520, role: "Day-one dinner" },
+  { id: "cheboygan", name: "Cheboygan / Plaunt ferry", lat: 45.6469, lon: -84.4745, role: "Ferry mainland" },
+  { id: "boisBlanc", name: "Bois Blanc Island", lat: 45.7465, lon: -84.4948, role: "Island" }
+];
+
+window.TRIP_DATA.sourceLinks = {
+  weather: { label: "Open weather source", url: "https://open-meteo.com/" },
+  gatewayArch: { label: "Open official NPS Gateway Arch page", url: "https://www.nps.gov/jeff/index.htm" },
+  brownBoard: { label: "Open official NPS Brown v. Board page", url: "https://www.nps.gov/brvb/planyourvisit/index.htm" },
+  indianaDunes: { label: "Open official NPS Indiana Dunes page", url: "https://www.nps.gov/indu/planyourvisit/things2do.htm" },
+  notreDame: { label: "Open official Notre Dame history page", url: "https://www.nd.edu/about/history/" },
+  studebaker: { label: "Open official museum page", url: "https://studebakermuseum.org/" },
+  mackinacBridge: { label: "Open official bridge page", url: "https://www.mackinacbridge.org/history/" },
+  ferry: { label: "Open official ferry schedule", url: "https://plaunttransportation.com/" },
+  clearDarkSky: { label: "Open Clear Dark Sky chart", url: "https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1" },
+  boisBlanc: { label: "Open official island township site", url: "https://www.boisblanctownship.org/" },
+  michiganVisitor: { label: "Open official Michigan visitor page", url: "https://www.michigan.org/city/bois-blanc-island" }
+};
+
+window.TRIP_DATA.badgeCatalog = [
+  ["launch-crew","Launch Crew","Route","Olathe departure","startTrip",["all"],"The trip officially started.","You started the trip.",""],
+  ["first-miles-marker","First Miles Marker","Route","Kansas outbound","manual",["all"],"Leave the first real miles behind.","The first miles are behind you.",""],
+  ["kansas-road-reader","Kansas Road Reader","Route","Kansas","activity",["all"],"Notice the route instead of only riding through it.","You started reading the road.",""],
+  ["fairness-fact-finder","Fairness Fact Finder","Place","Brown v. Board","source",["elsie","katrina","momdad"],"Learn why this school-history stop matters.","You learned a fairness fact.","https://www.nps.gov/brvb/planyourvisit/index.htm"],
+  ["first-reset-pro","First Reset Pro","Stops","Columbia reset","need",["all"],"Use a smart first stop before everyone is desperate.","You made the first smart reset.",""],
+  ["missouri-miles","Missouri Miles","Route","Missouri crossing","manual",["all"],"Cross into the next big part of the drive.","Missouri miles unlocked.",""],
+  ["arch-spotter","Arch Spotter","Place","Gateway Arch","source",["all"],"Spot or learn about the Gateway Arch.","You found the Arch story.","https://www.nps.gov/jeff/index.htm"],
+  ["river-crossing-scout","River Crossing Scout","Route","Mississippi River","manual",["katrina","emma","momdad"],"Notice the Mississippi River crossing.","You caught a major river crossing.",""],
+  ["illinois-stretch-survivor","Illinois Stretch Survivor","Route","Illinois road stretch","manual",["all"],"Handle a long road stretch.","You handled the Illinois stretch.",""],
+  ["effingham-energy-reset","Effingham Energy Reset","Stops","Effingham service window","need",["all"],"Use a smart service stop to keep the day moving.","You used a strong reset window.",""],
+  ["indiana-line-crosser","Indiana Line Crosser","Route","Indiana crossing","manual",["all"],"Cross another state line.","Indiana line crossed.",""],
+  ["indianapolis-route-marker","Indianapolis Route Marker","Route","Indianapolis","manual",["all"],"Pass a major Midwest city marker.","Indianapolis marker reached.",""],
+  ["lafayette-final-push","Lafayette Final Push","Route","Lafayette","manual",["all"],"Reach the final stretch before South Bend.","Final push unlocked.",""],
+  ["south-bend-stopper","South Bend Stopper","Route","South Bend overnight","manual",["all"],"Reach the day-one dinner goal.","South Bend goal reached.",""],
+  ["golden-dome-detective","Golden Dome Detective","Place","Notre Dame","source",["katrina","emma","eliette"],"Learn one Notre Dame history detail.","You found a campus story.","https://www.nd.edu/about/history/"],
+  ["campus-story-finder","Campus Story Finder","Place","Notre Dame","capture",["elsie","katrina","eliette"],"Capture or save a campus detail.","You found a campus story detail.","https://www.nd.edu/about/history/"],
+  ["studebaker-shift","Studebaker Shift","Place","Studebaker Museum","source",["emma","jules","katrina"],"Learn how wagons became cars.","You learned a transportation shift.","https://studebakermuseum.org/"],
+  ["lake-michigan-lookout","Lake Michigan Lookout","Route","Lake Michigan","manual",["all"],"Reach the Great Lakes part of the trip.","Great Lakes mode unlocked.",""],
+  ["dunes-questioner","Dunes Questioner","Place","Indiana Dunes","source",["katrina","emma","eliette"],"Ask how wind and water build dunes.","You unlocked a dunes question.","https://www.nps.gov/indu/planyourvisit/things2do.htm"],
+  ["michigan-bound","Michigan Bound","Route","Michigan entry","manual",["all"],"Make it into the destination state.","Michigan reached.",""],
+  ["grand-rapids-reset","Grand Rapids Reset","Stops","Grand Rapids reset","need",["all"],"Pick a smart Michigan reset.","Michigan reset complete.",""],
+  ["northern-michigan-mode","Northern Michigan Mode","Route","Northern Michigan","manual",["all"],"The trip shifts into northern Michigan.","Northern Michigan mode unlocked.",""],
+  ["forest-road-watcher","Forest Road Watcher","Route","Grayling / forest roads","activity",["elsie","jules","momdad"],"Notice the northern forest road change.","You watched the forest road shift.",""],
+  ["straits-scout","Straits Scout","Place","Mackinac / Straits","source",["all"],"Learn why the Straits matter.","You scouted the Straits.","https://www.mackinacbridge.org/history/"],
+  ["last-mainland-prep","Last Mainland Prep","Ferry","Cheboygan supplies","activity",["emma","eliette","momdad"],"Help with the last mainland checklist.","Mainland prep complete.",""],
+  ["cheboygan-ready","Cheboygan Ready","Ferry","Cheboygan","manual",["all"],"Reach the ferry town.","Cheboygan ready.",""],
+  ["ferry-ready","Ferry Ready","Ferry","Plaunt ferry","approve",["momdad"],"Verify the ferry plan before depending on it.","Ferry plan checked.","https://plaunttransportation.com/"],
+  ["boat-boss","Boat Boss","Ferry","Plaunt ferry","activity",["jules","emma","momdad"],"Notice how cars and people get to the island.","Boat boss unlocked.","https://plaunttransportation.com/"],
+  ["ferry-crossing-crew","Ferry Crossing Crew","Ferry","Mainland to island","markArrived",["all"],"Cross from mainland to island.","Ferry crossing complete.",""],
+  ["island-arrival","Island Arrival","Island","Bois Blanc arrival","markArrived",["all"],"Make it to Bois Blanc Island.","Island arrival unlocked.",""],
+  ["first-island-photo","First Island Photo","Photos","Island memory","capture",["all"],"Capture the first island memory.","First island photo captured.",""],
+  ["island-explorer","Island Explorer","Island","Island activity","activity",["all"],"Complete the first island activity.","Island exploring started.",""],
+  ["wildlife-watcher","Wildlife Watcher","Nature","Island wildlife","activity",["elsie","jules"],"Complete or capture an animal or habitat activity.","Wildlife watching unlocked.",""],
+  ["tiny-treasure-scout","Tiny Treasure Scout","Details","Keepsake/detail","activity",["eliette"],"Find a shiny, small, or story-rich detail.","Tiny treasure found.",""],
+  ["island-life-investigator","Island Life Investigator","Island","Daily life","activity",["emma","katrina"],"Explore how island life works.","Island life investigated.",""],
+  ["shoreline-story","Shoreline Story","Place","Lighthouse / shoreline","source",["katrina","elsie","eliette"],"Open or complete a shoreline story card.","Shoreline story unlocked.","https://www.michigan.org/property/bois-blanc-island-lighthouse"],
+  ["weather-watch","Weather Watch","Weather","Trip weather","weather",["momdad"],"Check real weather before making a plan.","Weather checked.","https://open-meteo.com/"],
+  ["cloud-cover-checker","Cloud Cover Checker","Stars","Sky conditions","weather",["momdad","elsie","katrina"],"Check cloud cover before stargazing.","Cloud cover checked.","https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1"],
+  ["star-looker","Star Looker","Stars","Simple stargazing","stars",["jules"],"Look up safely with grownups.","Star Looker unlocked.",""],
+  ["stargazing-team","Stargazing Team","Stars","Family sky session","stars",["all"],"Use the night sky as part of the trip.","Stargazing team unlocked.","https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1"],
+  ["summer-triangle-finder","Summer Triangle Finder","Stars","Summer Triangle","stars",["elsie","katrina","eliette"],"Look high overhead for Vega, Deneb, and Altair.","Summer Triangle found.",""],
+  ["first-photo-captured","First Photo Captured","Photos","Trip memory","capture",["all"],"Start the trip memory collection.","First capture saved.",""],
+  ["detail-collector","Detail Collector","Photos","Small details","capture",["eliette"],"Capture or save a detail-oriented item.","Detail collected.",""],
+  ["trip-shortlist-starter","Trip Shortlist Starter","Shortlist","Saved item","shortlist",["all"],"Save something worth remembering or planning around.","Trip Shortlist started.",""],
+  ["family-vote-starter","Family Vote Starter","Votes","Family choice","vote",["all"],"Help choose what the family might do.","First family vote recorded.",""],
+  ["plan-approved","Plan Approved","Planning","Approved plan","approve",["momdad"],"Approve a saved or voted item into the real plan.","Plan approved.",""],
+  ["ferry-return-ready","Ferry Return Ready","Return","Return ferry","startReturn",["momdad","emma"],"Put the return crossing on the radar.","Return ferry ready.","https://plaunttransportation.com/"],
+  ["homeward-bound","Homeward Bound","Return","Return route","startReturn",["all"],"The trip turns toward home.","Homeward bound unlocked.",""],
+  ["return-road-warrior","Return Road Warrior","Return","Long road home","manual",["all"],"Handle the road back.","Return road warrior unlocked.",""],
+  ["full-route-complete","Full Route Complete","Completion","Whole trip","completeTrip",["all"],"Complete the full route.","Full route complete.",""],
+  ["teacher-fact-builder","Teacher Fact Builder","Learning","Teachable facts","activity",["elsie"],"Explain a place in younger-kid language.","Teacher fact built.",""],
+  ["suspense-story-finder","Suspense-Light Story Finder","Story","Safe mystery","activity",["elsie"],"Find a safe suspense story hook.","Safe suspense story found.",""],
+  ["hidden-fact-hunter","Hidden Fact Hunter","Learning","Hidden facts","activity",["katrina"],"Save or complete a history or trivia item.","Hidden fact hunted.",""],
+  ["timeline-detective","Timeline Detective","History","Timeline task","activity",["katrina"],"Complete a timeline or history task.","Timeline detective unlocked.",""],
+  ["real-life-explorer","Real-Life Explorer","Community","Daily life","activity",["emma"],"Complete a daily-life or community activity.","Real-life exploring unlocked.",""],
+  ["community-connector","Community Connector","Community","Sports/community","activity",["emma"],"Notice how people gather, play, or work.","Community connection made.",""],
+  ["cozy-sky-watcher","Cozy Sky Watcher","Stars","Cozy sky setup","stars",["eliette"],"Use color, comfort, and detail while stargazing.","Cozy sky watched.",""],
+  ["captain-choice","Captain Choice","Jules","Captain decision","vote",["jules"],"Make a simple captain choice.","Captain choice made.",""],
+  ["big-machine-spotter","Big Machine Spotter","Jules","Trucks/boats/machines","activity",["jules"],"Spot a machine and say what it does.","Big machine spotted.",""],
+  ["source-checker","Source Checker","Sources","Official source","source",["momdad"],"Open or verify an official source.","Official source checked.",""],
+  ["logistics-captain","Logistics Captain","Planning","Logistics check","approve",["momdad"],"Approve weather, route, ferry, or family plan details.","Logistics captain unlocked.",""]
+].map(([id,title,category,segment,trigger,profiles,locked,earned,sourceUrl]) => ({
+  id, title, category, segment, trigger, profiles, locked, earned, sourceUrl,
+  icon: category.toLowerCase().replaceAll(" ", "-")
+}));
