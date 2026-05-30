@@ -6,7 +6,7 @@
   let activePage = "home";
   let watchId = null;
   let lastGpsRender = 0;
-  let googleMapsOptionsSet = false;
+  let routeMap = null;
 
   const phaseLabels = {
     pretrip: "Pre-trip",
@@ -366,10 +366,10 @@
   }
 
   function activeRouteUrl() {
-    if (state.phase === "return" || selectedDayDate() === "2026-08-08") return data.googleMaps.returnUrl;
-    if (selectedDayDate() === "2026-07-31") return data.googleMaps.dayOneUrl;
-    if (selectedDayDate() === "2026-08-01") return data.googleMaps.ferryDayUrl;
-    return data.googleMaps.outboundUrl;
+    if (state.phase === "return" || selectedDayDate() === "2026-08-08") return data.mapLinks.returnUrl;
+    if (selectedDayDate() === "2026-07-31") return data.mapLinks.dayOneUrl;
+    if (selectedDayDate() === "2026-08-01") return data.mapLinks.ferryDayUrl;
+    return data.mapLinks.outboundUrl;
   }
 
   function sourceLinkForPlace(place) {
@@ -661,7 +661,7 @@
     state.destinationStatus = `${Math.round(percentToDestination)}% to ${destination.label}`;
     if (state.phase === "outbound") state.progress = percentToDestination;
     if (state.phase === "return") state.returnProgress = percentToDestination;
-    renderGoogleMapPanel();
+    renderRouteMapPanel();
     offerNearbyBadges(point);
     saveState();
     render();
@@ -703,185 +703,114 @@
     render();
   }
 
-  function googleMapsApiKey() {
-    const key = String(data.googleMaps.apiKey || data.googleMaps.embedApiKey || "").trim();
-    if (!key || key.includes("__GOOGLE_MAPS") || key.toLowerCase().includes("your_google")) return "";
-    return key;
-  }
-
-  function installGoogleMapsImportLibrary(options) {
-    if (window.google?.maps?.importLibrary || googleMapsOptionsSet) return;
-    googleMapsOptionsSet = true;
-    ((g) => {
-      let h;
-      let a;
-      let k;
-      const p = "The Google Maps JavaScript API";
-      const c = "google";
-      const l = "importLibrary";
-      const q = "__ib__";
-      const m = document;
-      let b = window;
-      b = b[c] || (b[c] = {});
-      const d = b.maps || (b.maps = {});
-      const r = new Set();
-      const e = new URLSearchParams();
-      const u = () => h || (h = new Promise(async (f, n) => {
-        await (a = m.createElement("script"));
-        e.set("libraries", [...r] + "");
-        for (k in g) e.set(k.replace(/[A-Z]/g, (t) => `_${t[0].toLowerCase()}`), g[k]);
-        e.set("callback", `${c}.maps.${q}`);
-        a.src = `https://maps.${c}apis.com/maps/api/js?${e}`;
-        d[q] = f;
-        a.onerror = () => {
-          h = n(Error(`${p} could not load.`));
-        };
-        a.nonce = m.querySelector("script[nonce]")?.nonce || "";
-        m.head.append(a);
-      }));
-      d[l] ? console.warn(`${p} only loads once. Ignoring:`, g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
-    })(options);
-  }
-
-  async function importGoogleMapsLibrary(name) {
-    const key = googleMapsApiKey();
-    if (!key) throw new Error("Google Maps JavaScript API key missing");
-    installGoogleMapsImportLibrary({
-      key,
-      v: "weekly",
-      region: "US",
-      authReferrerPolicy: "origin",
-      ...(data.googleMaps.mapId ? { mapIds: [data.googleMaps.mapId] } : {})
-    });
-    return google.maps.importLibrary(name);
-  }
-
-  function googleRoutePlan() {
+  function routePlan() {
     const stops = data.route.coordinates;
     if (state.phase === "return" || selectedDayDate() === "2026-08-08") {
       return {
-        origin: { label: "Cheboygan", location: { lat: stops.cheboygan.lat, lng: stops.cheboygan.lon } },
-        destination: { label: "Olathe", location: { lat: stops.start.lat, lng: stops.start.lon } },
+        origin: { label: "Cheboygan", location: { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon } },
+        destination: { label: "Olathe", location: { lat: stops.start.lat, lon: stops.start.lon } },
         waypoints: [
-          { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } }
+          { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } }
         ]
       };
     }
     if (selectedDayDate() === "2026-07-31") {
       return {
-        origin: { label: "Olathe", location: { lat: stops.start.lat, lng: stops.start.lon } },
-        destination: { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } },
+        origin: { label: "Olathe", location: { lat: stops.start.lat, lon: stops.start.lon } },
+        destination: { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } },
         waypoints: [
-          { label: "Columbia", location: { lat: stops.columbia.lat, lng: stops.columbia.lon } },
-          { label: "St. Louis", location: { lat: stops.stLouis.lat, lng: stops.stLouis.lon } },
-          { label: "Indianapolis", location: { lat: stops.indianapolis.lat, lng: stops.indianapolis.lon } }
+          { label: "Columbia", location: { lat: stops.columbia.lat, lon: stops.columbia.lon } },
+          { label: "St. Louis", location: { lat: stops.stLouis.lat, lon: stops.stLouis.lon } },
+          { label: "Indianapolis", location: { lat: stops.indianapolis.lat, lon: stops.indianapolis.lon } }
         ]
       };
     }
     if (selectedDayDate() === "2026-08-01") {
       return {
-        origin: { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } },
-        destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lng: stops.cheboygan.lon } },
+        origin: { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } },
+        destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon } },
         waypoints: [
-          { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lng: stops.grandRapids.lon } },
-          { label: "Grayling", location: { lat: stops.grayling.lat, lng: stops.grayling.lon } }
+          { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lon: stops.grandRapids.lon } },
+          { label: "Grayling", location: { lat: stops.grayling.lat, lon: stops.grayling.lon } }
         ]
       };
     }
     return {
-      origin: { label: "Olathe", location: { lat: stops.start.lat, lng: stops.start.lon } },
-      destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lng: stops.cheboygan.lon } },
+      origin: { label: "Olathe", location: { lat: stops.start.lat, lon: stops.start.lon } },
+      destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon } },
       waypoints: [
-        { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } },
-        { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lng: stops.grandRapids.lon } }
+        { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } },
+        { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lon: stops.grandRapids.lon } }
       ]
     };
   }
 
-  async function drawGoogleMap(container) {
-    const [{ Map }, routesLibrary] = await Promise.all([
-      importGoogleMapsLibrary("maps"),
-      importGoogleMapsLibrary("routes")
-    ]);
-    const plan = googleRoutePlan();
-    const mapEl = container.querySelector("#googleMapCanvas");
-    const map = new Map(mapEl, {
-      center: plan.origin.location,
-      zoom: 6,
-      mapId: data.googleMaps.mapId || undefined,
-      mapTypeControl: false,
-      fullscreenControl: false,
-      streetViewControl: false
-    });
-    const DirectionsService = routesLibrary.DirectionsService || google.maps.DirectionsService;
-    const DirectionsRenderer = routesLibrary.DirectionsRenderer || google.maps.DirectionsRenderer;
-    const directionsService = new DirectionsService();
-    const directionsRenderer = new DirectionsRenderer({
-      map,
-      suppressMarkers: false,
-      polylineOptions: { strokeColor: "#1f78a4", strokeOpacity: 0.92, strokeWeight: 6 }
-    });
-    directionsService.route({
-      origin: plan.origin.location,
-      destination: plan.destination.location,
-      waypoints: plan.waypoints.map((stop) => ({ location: stop.location, stopover: true })),
-      travelMode: google.maps.TravelMode.DRIVING,
-      optimizeWaypoints: false
-    }, (result, status) => {
-      if (status === "OK" && result) {
-        directionsRenderer.setDirections(result);
-        return;
-      }
-      const bounds = new google.maps.LatLngBounds();
-      [plan.origin, ...plan.waypoints, plan.destination].forEach((stop) => {
-        bounds.extend(stop.location);
-        new google.maps.Marker({ map, position: stop.location, title: stop.label });
-      });
-      new google.maps.Polyline({
-        map,
-        path: [plan.origin, ...plan.waypoints, plan.destination].map((stop) => stop.location),
-        strokeColor: "#1f78a4",
-        strokeOpacity: 0.92,
-        strokeWeight: 5
-      });
-      map.fitBounds(bounds);
-    });
-    if (state.lastPosition) {
-      new google.maps.Marker({
-        map,
-        position: { lat: state.lastPosition.lat, lng: state.lastPosition.lon },
-        title: "Current GPS location",
-        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-      });
-    }
-  }
-
-  function renderGoogleMapPanel() {
-    const container = byId("googleMapPanel");
+  function renderRouteMapPanel() {
+    const container = byId("routeMapPanel");
     if (!container) return;
-    const key = googleMapsApiKey();
-    byId("mapMode").textContent = key ? "Google Maps JavaScript API" : "Google Maps route links";
-    if (!key) {
+    byId("mapMode").textContent = state.lastPosition ? "Open map with live GPS active" : "Open map; tap Start GPS to show your location";
+    if (!window.maplibregl) {
       container.innerHTML = `
-      <div class="google-map-fallback">
-        <strong>Google Maps is ready for an API key</strong>
-        <p>Add a restricted Google Maps JavaScript API key in <code>trip-data.js</code> at <code>googleMaps.apiKey</code>. Until then, the route buttons open Google Maps directly.</p>
-        <div class="route-steps"><span>Olathe</span><span>South Bend</span><span>Cheboygan ferry</span><span>Bois Blanc Island</span></div>
-        <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a><a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
-      </div>
-    `;
-      return;
-    }
-    container.innerHTML = `<div id="googleMapCanvas" class="google-map-canvas" role="img" aria-label="Live Google route map"><div class="loading-note">Loading Google Maps route...</div></div>`;
-    drawGoogleMap(container).catch(() => {
-      container.innerHTML = `
-        <div class="google-map-fallback">
-          <strong>Google Maps could not load</strong>
-          <p>Check that the key allows the Maps JavaScript API and this site domain. The route buttons still open Google Maps.</p>
-          <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a><a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
+        <div class="map-fallback">
+          <strong>Map will load when online</strong>
+          <p>The trip route and GPS tracker still work from saved trip data. Open the full route in your phone maps if you need turn-by-turn directions.</p>
+          <div class="route-steps"><span>Olathe</span><span>South Bend</span><span>Cheboygan ferry</span><span>Bois Blanc Island</span></div>
+          <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open driving route</a><a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
         </div>
       `;
+      return;
+    }
+    container.innerHTML = `<div id="mapLibreCanvas" class="maplibre-canvas" role="img" aria-label="Open route map"></div>`;
+    drawRouteMap();
+  }
+
+  function mapPoint(stop) {
+    return [stop.location.lon, stop.location.lat];
+  }
+
+  function drawRouteMap() {
+    const canvas = byId("mapLibreCanvas");
+    if (!canvas || !window.maplibregl) return;
+    const plan = routePlan();
+    const stops = [plan.origin, ...plan.waypoints, plan.destination];
+    const line = stops.map(mapPoint);
+    if (state.lastPosition) line.push([state.lastPosition.lon, state.lastPosition.lat]);
+    if (routeMap) {
+      routeMap.remove();
+      routeMap = null;
+    }
+    routeMap = new maplibregl.Map({
+      container: canvas,
+      style: data.mapLinks.styleUrl,
+      center: mapPoint(plan.origin),
+      zoom: 5
     });
+    routeMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    routeMap.on("load", () => {
+      routeMap.addSource("trip-route", {
+        type: "geojson",
+        data: { type: "Feature", geometry: { type: "LineString", coordinates: stops.map(mapPoint) } }
+      });
+      routeMap.addLayer({
+        id: "trip-route-line",
+        type: "line",
+        source: "trip-route",
+        paint: { "line-color": "#1f78a4", "line-width": 5, "line-opacity": 0.9 }
+      });
+      stops.forEach((stop) => addMapMarker(stop.location, stop.label, "route"));
+      if (state.lastPosition) addMapMarker(state.lastPosition, "Current GPS location", "gps");
+      const bounds = line.reduce((next, coord) => next.extend(coord), new maplibregl.LngLatBounds(line[0], line[0]));
+      routeMap.fitBounds(bounds, { padding: 48, maxZoom: 8, duration: 0 });
+    });
+  }
+
+  function addMapMarker(point, label, type) {
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = `map-marker ${type === "gps" ? "is-gps" : ""}`;
+    marker.title = label;
+    marker.textContent = type === "gps" ? "You" : "";
+    new maplibregl.Marker({ element: marker }).setLngLat([point.lon, point.lat]).setPopup(new maplibregl.Popup().setText(label)).addTo(routeMap);
   }
 
   function renderDaySelect() {
@@ -929,6 +858,7 @@
     location.hash = `/${profileId}/home`;
     byId("splash").classList.add("is-hidden");
     render();
+    if (!state.lastPosition && state.gpsStatus !== "Active") useLocation();
   }
 
   function navTo(page) {
@@ -1005,10 +935,10 @@
     const profile = currentProfile();
     byId("routeQuest").innerHTML = `
       <div class="route-actions">
-        <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a>
-        <a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a>
+        <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open phone driving route</a>
+        <a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a>
       </div>
-      <p class="map-caption">Google Maps powers the route panel when an API key is configured; route buttons open Google Maps directly.</p>
+      <p class="map-caption">The in-app map uses MapLibre and OpenFreeMap with no API key. Phone-map buttons are for turn-by-turn driving.</p>
       ${renderBadgeShelf(profile.id)}
     `;
   }
@@ -1047,7 +977,10 @@
   function routePlaceForProfile(profile) {
     const candidates = data.route.routePlaces.filter((place) => place.day === selectedDayDate());
     const pool = candidates.length ? candidates : data.route.routePlaces;
-    return pool[(new Date(selectedDayDate()).getDate() + profile.name.length) % pool.length];
+    const preferred = data.profilePlacePreferences?.[profile.id] || [];
+    const exact = preferred.map((name) => pool.find((place) => place.name === name)).find(Boolean);
+    if (exact) return exact;
+    return pool.find((place) => place.profiles?.[profile.id]) || pool[0];
   }
 
   function placeCard(place, profile) {
@@ -1163,7 +1096,8 @@
   }
 
   function selectedDetailPlace() {
-    const target = decodeURIComponent(location.hash.split("/")[2] || "");
+    const parts = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
+    const target = decodeURIComponent(parts.slice(2).join("/") || "");
     return data.route.routePlaces.find((place) => place.name === target) || routePlaceForProfile(currentProfile());
   }
 
@@ -1190,7 +1124,9 @@
   }
 
   function renderTodayPage(profile, place) {
-    const feature = (data.dailyProfileFeatures[profile.id] || data.dailyProfileFeatures.momdad)[0];
+    const features = data.dailyProfileFeatures[profile.id] || data.dailyProfileFeatures.momdad;
+    const dayIndex = Math.max(0, data.days.findIndex((day) => day.date === selectedDayDate()));
+    const feature = features[dayIndex % features.length];
     return `
       <div class="profile-grid">
         <div>
@@ -1211,11 +1147,12 @@
     const simple = profile.id === "jules";
     return `
       <div class="choice-card">
-        <strong>${simple ? "Road, ferry, island" : "Road-accurate route"}</strong>
-        <p>${simple ? "First road. Then boat. Then island." : "The in-app route is powered by Google Maps when an API key is configured. Route buttons open Google Maps directly."}</p>
+        <strong>${simple ? "Road, ferry, island" : "Live route and location"}</strong>
+        <p>${simple ? "First road. Then boat. Then island. Tap Start GPS so the map can find us." : "The in-app map uses MapLibre with no key. Tap Start GPS to show the current location, distance, and percent to the next destination."}</p>
         <div class="action-row">
-          <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a>
-          <a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a>
+          <button type="button" data-start-gps="true">Start GPS</button>
+          <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open phone driving route</a>
+          <a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a>
         </div>
       </div>
       ${placeCard(place, profile)}
@@ -1447,7 +1384,7 @@
     const weatherStatus = Object.values(state.weather || {}).length ? "Cached or live Open-Meteo data available" : "Weather not fetched yet";
     return `
       <div class="source-grid">
-        <div class="choice-card"><strong>Data status</strong><p>Weather: ${weatherStatus}. GPS: ${state.gpsStatus}. Route map: Google Maps JavaScript API when configured; route links open Google Maps directly.</p></div>
+        <div class="choice-card"><strong>Data status</strong><p>Weather: ${weatherStatus}. GPS: ${state.gpsStatus}. Route map: MapLibre/OpenFreeMap in the app; phone-map links open outside the app for turn-by-turn driving.</p></div>
         ${Object.values(data.sourceLinks).map((source) => `<div class="choice-card"><strong>${source.label}</strong><p><a class="external-link" href="${source.url}" target="_blank" rel="noopener">${source.label}</a></p></div>`).join("")}
       </div>
     `;
@@ -1516,6 +1453,7 @@
       };
     });
     document.querySelectorAll("[data-weather-refresh]").forEach((button) => { button.onclick = refreshWeatherCards; });
+    document.querySelectorAll("[data-start-gps]").forEach((button) => { button.onclick = useLocation; });
   }
 
   function wireEvents() {
@@ -1551,7 +1489,7 @@
     });
     renderCountdowns();
     renderTripStatus();
-    renderGoogleMapPanel();
+    renderRouteMapPanel();
     renderRouteQuest();
     renderProfile();
   }

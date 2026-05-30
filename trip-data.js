@@ -383,7 +383,7 @@ window.TRIP_DATA = {
       { title: "Local gathering spot", type: "Island", detail: "Find where people seem to gather and what it tells you.", link: "https://www.boisblanctownship.org/", lookFor: "Store, tavern, dock, road crossing", capture: "Gathering-place note" },
       { title: "Baseball maybe", type: "Route", detail: "Look for a field, team sign, or community sports clue along the way.", link: "https://visitsouthbend.com/things-to-do/sports-recreation/", lookFor: "Field lights, team signs, ball caps", capture: "Sports clue photo" },
       { title: "Why people vacation here", type: "Island", detail: "Pick three reasons a real family would choose a quiet island.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Water, quiet, routine break, stars", capture: "Three-reason video" },
-      { title: "Best stop scorecard", type: "Travel", detail: "Score a stop: bathroom, food, speed, mood, and something interesting.", link: "https://www.google.com/maps", lookFor: "Clean, quick, useful, local", capture: "Scorecard photo" }
+      { title: "Best stop scorecard", type: "Travel", detail: "Score a stop: bathroom, food, speed, mood, and something interesting.", link: "https://maps.apple.com/?q=gas%20food%20restroom%20near%20me", lookFor: "Clean, quick, useful, local", capture: "Scorecard photo" }
     ],
     eliette: [
       { title: "Shiny rock and texture hunt", type: "Island", detail: "Find legal, leave-no-trace textures: rocks, shells, bark, signs, water sparkle.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Sparkle, pattern, color, shape", capture: "Close-up photo" },
@@ -399,7 +399,7 @@ window.TRIP_DATA = {
       { title: "Water sparkle watch", type: "Stars", detail: "At sunset or night, notice how water changes color and reflection.", link: "https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1", lookFor: "Glints, moon path, ripples", capture: "Low-light photo if safe" }
     ],
     jules: [
-      { title: "Captain stop choice", type: "Travel", detail: "Pick from two parent-approved stops and explain why your crew needs it.", link: "https://www.google.com/maps", lookFor: "Bathroom, snack, truck, sign", capture: "Captain thumbs-up photo" },
+      { title: "Captain stop choice", type: "Travel", detail: "Pick from two parent-approved stops and explain why your crew needs it.", link: "https://maps.apple.com/?q=gas%20food%20restroom%20near%20me", lookFor: "Bathroom, snack, truck, sign", capture: "Captain thumbs-up photo" },
       { title: "Truck job spotter", type: "Route", detail: "Spot three trucks and guess each one's job.", link: "https://www.fhwa.dot.gov/", lookFor: "Tanker, box truck, construction, tow", capture: "No driver photos; draw them" },
       { title: "Ferry boss question", type: "Island", detail: "Figure out why cars can ride on a boat.", link: "https://plaunttransportation.com/", lookFor: "Ramp, wheels, ropes, captain", capture: "Captain explanation video" },
       { title: "Dino brain rock", type: "Nature", detail: "Find a rock or sand pattern that looks ancient and ask how it got there.", link: "https://www.nps.gov/indu/learn/nature/index.htm", lookFor: "Layers, bumps, big stones, sand", capture: "Rock photo" },
@@ -412,10 +412,10 @@ window.TRIP_DATA = {
       { title: "Big machine reason", type: "Any Day", detail: "Find one big machine and say the reason people need it.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Truck, ferry, mower, tractor, bridge", capture: "Reason video" }
     ],
     momdad: [
-      { title: "Approve one kid win per segment", type: "Planning", detail: "Pick the child most likely to benefit from the next optional stop.", link: "https://www.google.com/maps", lookFor: "Clean restrooms, time cost, child fit", capture: "Save a note" },
+      { title: "Approve one kid win per segment", type: "Planning", detail: "Pick the child most likely to benefit from the next optional stop.", link: "https://maps.apple.com/?q=gas%20food%20restroom%20near%20me", lookFor: "Clean restrooms, time cost, child fit", capture: "Save a note" },
       { title: "Verify Plaunt schedule", type: "Ferry", detail: "Check official ferry details before relying on any cached plan.", link: "https://plaunttransportation.com/", lookFor: "Schedule, vehicle space, weather, buffer", capture: "Screenshot if needed" },
       { title: "Star grade check", type: "Night", detail: "Use Clear Dark Sky before promising a stargazing night.", link: "https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1", lookFor: "Cloud cover, transparency, darkness, smoke", capture: "Save the grade" },
-      { title: "Route stop confidence", type: "Travel", detail: "Choose stops by service density and restroom confidence first.", link: "https://www.google.com/maps", lookFor: "Recent reviews, fuel, food, clean restrooms", capture: "Favorite the stop" }
+      { title: "Route stop confidence", type: "Travel", detail: "Choose stops by service density and restroom confidence first.", link: "https://maps.apple.com/?q=gas%20food%20restroom%20near%20me", lookFor: "Recent reviews, fuel, food, clean restrooms", capture: "Favorite the stop" }
     ]
   },
   eventsFallback: [
@@ -516,15 +516,51 @@ window.TRIP_DATA = {
   ]
 };
 
-window.TRIP_DATA.googleMaps = {
-  apiKey: "__GOOGLE_MAPS_API_KEY__",
-  mapId: "__GOOGLE_MAP_ID__",
-  embedApiKey: "",
-  embedHelp: "Add a restricted Google Maps JavaScript API key here to show the live Google map. Without a key, the app uses direct Google Maps route links.",
-  outboundUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=Bois%20Blanc%20Island%2C%20MI&waypoints=South%20Bend%2C%20IN%7CPlaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",
-  dayOneUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=South%20Bend%2C%20IN&travelmode=driving",
-  ferryDayUrl: "https://www.google.com/maps/dir/?api=1&origin=South%20Bend%2C%20IN&destination=Plaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",
-  returnUrl: "https://www.google.com/maps/dir/?api=1&origin=Bois%20Blanc%20Island%2C%20MI&destination=Olathe%2C%20KS&travelmode=driving"
+window.TRIP_DATA.mapLinks = {
+  styleUrl: "https://tiles.openfreemap.org/styles/liberty",
+  outboundUrl: "https://maps.apple.com/?saddr=1924%20E%20155th%20St%2C%20Olathe%2C%20KS&daddr=Bois%20Blanc%20Island%2C%20MI",
+  dayOneUrl: "https://maps.apple.com/?saddr=1924%20E%20155th%20St%2C%20Olathe%2C%20KS&daddr=South%20Bend%2C%20IN",
+  ferryDayUrl: "https://maps.apple.com/?saddr=South%20Bend%2C%20IN&daddr=Plaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI",
+  returnUrl: "https://maps.apple.com/?saddr=Bois%20Blanc%20Island%2C%20MI&daddr=1924%20E%20155th%20St%2C%20Olathe%2C%20KS"
+};
+
+window.TRIP_DATA.profilePlacePreferences = {
+  elsie: [
+    "Studebaker National Museum",
+    "Mackinac Bridge / Straits of Mackinac",
+    "Plaunt Transportation Ferry",
+    "Brown v. Board of Education National Historical Park"
+  ],
+  katrina: [
+    "Brown v. Board of Education National Historical Park",
+    "Gateway Arch",
+    "Notre Dame",
+    "Mackinac Bridge / Straits of Mackinac"
+  ],
+  emma: [
+    "Notre Dame",
+    "Studebaker National Museum",
+    "Plaunt Transportation Ferry",
+    "Indiana Dunes National Park"
+  ],
+  eliette: [
+    "Gateway Arch",
+    "Notre Dame",
+    "Studebaker National Museum",
+    "Plaunt Transportation Ferry"
+  ],
+  jules: [
+    "Studebaker National Museum",
+    "Plaunt Transportation Ferry",
+    "Mackinac Bridge / Straits of Mackinac",
+    "Indiana Dunes National Park"
+  ],
+  momdad: [
+    "Notre Dame",
+    "Plaunt Transportation Ferry",
+    "Brown v. Board of Education National Historical Park",
+    "Gateway Arch"
+  ]
 };
 
 window.TRIP_DATA.weatherLocations = [

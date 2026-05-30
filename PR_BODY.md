@@ -1,12 +1,12 @@
 ## Summary
 
-Completes a major static-app optimization pass for the Elskatemm Travel Companion. The app now uses profile dashboards, hash-routed focused pages, road-accurate Google Maps route links, Open-Meteo weather, official source links, clearer ferry handling, Trip Shortlist, Family Vote, capture/delete controls, and a data-driven badge system.
+Completes a major static-app optimization pass for the Elskatemm Travel Companion. The app now uses profile dashboards, hash-routed focused pages, a MapLibre/OpenFreeMap route map with live GPS, Open-Meteo weather, official source links, clearer ferry handling, Trip Shortlist, Family Vote, capture/delete controls, and a data-driven badge system.
 
 ## Sub-Agent Work Breakdown
 
 1. Route/GPS Agent
-- Added Google Maps route links for outbound, day-one, ferry-day, and return.
-- Replaced the old context map with Google route links and an optional Google Maps Embed panel.
+- Added phone-map route links for outbound, day-one, ferry-day, and return.
+- Replaced the old map and Google setup with a no-key MapLibre/OpenFreeMap route panel.
 - Improved GPS status, accuracy, destination distance, and Mom/Dad detail.
 
 2. Data/Source-Link Agent
@@ -35,7 +35,7 @@ Completes a major static-app optimization pass for the Elskatemm Travel Companio
 7. Cloudflare/Deployment Agent
 - Preserved flat static app.
 - Kept Wrangler deployment through `dist`.
-- Updated service worker cache to `elskatemm-trip-v7`.
+- Updated service worker cache to `elskatemm-trip-v9`.
 
 8. QA/Performance Agent
 - Kept lazy images.
@@ -75,7 +75,7 @@ The build creates `dist/` with eight app assets. Wrangler deploys `./dist`.
 
 None required.
 
-Google Maps JavaScript API support is wired in with the dynamic import loader pattern. Current route links still work without keys.
+No Google Maps key is required. The in-app route map uses MapLibre and OpenFreeMap; phone-map links are only for turn-by-turn driving outside the app.
 
 ## Known Limitations
 
@@ -106,9 +106,9 @@ Google Maps JavaScript API support is wired in with the dynamic import loader pa
 - [ ] Weather differs by profile.
 - [ ] Stars differ by profile.
 - [ ] Ferry details are simplified for child views and complete for Mom/Dad.
-- [ ] Google Maps route link works.
+- [ ] Phone driving route link works.
 - [ ] Return route link works.
-- [ ] Google route fallback opens the correct road-accurate map.
+- [ ] MapLibre/OpenFreeMap route panel loads without a Google key.
 - [ ] GPS permission denied state works.
 - [ ] GPS active state works.
 - [ ] GPS stop tracking works.

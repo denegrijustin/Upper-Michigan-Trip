@@ -6,7 +6,7 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 
 - Hash-routed profile dashboards for Elsie, Katrina, Emma Grace, Eliette, and Mom/Dad
 - Simple scroll-based Jules flow with short captain-style cards
-- Google Maps JavaScript API route map using the same dynamic import pattern as `googlemaps/js-api-loader`
+- MapLibre live route map using OpenFreeMap tiles, with no Google API key needed
 - Self-contained illustrated route images, so key content visuals still work offline
 - Browser GPS controls with off/requesting/active/error states, accuracy, last updated, and Mom/Dad detail
 - Open-Meteo weather with no API key, 30-minute local cache, GPS-following location, 12-hour hourly outlook, and imperial units
@@ -16,7 +16,7 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 - Family Vote choices: Yes, Maybe, Skip
 - Captured photo/video trip story with delete buttons and local size safeguards
 - Data-driven badge catalog with 60 starter badges, including 30+ route/place/milestone badges
-- Service worker cache bumped to `elskatemm-trip-v8`
+- Service worker cache bumped to `elskatemm-trip-v9`
 - Wrangler deployment using a generated `dist` folder
 
 ## File Structure
@@ -57,12 +57,6 @@ Working settings:
 
 `wrangler.jsonc` uses the Cloudflare Worker name `michigan-trip`.
 
-## Google Maps API Key
-
-Set `GOOGLE_MAPS_API_KEY` as a Cloudflare build environment variable. The build command injects it into `dist/trip-data.js` without committing the key to GitHub.
-
-Optional: set `GOOGLE_MAP_ID` if you create a custom Google Map ID.
-
 ## Weather
 
 Primary weather source: Open-Meteo.
@@ -81,7 +75,7 @@ Future optional enhancement: National Weather Service alerts.
 
 ## Maps And GPS
 
-Google Maps links provide road-accurate directions. If you add a restricted Google Maps JavaScript API key in `trip-data.js`, the app renders a live Google map panel in place using Google's dynamic library import loader pattern.
+The in-app map uses MapLibre and OpenFreeMap, so there is no map API key or billing setup. The map draws the planned trip route and adds the current GPS location when permission is enabled. Phone-map links are provided for turn-by-turn driving outside the app.
 
 GPS uses browser geolocation. If permission is denied, the app stays useful with route-phase context and source links.
 
@@ -118,8 +112,8 @@ Captured media is stored on this device with size limits. The app includes delet
 
 ## Known Limitations
 
-- No private API keys are committed.
-- Google Maps uses outbound links unless a Maps JavaScript API key is added.
+- No private API keys are required or committed.
+- The in-app map is a planned route context map, not a turn-by-turn navigation engine.
 - Ferry schedules are not embedded live; verify on the official Plaunt site.
 - Dark-sky guidance links to Clear Dark Sky and uses Open-Meteo cloud cover as the live-friendly support signal.
 - Captured media uses local browser storage safeguards rather than a cloud media backend.
@@ -152,9 +146,9 @@ Profiles/navigation:
 
 Route/GPS/weather:
 
-- [ ] Google Maps route link works.
+- [ ] Phone driving route link works.
 - [ ] Return route link works.
-- [ ] Google route fallback opens the correct road-accurate map.
+- [ ] MapLibre route panel loads without a Google key.
 - [ ] GPS denied, active, and stop states work.
 - [ ] Weather fetch from Open-Meteo works.
 - [ ] Weather cached fallback is labeled.

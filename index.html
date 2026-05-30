@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#1f4f3a">
     <title>Elskatemm Travel Companion</title>
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.css">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -71,11 +72,11 @@
         <section class="map-and-panel">
           <div class="map-panel">
             <div class="map-toolbar">
-              <strong>Google Route Map</strong>
-              <span id="mapMode">Road-accurate route via Google Maps</span>
+              <strong>Live Route Map</strong>
+              <span id="mapMode">Open map with live GPS</span>
             </div>
-            <div id="map" class="route-map google-map-panel" aria-label="Google Maps route panel">
-              <div id="googleMapPanel" class="google-map-panel"></div>
+            <div id="map" class="route-map maplibre-panel" aria-label="Live route map">
+              <div id="routeMapPanel" class="maplibre-panel"></div>
             </div>
             <div id="routeQuest" class="route-quest"></div>
           </div>
@@ -130,6 +131,7 @@
     </div>
     <input id="captureInput" type="file" accept="image/*,video/*" capture="environment" multiple hidden>
     <script src="/trip-data.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

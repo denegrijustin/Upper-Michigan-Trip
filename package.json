@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "mkdir -p dist && cp index.html styles.css app.js trip-data.js manifest.json sw.js icon.svg README.md dist/ && node -e \"const fs=require('fs');const p='dist/trip-data.js';let s=fs.readFileSync(p,'utf8');const clean=v=>String(v||'').replace(/[^A-Za-z0-9_\\-.]/g,'');s=s.replace('__GOOGLE_MAPS_API_KEY__',clean(process.env.GOOGLE_MAPS_API_KEY));s=s.replace('__GOOGLE_MAP_ID__',clean(process.env.GOOGLE_MAP_ID));fs.writeFileSync(p,s);\"",
+    "build": "mkdir -p dist && cp index.html styles.css app.js trip-data.js manifest.json sw.js icon.svg README.md dist/",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
