@@ -1,13 +1,29 @@
-# Upper Michigan Trip upload package
+# Upper Michigan Trip mobile-first v2 upload package
 
-Upload these files to the root of the GitHub repo, replacing existing files where they already exist:
+Upload these files to the root of the `denegrijustin/Upper-Michigan-Trip` repo.
+
+## Files
+
+1. `index.html`
+2. `sw.js`
+3. `mobile-first-fix.css`
+
+## What this version fixes
+
+- Keeps the page itself from sliding horizontally on phones.
+- Constrains horizontal badge/tile shelves so only the shelf scrolls, not the full page.
+- Improves weather tab readability with larger text, better spacing, and single-column mobile presentation.
+- Keeps dashboard/card layouts single-column by default and progressively enhances at larger widths.
+- Updates service worker cache version to `elskatemm-trip-v12`.
+
+## Upload order
 
 1. `mobile-first-fix.css`
 2. `index.html`
 3. `sw.js`
 
-Important: upload `sw.js` last so the service worker cache update happens after the new CSS file is present.
+Upload `sw.js` last so the cache update happens after the CSS file exists.
 
-This package links `mobile-first-fix.css` after `styles.css`, updates the service worker cache to `elskatemm-trip-v11`, and includes the new CSS in both the precache list and network-first list.
+## After upload
 
-Note: `trip-data.js` still needs a separate data-specific pass if you want to replace the existing full data file. The current repo already includes Day 2 map stops and route places for South Bend → Grand Rapids → Grayling → Cheboygan → Bois Blanc.
+Let Cloudflare redeploy, then test on iPhone. If the old UI persists, open in a private tab or clear site data because the PWA service worker may cache old assets.
