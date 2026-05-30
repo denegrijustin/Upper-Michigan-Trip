@@ -35,7 +35,7 @@ Completes a major static-app optimization pass for the Elskatemm Travel Companio
 7. Cloudflare/Deployment Agent
 - Preserved flat static app.
 - Kept Wrangler deployment through `dist`.
-- Updated service worker cache to `elskatemm-trip-v3`.
+- Updated service worker cache to `elskatemm-trip-v6`.
 
 8. QA/Performance Agent
 - Kept lazy images.
@@ -75,7 +75,7 @@ The build creates `dist/` with eight app assets. Wrangler deploys `./dist`.
 
 None required.
 
-Optional future Google Maps Embed API support can be added later, but current route links work without keys.
+Google Maps JavaScript API support is wired in with the dynamic import loader pattern. Current route links still work without keys.
 
 ## Known Limitations
 

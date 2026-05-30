@@ -6,6 +6,7 @@
   let activePage = "home";
   let watchId = null;
   let lastGpsRender = 0;
+  let googleMapsOptionsSet = false;
 
   const phaseLabels = {
     pretrip: "Pre-trip",
@@ -593,27 +594,183 @@
     render();
   }
 
-  function googleEmbedSrc() {
-    const key = data.googleMaps.embedApiKey;
-    if (!key) return "";
-    return `https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(key)}&origin=Olathe%2C%20KS&destination=Bois%20Blanc%20Island%2C%20MI&waypoints=South%20Bend%2C%20IN%7CPlaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&mode=driving`;
+  function googleMapsApiKey() {
+    return data.googleMaps.apiKey || data.googleMaps.embedApiKey || "";
+  }
+
+  function installGoogleMapsImportLibrary(options) {
+    if (window.google?.maps?.importLibrary || googleMapsOptionsSet) return;
+    googleMapsOptionsSet = true;
+    ((g) => {
+      let h;
+      let a;
+      let k;
+      const p = "The Google Maps JavaScript API";
+      const c = "google";
+      const l = "importLibrary";
+      const q = "__ib__";
+      const m = document;
+      let b = window;
+      b = b[c] || (b[c] = {});
+      const d = b.maps || (b.maps = {});
+      const r = new Set();
+      const e = new URLSearchParams();
+      const u = () => h || (h = new Promise(async (f, n) => {
+        await (a = m.createElement("script"));
+        e.set("libraries", [...r] + "");
+        for (k in g) e.set(k.replace(/[A-Z]/g, (t) => `_${t[0].toLowerCase()}`), g[k]);
+        e.set("callback", `${c}.maps.${q}`);
+        a.src = `https://maps.${c}apis.com/maps/api/js?${e}`;
+        d[q] = f;
+        a.onerror = () => {
+          h = n(Error(`${p} could not load.`));
+        };
+        a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+        m.head.append(a);
+      }));
+      d[l] ? console.warn(`${p} only loads once. Ignoring:`, g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
+    })(options);
+  }
+
+  async function importGoogleMapsLibrary(name) {
+    const key = googleMapsApiKey();
+    if (!key) throw new Error("Google Maps JavaScript API key missing");
+    installGoogleMapsImportLibrary({
+      key,
+      v: "weekly",
+      region: "US",
+      authReferrerPolicy: "origin",
+      ...(data.googleMaps.mapId ? { mapIds: [data.googleMaps.mapId] } : {})
+    });
+    return google.maps.importLibrary(name);
+  }
+
+  function googleRoutePlan() {
+    const stops = data.route.coordinates;
+    if (state.phase === "return" || selectedDayDate() === "2026-08-08") {
+      return {
+        origin: { label: "Cheboygan", location: { lat: stops.cheboygan.lat, lng: stops.cheboygan.lon } },
+        destination: { label: "Olathe", location: { lat: stops.start.lat, lng: stops.start.lon } },
+        waypoints: [
+          { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } }
+        ]
+      };
+    }
+    if (selectedDayDate() === "2026-07-31") {
+      return {
+        origin: { label: "Olathe", location: { lat: stops.start.lat, lng: stops.start.lon } },
+        destination: { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } },
+        waypoints: [
+          { label: "Columbia", location: { lat: stops.columbia.lat, lng: stops.columbia.lon } },
+          { label: "St. Louis", location: { lat: stops.stLouis.lat, lng: stops.stLouis.lon } },
+          { label: "Indianapolis", location: { lat: stops.indianapolis.lat, lng: stops.indianapolis.lon } }
+        ]
+      };
+    }
+    if (selectedDayDate() === "2026-08-01") {
+      return {
+        origin: { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } },
+        destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lng: stops.cheboygan.lon } },
+        waypoints: [
+          { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lng: stops.grandRapids.lon } },
+          { label: "Grayling", location: { lat: stops.grayling.lat, lng: stops.grayling.lon } }
+        ]
+      };
+    }
+    return {
+      origin: { label: "Olathe", location: { lat: stops.start.lat, lng: stops.start.lon } },
+      destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lng: stops.cheboygan.lon } },
+      waypoints: [
+        { label: "South Bend", location: { lat: stops.southBend.lat, lng: stops.southBend.lon } },
+        { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lng: stops.grandRapids.lon } }
+      ]
+    };
+  }
+
+  async function drawGoogleMap(container) {
+    const [{ Map }, routesLibrary] = await Promise.all([
+      importGoogleMapsLibrary("maps"),
+      importGoogleMapsLibrary("routes")
+    ]);
+    const plan = googleRoutePlan();
+    const mapEl = container.querySelector("#googleMapCanvas");
+    const map = new Map(mapEl, {
+      center: plan.origin.location,
+      zoom: 6,
+      mapId: data.googleMaps.mapId || undefined,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      streetViewControl: false
+    });
+    const DirectionsService = routesLibrary.DirectionsService || google.maps.DirectionsService;
+    const DirectionsRenderer = routesLibrary.DirectionsRenderer || google.maps.DirectionsRenderer;
+    const directionsService = new DirectionsService();
+    const directionsRenderer = new DirectionsRenderer({
+      map,
+      suppressMarkers: false,
+      polylineOptions: { strokeColor: "#1f78a4", strokeOpacity: 0.92, strokeWeight: 6 }
+    });
+    directionsService.route({
+      origin: plan.origin.location,
+      destination: plan.destination.location,
+      waypoints: plan.waypoints.map((stop) => ({ location: stop.location, stopover: true })),
+      travelMode: google.maps.TravelMode.DRIVING,
+      optimizeWaypoints: false
+    }, (result, status) => {
+      if (status === "OK" && result) {
+        directionsRenderer.setDirections(result);
+        return;
+      }
+      const bounds = new google.maps.LatLngBounds();
+      [plan.origin, ...plan.waypoints, plan.destination].forEach((stop) => {
+        bounds.extend(stop.location);
+        new google.maps.Marker({ map, position: stop.location, title: stop.label });
+      });
+      new google.maps.Polyline({
+        map,
+        path: [plan.origin, ...plan.waypoints, plan.destination].map((stop) => stop.location),
+        strokeColor: "#1f78a4",
+        strokeOpacity: 0.92,
+        strokeWeight: 5
+      });
+      map.fitBounds(bounds);
+    });
+    if (state.lastPosition) {
+      new google.maps.Marker({
+        map,
+        position: { lat: state.lastPosition.lat, lng: state.lastPosition.lon },
+        title: "Current GPS location",
+        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+      });
+    }
   }
 
   function renderGoogleMapPanel() {
-    const container = byId("googleMapEmbed");
+    const container = byId("googleMapPanel");
     if (!container) return;
-    const embed = googleEmbedSrc();
-    byId("mapMode").textContent = embed ? "Google Maps Embed API" : "Google Maps route links";
-    container.innerHTML = embed ? `
-      <iframe title="Google Maps road route from Olathe to Bois Blanc Island" src="${embed}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-    ` : `
+    const key = googleMapsApiKey();
+    byId("mapMode").textContent = key ? "Google Maps JavaScript API" : "Google Maps route links";
+    if (!key) {
+      container.innerHTML = `
       <div class="google-map-fallback">
-        <strong>Road-accurate route uses Google Maps</strong>
-        <p>Add a Google Maps Embed API key in <code>trip-data.js</code> at <code>googleMaps.embedApiKey</code> to show the map in this panel. Until then, every route button opens Google Maps directly.</p>
+        <strong>Google Maps is ready for an API key</strong>
+        <p>Add a restricted Google Maps JavaScript API key in <code>trip-data.js</code> at <code>googleMaps.apiKey</code>. Until then, the route buttons open Google Maps directly.</p>
         <div class="route-steps"><span>Olathe</span><span>South Bend</span><span>Cheboygan ferry</span><span>Bois Blanc Island</span></div>
         <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a><a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
       </div>
     `;
+      return;
+    }
+    container.innerHTML = `<div id="googleMapCanvas" class="google-map-canvas" role="img" aria-label="Live Google route map"><div class="loading-note">Loading Google Maps route...</div></div>`;
+    drawGoogleMap(container).catch(() => {
+      container.innerHTML = `
+        <div class="google-map-fallback">
+          <strong>Google Maps could not load</strong>
+          <p>Check that the key allows the Maps JavaScript API and this site domain. The route buttons still open Google Maps.</p>
+          <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a><a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
+        </div>
+      `;
+    });
   }
 
   function renderDaySelect() {
@@ -739,7 +896,7 @@
         <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a>
         <a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a>
       </div>
-      <p class="map-caption">Google Maps provides the road-accurate route. If no Embed API key is configured, use the route buttons.</p>
+      <p class="map-caption">Google Maps powers the route panel when an API key is configured; route buttons open Google Maps directly.</p>
       ${renderBadgeShelf(profile.id)}
     `;
   }
@@ -943,7 +1100,7 @@
     return `
       <div class="choice-card">
         <strong>${simple ? "Road, ferry, island" : "Road-accurate route"}</strong>
-        <p>${simple ? "First road. Then boat. Then island." : "The in-app map is approximate. Use Google Maps for road-accurate driving directions."}</p>
+        <p>${simple ? "First road. Then boat. Then island." : "The in-app route is powered by Google Maps when an API key is configured. Route buttons open Google Maps directly."}</p>
         <div class="action-row">
           <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a>
           <a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a>
@@ -1175,7 +1332,7 @@
     const weatherStatus = Object.values(state.weather || {}).length ? "Cached or live Open-Meteo data available" : "Weather not fetched yet";
     return `
       <div class="source-grid">
-        <div class="choice-card"><strong>Data status</strong><p>Weather: ${weatherStatus}. GPS: ${state.gpsStatus}. Route map: approximate context; Google Maps links are road-accurate.</p></div>
+        <div class="choice-card"><strong>Data status</strong><p>Weather: ${weatherStatus}. GPS: ${state.gpsStatus}. Route map: Google Maps JavaScript API when configured; route links open Google Maps directly.</p></div>
         ${Object.values(data.sourceLinks).map((source) => `<div class="choice-card"><strong>${source.label}</strong><p><a class="external-link" href="${source.url}" target="_blank" rel="noopener">${source.label}</a></p></div>`).join("")}
       </div>
     `;
