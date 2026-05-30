@@ -517,8 +517,8 @@ window.TRIP_DATA = {
 };
 
 window.TRIP_DATA.googleMaps = {
-  apiKey: "",
-  mapId: "",
+  apiKey: "__GOOGLE_MAPS_API_KEY__",
+  mapId: "__GOOGLE_MAP_ID__",
   embedApiKey: "",
   embedHelp: "Add a restricted Google Maps JavaScript API key here to show the live Google map. Without a key, the app uses direct Google Maps route links.",
   outboundUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=Bois%20Blanc%20Island%2C%20MI&waypoints=South%20Bend%2C%20IN%7CPlaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",

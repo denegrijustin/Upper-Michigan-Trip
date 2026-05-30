@@ -704,7 +704,9 @@
   }
 
   function googleMapsApiKey() {
-    return data.googleMaps.apiKey || data.googleMaps.embedApiKey || "";
+    const key = String(data.googleMaps.apiKey || data.googleMaps.embedApiKey || "").trim();
+    if (!key || key.includes("__GOOGLE_MAPS") || key.toLowerCase().includes("your_google")) return "";
+    return key;
   }
 
   function installGoogleMapsImportLibrary(options) {
@@ -945,7 +947,8 @@
     byId("percentLeft").textContent = `${Math.round(100 - progressForPhase())}%`;
     byId("phaseLabel").textContent = phaseLabels[state.phase] || "Pre-trip";
     byId("heroTitle").textContent = state.phase === "return" ? "Homeward Bound" : state.phase === "island" ? selectedDay().title : "Bois Blanc Bound";
-    byId("heroText").textContent = selectedDay().outlook;
+    byId("heroText").textContent = "";
+    byId("heroText").hidden = true;
     byId("primaryProgressLabel").textContent = state.phase === "pretrip" ? "Countdown to launch" : "Whole trip progress";
     byId("primaryProgressText").textContent = `${Math.round(wholeTrip)}%`;
     byId("primaryProgressBar").style.width = `${wholeTrip}%`;

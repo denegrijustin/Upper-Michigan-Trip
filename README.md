@@ -16,7 +16,7 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 - Family Vote choices: Yes, Maybe, Skip
 - Captured photo/video trip story with delete buttons and local size safeguards
 - Data-driven badge catalog with 60 starter badges, including 30+ route/place/milestone badges
-- Service worker cache bumped to `elskatemm-trip-v7`
+- Service worker cache bumped to `elskatemm-trip-v8`
 - Wrangler deployment using a generated `dist` folder
 
 ## File Structure
@@ -56,6 +56,12 @@ Working settings:
 - Wrangler assets directory: `./dist`
 
 `wrangler.jsonc` uses the Cloudflare Worker name `michigan-trip`.
+
+## Google Maps API Key
+
+Set `GOOGLE_MAPS_API_KEY` as a Cloudflare build environment variable. The build command injects it into `dist/trip-data.js` without committing the key to GitHub.
+
+Optional: set `GOOGLE_MAP_ID` if you create a custom Google Map ID.
 
 ## Weather
 
@@ -174,4 +180,3 @@ Sources:
 - [ ] Ferry opens the official Plaunt site.
 - [ ] Major factual cards include official source links.
 - [ ] Source/data status is visible for live and semi-live features.
-Deployment refresh v7
