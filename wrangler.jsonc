@@ -1,0 +1,17 @@
+{
+  "name": "upper-michigan-trip",
+  "compatibility_date": "2026-05-30",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "single-page-application",
+    "exclude": [
+      "outputs/**",
+      "*.zip",
+      ".git/**",
+      ".github/**",
+      "node_modules/**",
+      ".wrangler/**",
+      ".DS_Store"
+    ]
+  }
+}
