@@ -32,7 +32,6 @@
         </div>
         <div class="top-actions">
           <button id="activeTraveler" class="traveler-chip" type="button">Choose traveler</button>
-          <button id="installPack" class="primary-action" type="button">Download Trip Pack</button>
         </div>
       </header>
 
@@ -70,15 +69,6 @@
           </article>
         </section>
 
-        <section class="controls-strip" aria-label="Trip controls">
-          <button id="useLocation" type="button">Start Live GPS</button>
-          <button id="stopLocation" type="button">Stop GPS</button>
-          <button id="startTrip" type="button">Start Trip / We Left</button>
-          <button id="markArrived" type="button">Arrived on Island</button>
-          <button id="startReturn" type="button">Start Return</button>
-          <button id="completeTrip" type="button">Trip Complete</button>
-        </section>
-
         <section class="map-and-panel">
           <div class="map-panel">
             <div class="map-toolbar">
@@ -89,6 +79,7 @@
               <div id="leafletMap" class="leaflet-map" aria-label="Live OpenStreetMap route"></div>
               <svg id="routeSvg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
+            <div id="routeQuest" class="route-quest"></div>
           </div>
 
           <aside class="status-panel">
@@ -97,17 +88,23 @@
             <div id="kidTravelUpdate" class="kid-travel-update"></div>
             <div id="actionStatus" class="action-status">No action yet.</div>
             <dl>
-              <div><dt>Since last stop</dt><dd id="sinceStop">Not started</dd></div>
               <div><dt>Location</dt><dd id="gpsStatus">Not requested</dd></div>
               <div><dt>Destination</dt><dd id="destinationStatus">Not set</dd></div>
               <div><dt>Tracking</dt><dd id="trackingStatus">Off</dd></div>
-              <div><dt>Stop rhythm</dt><dd>Plan every 4-5 hours</dd></div>
-              <div><dt>Trip pack</dt><dd id="packStatus">Not downloaded</dd></div>
             </dl>
             <div class="quick-actions">
               <button data-need="Bathroom now" type="button">Bathroom now</button>
               <button data-need="Gas now" type="button">Gas now</button>
               <button data-need="Food now" type="button">Food now</button>
+            </div>
+            <div id="needResults" class="need-results"></div>
+            <div class="trip-controls" aria-label="Trip controls">
+              <button id="useLocation" type="button">Start GPS</button>
+              <button id="stopLocation" type="button">Stop GPS</button>
+              <button id="startTrip" type="button">We Left</button>
+              <button id="markArrived" type="button">On Island</button>
+              <button id="startReturn" type="button">Return</button>
+              <button id="completeTrip" type="button">Complete</button>
             </div>
           </aside>
         </section>
@@ -129,7 +126,7 @@
           <article class="tool-card" id="starsCard"></article>
           <article class="tool-card" id="adventureCard"></article>
           <article class="tool-card" id="eventsCard"></article>
-          <article class="tool-card" id="journalCard"></article>
+          <article class="tool-card" id="summaryCard"></article>
         </section>
       </main>
 
@@ -141,6 +138,7 @@
         <a href="#adventureCard">Island</a>
       </nav>
     </div>
+    <input id="captureInput" type="file" accept="image/*,video/*" capture="environment" multiple hidden>
     <script src="/trip-data.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/app.js"></script>

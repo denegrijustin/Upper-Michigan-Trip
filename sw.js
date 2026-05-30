@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v2";
+const CACHE_NAME = "elskatemm-trip-v2-1";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -23,6 +23,20 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  const networkFirst = ["/", "/index.html", "/styles.css", "/app.js", "/trip-data.js", "/sw.js"].includes(url.pathname);
+  if (networkFirst) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
+    );
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

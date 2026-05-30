@@ -10,7 +10,7 @@ window.TRIP_DATA = {
     totalReturnMiles: 1065,
     finalPublicLabel: "Bois Blanc Island home base",
     coordinates: {
-      start: { lat: 38.8814, lon: -94.8191 },
+      start: { lat: 38.8562, lon: -94.7878 },
       columbia: { lat: 38.9517, lon: -92.3341 },
       stLouis: { lat: 38.6270, lon: -90.1994 },
       indianapolis: { lat: 39.7684, lon: -86.1581 },
@@ -21,13 +21,13 @@ window.TRIP_DATA = {
       islandApprox: { lat: 45.7465, lon: -84.4948 }
     },
     destinationTargets: {
-      southBend: { label: "South Bend dinner stop", lat: 41.6764, lon: -86.2520, plannedMiles: 575 },
+      southBend: { label: "South Bend dinner stop", lat: 41.6764, lon: -86.2520, plannedMiles: 585, plannedHours: 9 },
       cheboygan: { label: "Plaunt ferry in Cheboygan", lat: 45.6469, lon: -84.4745, plannedMiles: 460 },
       island: { label: "Bois Blanc Island home base", lat: 45.7465, lon: -84.4948, plannedMiles: 1065 },
       home: { label: "home in Olathe", lat: 38.8814, lon: -94.8191, plannedMiles: 1065 }
     },
     mapStops: [
-      { id: "olathe", label: "Olathe", lat: 38.8814, lon: -94.8191, type: "start" },
+      { id: "olathe", label: "Olathe", lat: 38.8562, lon: -94.7878, type: "start" },
       { id: "columbia", label: "Columbia", lat: 38.9517, lon: -92.3341, type: "route" },
       { id: "st-louis", label: "St. Louis", lat: 38.6270, lon: -90.1994, type: "route" },
       { id: "indianapolis", label: "Indianapolis", lat: 39.7684, lon: -86.1581, type: "route" },
@@ -42,6 +42,9 @@ window.TRIP_DATA = {
         name: "Brown v. Board of Education National Historical Park",
         place: "Topeka, Kansas",
         day: "2026-07-31",
+        milesFromStart: 63,
+        image: "https://www.nps.gov/common/uploads/cropped_image/primary/1F543FE8-9A95-59BC-26528737C31A8748.jpg",
+        learnMore: "https://www.nps.gov/brvb/planyourvisit/index.htm",
         why: "A real civil-rights landmark about school segregation and the Supreme Court decision that changed American education.",
         profiles: {
           elsie: "Teacher lens: this is about why schools should be fair for children. Think about how you would explain fairness to kindergarteners.",
@@ -56,6 +59,9 @@ window.TRIP_DATA = {
         name: "Gateway Arch",
         place: "St. Louis, Missouri",
         day: "2026-07-31",
+        milesFromStart: 260,
+        image: "https://www.nps.gov/common/uploads/cropped_image/primary/3C7F2389-1DD8-B71B-0B89B5A435368B0E.jpg",
+        learnMore: "https://www.nps.gov/jeff/",
         why: "A 630-foot monument on the Mississippi River tied to westward expansion and river travel.",
         profiles: {
           elsie: "Suspense-light angle: giant metal arch, river crossings, and old travel stories make this feel dramatic without being scary.",
@@ -70,6 +76,9 @@ window.TRIP_DATA = {
         name: "Notre Dame",
         place: "South Bend, Indiana",
         day: "2026-07-31",
+        milesFromStart: 585,
+        image: "https://www.nd.edu/assets/images/about/history/1200/sorin-arrives-1200.jpg",
+        learnMore: "https://www.nd.edu/about/history/",
         why: "A famous university town stop with campus, sports history, architecture, and dinner nearby.",
         profiles: {
           elsie: "Look for campus details that feel like a story setting: old buildings, symbols, and quiet paths.",
@@ -84,6 +93,9 @@ window.TRIP_DATA = {
         name: "Studebaker National Museum",
         place: "South Bend, Indiana",
         day: "2026-07-31",
+        milesFromStart: 585,
+        image: "https://studebakermuseum.org/wp-content/uploads/2020/08/SNM-Exterior.jpg",
+        learnMore: "https://studebakermuseum.org/",
         why: "A museum about vehicles and the Studebaker company, from wagons to cars.",
         profiles: {
           elsie: "Cause-and-effect: wagons became cars because people needed better ways to move families and goods.",
@@ -98,6 +110,9 @@ window.TRIP_DATA = {
         name: "Indiana Dunes National Park",
         place: "Lake Michigan shoreline",
         day: "2026-08-01",
+        milesFromStart: 655,
+        image: "https://www.nps.gov/common/uploads/cropped_image/primary/4FF4684F-1DD8-B71B-0B46D743E2BEE8C5.jpg",
+        learnMore: "https://www.nps.gov/indu/planyourvisit/things2do.htm",
         why: "A National Park on Lake Michigan with dunes, beaches, wetlands, and biodiversity.",
         profiles: {
           elsie: "Animal habitat lens: dunes, wetlands, birds, and small creatures all use different layers of the shoreline.",
@@ -112,6 +127,9 @@ window.TRIP_DATA = {
         name: "Mackinac Bridge / Straits of Mackinac",
         place: "Northern Michigan",
         day: "2026-08-01",
+        milesFromStart: 1000,
+        image: "https://www.mackinacbridge.org/wp-content/uploads/2020/04/MackinacBridge.jpg",
+        learnMore: "https://www.mackinacbridge.org/history/",
         why: "The bridge connects Michigan’s peninsulas across the Straits, where Lakes Michigan and Huron meet.",
         profiles: {
           elsie: "Suspense-light engineering: huge bridge, deep water, wind, and stories of crossing the Straits.",
@@ -126,6 +144,9 @@ window.TRIP_DATA = {
         name: "Plaunt Transportation Ferry",
         place: "Cheboygan to Bois Blanc Island",
         day: "2026-08-01",
+        milesFromStart: 1035,
+        image: "https://www.boisblanctownship.org/wp-content/uploads/2022/02/transportation.jpg",
+        learnMore: "https://plaunttransportation.com/",
         why: "The ferry is the practical link between mainland Cheboygan and Bois Blanc Island.",
         profiles: {
           elsie: "Observation only: boats, gulls, waves, and how island life depends on water. Adults handle timing.",
@@ -144,12 +165,15 @@ window.TRIP_DATA = {
       { id: "island", name: "Bois Blanc Island", milesFromStart: 1065, type: "arrival" }
     ],
     restStops: [
-      { date: "2026-07-31", name: "Mid-Missouri travel center window", segment: "Olathe to Columbia / St. Louis corridor", timing: "3.5-4.5 hours after departure", confidence: "High", note: "Bathroom, gas, stretch, and snack stop before the long Illinois/Indiana push." },
-      { date: "2026-07-31", name: "Light lunch window", segment: "Missouri or Illinois, on route", timing: "Late morning to early afternoon", confidence: "Medium", note: "Keep lunch lighter so dinner in South Bend still feels worth it." },
-      { date: "2026-07-31", name: "Dinner target", segment: "South Bend, Indiana", timing: "Evening July 31", confidence: "Goal", note: "Primary day-one food target. Do not replace with a late heavy stop unless needed." },
-      { date: "2026-08-01", name: "Northern Michigan top-off", segment: "Grand Rapids / Grayling / Cheboygan corridor", timing: "Before reaching Plaunt Transportation", confidence: "High", note: "Gas, restroom, snacks, and ferry buffer before boarding." },
-      { date: "2026-08-08", name: "Return first mainland reset", segment: "Cheboygan after ferry", timing: "Immediately after returning to the mainland", confidence: "High", note: "Bathroom, fuel, food, and route choice before the long drive home." },
-      { date: "2026-08-08", name: "Return 4-hour window", segment: "Michigan / Indiana return corridor", timing: "Every 4-5 hours while returning", confidence: "Medium", note: "Use only while the return phase is active." }
+      { date: "2026-07-31", name: "Columbia, MO travel-center window", segment: "I-70 east of Kansas City", milesFromStart: 150, timing: "About 2.5 hours after departure", confidence: "High", needs: ["Bathroom now", "Gas now", "Food now"], note: "Good first reset: clean-restroom chains, fuel, breakfast/snack choices, and no pressure on South Bend dinner." },
+      { date: "2026-07-31", name: "Wentzville / St. Charles, MO reset", segment: "Before or just after the St. Louis metro", milesFromStart: 235, timing: "About 3.75-4.25 hours after departure", confidence: "High", needs: ["Bathroom now", "Gas now"], note: "Best if you want a cleaner edge-of-metro stop before traffic and the Illinois push." },
+      { date: "2026-07-31", name: "Effingham, IL lunch/gas window", segment: "I-70 / I-57 crossing", milesFromStart: 365, timing: "About 5.75-6.25 hours after departure", confidence: "High", needs: ["Bathroom now", "Gas now", "Food now"], note: "Strong lunch zone with many services, then protect the final run toward South Bend." },
+      { date: "2026-07-31", name: "Lafayette, IN final stretch check", segment: "Before turning north toward South Bend", milesFromStart: 485, timing: "About 7.5 hours after departure", confidence: "Medium", needs: ["Bathroom now", "Gas now", "Food now"], note: "Use only if energy dips. Keep it short so South Bend dinner still works." },
+      { date: "2026-07-31", name: "Dinner target", segment: "South Bend, Indiana", milesFromStart: 585, timing: "About 9 hours driving from home before longer breaks", confidence: "Goal", needs: ["Food now"], note: "Primary day-one food target. Notre Dame and Studebaker are nearby learning anchors, not ferry content." },
+      { date: "2026-08-01", name: "Grand Rapids / Comstock Park reset", segment: "US-131 northbound", milesFromStart: 735, timing: "Morning/midday after leaving South Bend", confidence: "High", needs: ["Bathroom now", "Gas now", "Food now"], note: "Good service density before northern Michigan gets more spread out." },
+      { date: "2026-08-01", name: "Grayling, MI top-off", segment: "Before the Cheboygan approach", milesFromStart: 920, timing: "Before reaching Plaunt Transportation", confidence: "High", needs: ["Bathroom now", "Gas now", "Food now"], note: "Gas, restroom, snacks, and a buffer before ferry-day logistics." },
+      { date: "2026-08-08", name: "Cheboygan mainland reset", segment: "After ferry return", milesFromStart: 30, timing: "Immediately after returning to the mainland", confidence: "High", needs: ["Bathroom now", "Gas now", "Food now"], note: "Bathroom, fuel, food, and route choice before the long drive home." },
+      { date: "2026-08-08", name: "Return 4-hour service window", segment: "Michigan / Indiana return corridor", milesFromStart: 300, timing: "Every 4-5 hours while returning", confidence: "Medium", needs: ["Bathroom now", "Gas now", "Food now"], note: "Use only while the return phase is active." }
     ]
   },
   profiles: [
@@ -276,7 +300,7 @@ window.TRIP_DATA = {
     }
   ],
   days: [
-    { date: "2026-07-31", title: "Launch Day", mood: "Road-trip energy", outlook: "Track stop rhythm, protect the South Bend dinner goal, and bank fun facts along the route.", accent: "#1f4f3a" },
+    { date: "2026-07-31", title: "Launch Day", mood: "Road-trip energy", outlook: "Use live GPS, protect the South Bend dinner goal, and bank fun facts along the route.", accent: "#1f4f3a" },
     { date: "2026-08-01", title: "Ferry and Arrival", mood: "South Bend to Cheboygan", outlook: "Morning road miles first, then Cheboygan timing, Plaunt ferry buffer, island orientation, first sunset and stars.", accent: "#236c8f" },
     { date: "2026-08-02", title: "Build Today's Adventure", mood: "Open island day", outlook: "No fixed plan. Vote on beaches, shops, local taste, slow exploring, or a low-energy backup.", accent: "#6c8a4b" },
     { date: "2026-08-03", title: "Stories and History", mood: "Great Lakes context", outlook: "Use history as a menu: ferry stories, island life, lighthouses, shipwrecks, and old routes.", accent: "#8b5e34" },
@@ -285,6 +309,32 @@ window.TRIP_DATA = {
     { date: "2026-08-06", title: "Stars and Wonder", mood: "Night-sky focus", outlook: "Check clouds, moonlight, best viewing window, and horizon targets.", accent: "#25446b" },
     { date: "2026-08-07", title: "Favorites Day", mood: "Last full island day", outlook: "Revisit favorites, gather memories, buy keepsakes, and choose one last good adventure.", accent: "#b06f33" },
     { date: "2026-08-08", title: "Departure Day", mood: "Pack and return", outlook: "Ferry timing, packing, goodbye views, return progress, and what-we-learned recap.", accent: "#56616f" }
+  ],
+  planningQuest: [
+    {
+      title: "Map the first big day",
+      prompt: "Find Olathe, St. Louis, Indianapolis, and South Bend on the map. Which city feels like the halfway mood shift?",
+      answer: "St. Louis is the first big landmark; Effingham/Lafayette are useful service windows; South Bend is the dinner goal.",
+      bestFor: ["all"]
+    },
+    {
+      title: "Pack for one perfect night sky",
+      prompt: "Pick three things that make stargazing better: comfort, darkness, and patience all count.",
+      answer: "Red light, blanket/chair, layers, bug spray, and binoculars are the best starter kit.",
+      bestFor: ["elsie", "katrina", "eliette", "momdad"]
+    },
+    {
+      title: "Clean stop captain",
+      prompt: "Choose the best stop rule: stop when bored, stop when fuel is low, or stop before everyone is desperate?",
+      answer: "Stop before everyone is desperate. The app watches 4-5 hour windows but lets needs override the plan.",
+      bestFor: ["emma", "jules", "momdad"]
+    },
+    {
+      title: "Route photo challenge",
+      prompt: "Pick one thing to capture on the way: a bridge, campus sign, giant machine, shiny detail, or local food sign.",
+      answer: "The best trip summary comes from small, real moments captured as they happen.",
+      bestFor: ["all"]
+    }
   ],
   adventureOptions: [
     { name: "Elsie's small-creature suspense walk", bestFor: ["elsie"], effort: "Easy", bring: "Binoculars, camera, bug spray", why: "Looks for squirrels, tracks, birds, and eerie-but-safe island story details she can turn into teachable facts." },
@@ -295,6 +345,79 @@ window.TRIP_DATA = {
     { name: "Mom/Dad route optimizer", bestFor: ["momdad"], effort: "Planning", bring: "Hours, maps, weather, ferry notes", why: "Compares kid excitement with safety, time, restroom confidence, and backup plans." },
     { name: "Night-sky blanket session", bestFor: ["all"], effort: "Easy", bring: "Red light, blankets, bug spray, layers", why: "A flexible end-of-day adventure when the sky cooperates." }
   ],
+  activityBoard: {
+    elsie: [
+      { title: "Squirrel behavior scout", type: "Island", detail: "Watch how squirrels or chipmunks use trees, food, and hiding places.", link: "https://www.michigan.gov/dnr/education/michigan-species/mammals", lookFor: "Tail flicks, climbing paths, food choices", capture: "Photo or short animal-note video" },
+      { title: "Shipwreck story check", type: "Great Lakes", detail: "Read one Great Lakes shipwreck story and decide what made it suspenseful.", link: "https://thunderbay.noaa.gov/shipwrecks/", lookFor: "Weather, choices, water, warning signs", capture: "Record a 20-second suspense summary" },
+      { title: "Kindergarten explainer", type: "Teach", detail: "Explain the ferry, dunes, or stars in words a kindergartener would understand.", link: "https://plaunttransportation.com/", lookFor: "Simple cause and effect", capture: "Video your tiny lesson" },
+      { title: "Eerie but safe setting", type: "Story", detail: "Find a place that feels like a mystery scene without being actually scary.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Old sign, quiet road, fog, shoreline", capture: "Photo with a story title" },
+      { title: "Animal habitat sketch", type: "Nature", detail: "Pick one small animal and sketch where it would hide, eat, and watch.", link: "https://www.boisblanctownship.org/", lookFor: "Trees, brush, rocks, shoreline cover", capture: "Photo of the habitat" },
+      { title: "Notre Dame story setting", type: "Route", detail: "Look for one campus detail that could start a scene.", link: "https://www.nd.edu/about/history/", lookFor: "Old building, symbol, arch, path", capture: "Photo of the detail" },
+      { title: "Storm science fact", type: "Sky", detail: "Learn why Great Lakes weather can change fast.", link: "https://www.weather.gov/greatlakes/", lookFor: "Clouds, wind, wave changes", capture: "Sky photo" },
+      { title: "Suspense sound map", type: "Island", detail: "List five sounds that make the island feel alive at dusk.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Leaves, water, birds, boats, insects", capture: "Audio/video clip if allowed" },
+      { title: "Teacher fact card", type: "Route", detail: "Turn Brown v. Board into one fairness fact for younger kids.", link: "https://www.nps.gov/brvb/planyourvisit/index.htm", lookFor: "School, fairness, classroom clues", capture: "Photo of your written fact" },
+      { title: "Night creature question", type: "Stars", detail: "Ask what animals might be active while humans look at stars.", link: "https://www.michigan.gov/dnr/education/michigan-species", lookFor: "Sounds, tracks, safe distance", capture: "No flash; note only" },
+      { title: "Mystery object", type: "Island", detail: "Choose one object and write the non-scary mystery behind it.", link: "https://www.boisblanctownship.org/", lookFor: "Rope, sign, dock, weathered wood", capture: "Object photo" }
+    ],
+    katrina: [
+      { title: "Brown v. Board why chain", type: "Route", detail: "Build a three-step why chain: problem, decision, change.", link: "https://www.nps.gov/brvb/learn/historyculture/kansas.htm", lookFor: "Who made the choice and why", capture: "Photo of your why chain" },
+      { title: "Arch fact collector", type: "Route", detail: "Find the weirdest Gateway Arch fact and quiz the car.", link: "https://www.nps.gov/jeff/", lookFor: "Height, shape, river, engineering", capture: "Quiz video" },
+      { title: "Notre Dame origin story", type: "Route", detail: "Learn how Notre Dame began in 1842 and turn it into historical fiction.", link: "https://www.nd.edu/about/history/", lookFor: "Founder, cold day, mission, campus", capture: "Read your first sentence" },
+      { title: "Studebaker transformation", type: "Route", detail: "Track how a company moved from wagons to cars.", link: "https://studebakermuseum.org/", lookFor: "What changed in transportation", capture: "Before/after note" },
+      { title: "Dunes question", type: "Nature", detail: "Explain how wind and water can build a giant hill of sand.", link: "https://www.nps.gov/indu/planyourvisit/things2do.htm", lookFor: "Wind, waves, grass, slope", capture: "Sand pattern photo" },
+      { title: "Ferry economy question", type: "Island", detail: "Ask what island life has to plan around because of ferry timing.", link: "https://plaunttransportation.com/", lookFor: "Mail, groceries, vehicles, weather", capture: "List three dependencies" },
+      { title: "Lighthouse clue", type: "Island", detail: "Learn why the Bois Blanc light mattered for Lake Huron travel.", link: "https://www.michigan.org/property/bois-blanc-island-lighthouse", lookFor: "Shoal, shore, navigation, safety", capture: "Map or shoreline photo" },
+      { title: "Timeline detective", type: "Island", detail: "Put ferry, lighthouse, bridge, and university into timeline order.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Dates and reasons", capture: "Timeline picture" },
+      { title: "Historical-fiction ferry scene", type: "Write", detail: "Write one paragraph from someone arriving before smartphones.", link: "https://www.boisblanctownship.org/community/transportation/", lookFor: "What they carried, worried about, noticed", capture: "Read it aloud" },
+      { title: "Mackinac Bridge problem", type: "Engineering", detail: "Explain what problem the bridge solved.", link: "https://www.mackinacbridge.org/history/", lookFor: "Water crossing, weather, traffic", capture: "Bridge fact card" },
+      { title: "Question nobody asked", type: "Any Day", detail: "Find one place detail and ask the question no one else asked.", link: "https://www.boisblanctownship.org/", lookFor: "A sign, old object, map label, rule", capture: "Question photo" }
+    ],
+    emma: [
+      { title: "South Bend sports town", type: "Route", detail: "Find how Notre Dame shapes normal weekends in South Bend.", link: "https://fightingirish.com/", lookFor: "Team colors, restaurants, signs, fields", capture: "Sports-town photo" },
+      { title: "How island errands work", type: "Island", detail: "Figure out how groceries, school, mail, and repairs happen on an island.", link: "https://www.boisblanctownship.org/", lookFor: "Store, post office, ferry, dock", capture: "Everyday-life photo" },
+      { title: "Studebaker daily-life shift", type: "Route", detail: "Notice how vehicles changed work, shopping, family trips, and jobs.", link: "https://studebakermuseum.org/", lookFor: "Wagons, cars, tools, signs", capture: "Then-vs-now note" },
+      { title: "Dinner town review", type: "Route", detail: "Rate the South Bend dinner area like a local: food, walkability, energy.", link: "https://visitsouthbend.com/", lookFor: "Where people gather", capture: "One photo and one rating" },
+      { title: "Beach movement challenge", type: "Island", detail: "Create a low-key family movement challenge on sand, road, or shoreline.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Safe open space", capture: "Scoreboard photo" },
+      { title: "Indiana Dunes ecosystem", type: "Nature", detail: "Spot how beach, plants, water, and people share one place.", link: "https://www.nps.gov/indu/planyourvisit/things2do.htm", lookFor: "Boardwalks, plants, beach rules", capture: "Ecosystem photo" },
+      { title: "Ferry routine reporter", type: "Island", detail: "Describe the ferry like a normal daily routine, not just a tourist thing.", link: "https://plaunttransportation.com/", lookFor: "Cars, people, supplies, timing", capture: "Reporter clip" },
+      { title: "Local gathering spot", type: "Island", detail: "Find where people seem to gather and what it tells you.", link: "https://www.boisblanctownship.org/", lookFor: "Store, tavern, dock, road crossing", capture: "Gathering-place note" },
+      { title: "Baseball maybe", type: "Route", detail: "Look for a field, team sign, or community sports clue along the way.", link: "https://visitsouthbend.com/things-to-do/sports-recreation/", lookFor: "Field lights, team signs, ball caps", capture: "Sports clue photo" },
+      { title: "Why people vacation here", type: "Island", detail: "Pick three reasons a real family would choose a quiet island.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Water, quiet, routine break, stars", capture: "Three-reason video" },
+      { title: "Best stop scorecard", type: "Travel", detail: "Score a stop: bathroom, food, speed, mood, and something interesting.", link: "https://www.google.com/maps", lookFor: "Clean, quick, useful, local", capture: "Scorecard photo" }
+    ],
+    eliette: [
+      { title: "Shiny rock and texture hunt", type: "Island", detail: "Find legal, leave-no-trace textures: rocks, shells, bark, signs, water sparkle.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Sparkle, pattern, color, shape", capture: "Close-up photo" },
+      { title: "Souvenir scouting list", type: "Route", detail: "Look for patches, postcards, stickers, pins, or small local objects.", link: "https://visitsouthbend.com/", lookFor: "Small, local, easy to carry", capture: "Wish-list photo" },
+      { title: "Ferry detail story", type: "Island", detail: "Pick one ferry detail and invent its story.", link: "https://plaunttransportation.com/", lookFor: "Rope, sign, ramp, ticket, water", capture: "Detail photo" },
+      { title: "Lighthouse story object", type: "Island", detail: "Choose one lighthouse detail and ask what it helped sailors avoid.", link: "https://www.michigan.org/property/bois-blanc-island-lighthouse", lookFor: "Light, shore, rocks, shoal", capture: "Story-object photo" },
+      { title: "Craft color palette", type: "Island", detail: "Collect five colors from the island for a bracelet, drawing, or craft idea.", link: "https://www.boisblanctownship.org/", lookFor: "Water, moss, sand, bark, sunset", capture: "Color collage" },
+      { title: "Notre Dame tiny detail", type: "Route", detail: "Find a building detail, symbol, or sign most people would miss.", link: "https://www.nd.edu/about/history/", lookFor: "Carving, lettering, gold, pattern", capture: "Tiny detail photo" },
+      { title: "Museum logo hunt", type: "Route", detail: "At Studebaker, look for old logos, handles, wheels, and shiny trim.", link: "https://studebakermuseum.org/", lookFor: "Chrome, badges, paint, handles", capture: "Design detail photo" },
+      { title: "Hidden sign story", type: "Any Day", detail: "Find a sign that tells a bigger story than it looks like.", link: "https://www.boisblanctownship.org/", lookFor: "Rules, place names, hand lettering", capture: "Sign photo" },
+      { title: "Postcard sentence", type: "Write", detail: "Write one perfect postcard sentence from today's tiny discovery.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "A detail worth remembering", capture: "Postcard text photo" },
+      { title: "Local treat or nicknack", type: "Island", detail: "Find one small local thing that feels like the place.", link: "https://www.boisblanctownship.org/", lookFor: "Snack, sticker, card, handmade item", capture: "Only if buying is parent-approved" },
+      { title: "Water sparkle watch", type: "Stars", detail: "At sunset or night, notice how water changes color and reflection.", link: "https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1", lookFor: "Glints, moon path, ripples", capture: "Low-light photo if safe" }
+    ],
+    jules: [
+      { title: "Captain stop choice", type: "Travel", detail: "Pick from two parent-approved stops and explain why your crew needs it.", link: "https://www.google.com/maps", lookFor: "Bathroom, snack, truck, sign", capture: "Captain thumbs-up photo" },
+      { title: "Truck job spotter", type: "Route", detail: "Spot three trucks and guess each one's job.", link: "https://www.fhwa.dot.gov/", lookFor: "Tanker, box truck, construction, tow", capture: "No driver photos; draw them" },
+      { title: "Ferry boss question", type: "Island", detail: "Figure out why cars can ride on a boat.", link: "https://plaunttransportation.com/", lookFor: "Ramp, wheels, ropes, captain", capture: "Captain explanation video" },
+      { title: "Dino brain rock", type: "Nature", detail: "Find a rock or sand pattern that looks ancient and ask how it got there.", link: "https://www.nps.gov/indu/learn/nature/index.htm", lookFor: "Layers, bumps, big stones, sand", capture: "Rock photo" },
+      { title: "Super gecko hideout", type: "Island", detail: "Find the best place a super gecko would climb or hide.", link: "https://www.michigan.gov/dnr/education/michigan-species/reptiles", lookFor: "Tree bark, rocks, rails, shadows", capture: "Point at the hideout" },
+      { title: "Bridge why", type: "Route", detail: "Explain why people built a giant bridge instead of always using boats.", link: "https://www.mackinacbridge.org/history/", lookFor: "Water, cars, trucks, wind", capture: "Bridge why video" },
+      { title: "Museum wheels mission", type: "Route", detail: "Find the coolest wheels or old vehicle detail.", link: "https://studebakermuseum.org/", lookFor: "Wheels, headlights, steering wheels", capture: "Vehicle detail photo" },
+      { title: "Baseball sometimes challenge", type: "Route", detail: "Find one baseball clue: field, hat, sign, or ball shape.", link: "https://visitsouthbend.com/things-to-do/sports-recreation/", lookFor: "Baseball clue", capture: "Baseball clue photo" },
+      { title: "Why do I have to buckle?", type: "Travel", detail: "Captain safety rule: explain why seatbelts are part of being in charge.", link: "https://www.nhtsa.gov/vehicle-safety/seat-belts", lookFor: "Safety first, then captain choices", capture: "Captain rule salute" },
+      { title: "Boat sound detective", type: "Island", detail: "Listen for boat sounds and guess what is happening.", link: "https://www.boisblanctownship.org/community/transportation/", lookFor: "Motor, horn, waves, dock sounds", capture: "Sound note" },
+      { title: "Big machine reason", type: "Any Day", detail: "Find one big machine and say the reason people need it.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Truck, ferry, mower, tractor, bridge", capture: "Reason video" }
+    ],
+    momdad: [
+      { title: "Approve one kid win per segment", type: "Planning", detail: "Pick the child most likely to benefit from the next optional stop.", link: "https://www.google.com/maps", lookFor: "Clean restrooms, time cost, child fit", capture: "Save a note" },
+      { title: "Verify Plaunt schedule", type: "Ferry", detail: "Check official ferry details before relying on any cached plan.", link: "https://plaunttransportation.com/", lookFor: "Schedule, vehicle space, weather, buffer", capture: "Screenshot if needed" },
+      { title: "Star grade check", type: "Night", detail: "Use Clear Dark Sky before promising a stargazing night.", link: "https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1", lookFor: "Cloud cover, transparency, darkness, smoke", capture: "Save the grade" },
+      { title: "Route stop confidence", type: "Travel", detail: "Choose stops by service density and restroom confidence first.", link: "https://www.google.com/maps", lookFor: "Recent reviews, fuel, food, clean restrooms", capture: "Favorite the stop" }
+    ]
+  },
   eventsFallback: [
     "Check Bois Blanc Township and community updates before heading out.",
     "Verify The Outpost and Bob-Lo Tavern hours before leaving.",
@@ -366,12 +489,22 @@ window.TRIP_DATA = {
   },
   stars: {
     checklist: ["Red-light flashlight", "Blankets or chairs", "Bug spray", "Layers", "Closed-toe shoes", "Binoculars", "Tripod", "Battery pack", "Water and snacks"],
-    tonight: "Check twilight, moonlight, clouds, and the northern horizon before committing."
+    tonight: "Use Clear Dark Sky for cloud cover, transparency, seeing, darkness, smoke, wind, and humidity before committing.",
+    clearDarkSky: "https://www.cleardarksky.com/c/BsBlnIObMOkey.html?1",
+    gradeRules: [
+      "A: dark-blue cloud blocks, good transparency, dark sky, low smoke, light wind",
+      "B: mostly clear with average transparency or a brighter moon",
+      "C: broken clouds, haze, or humidity risk; still good for bright stars and planets",
+      "D: cloudy, smoky, windy, or too bright; use it as a learning night"
+    ],
+    overhead: ["Summer Triangle: Vega, Deneb, Altair", "Milky Way band if the sky is dark and clear", "Big Dipper / Ursa Major low-to-mid northern sky", "Cassiopeia rising later in the northeast"],
+    horizon: ["North: possible faint aurora only if space weather cooperates", "South: Scorpius and Sagittarius low, with the Milky Way core direction", "West after sunset: bright twilight colors over water", "East later: rising constellations and moon path if the moon is up"]
   },
   ferry: {
     terminal: "Plaunt Transportation, 412 Water Street, Cheboygan, MI",
     route: "Cheboygan to Bois Blanc Island",
     crossing: "About 45 minutes",
+    learnMore: "https://plaunttransportation.com/",
     reminders: ["Reserve/check vehicle space", "Arrive with buffer", "Top off gas and snacks before boarding", "Watch wind and storm conditions"]
   },
   travelJokes: [

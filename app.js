@@ -18,7 +18,8 @@
 
   function loadState() {
     try {
-      return JSON.parse(localStorage.getItem("tripState")) || defaultState();
+      const saved = JSON.parse(localStorage.getItem("tripState")) || {};
+      return { ...defaultState(), ...saved, phase: saved.phase || "pretrip" };
     } catch {
       return defaultState();
     }
@@ -34,6 +35,7 @@
       approved: [],
       dismissed: [],
       completed: [],
+      captures: [],
       actionMessage: "No action yet."
     };
   }
@@ -44,6 +46,7 @@
     state.approved ||= [];
     state.dismissed ||= [];
     state.completed ||= [];
+    state.captures ||= [];
   }
 
   function saveState() {
@@ -92,6 +95,14 @@
     const key = itemKey(name);
     if (!state.dismissed.includes(key)) state.dismissed.push(key);
     setAction(`Skipped ${name} for now.`);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
   }
 
   function currentProfile() {
@@ -178,7 +189,8 @@
   function childTravelLine(profile) {
     const destination = activeDestination();
     const miles = milesLeft();
-    const minutes = Math.max(10, Math.round((miles / 62) * 60));
+    const mph = destination.plannedHours && destination.plannedMiles ? destination.plannedMiles / destination.plannedHours : 62;
+    const minutes = Math.max(10, Math.round((miles / mph) * 60));
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     const timeText = hours > 0 ? `${hours} hr ${mins} min` : `${mins} min`;
@@ -190,14 +202,14 @@
       };
     }
     return {
-      title: `${profile.name}'s road update`,
+      title: "Road update",
       text: `${miles.toLocaleString()} miles, about ${timeText}, to ${destination.label}. Dad joke: ${joke}`
     };
   }
 
-  function preTripGameFor(profile) {
-    const options = data.preTripGame.filter((item) => item.bestFor.includes(profile.id) || item.bestFor.includes("all"));
-    return options[(new Date(selectedDayDate()).getDate() + profile.name.length) % options.length] || data.preTripGame[0];
+  function planningQuestFor(profile) {
+    const options = data.planningQuest.filter((item) => item.bestFor.includes(profile.id) || item.bestFor.includes("all"));
+    return options[(new Date(selectedDayDate()).getDate() + profile.name.length) % options.length] || data.planningQuest[0];
   }
 
   function dailyFeatureFor(profile) {
@@ -210,6 +222,23 @@
     const candidates = data.route.routePlaces.filter((place) => place.day === day);
     const pool = candidates.length ? candidates : data.route.routePlaces;
     return pool[(new Date(day).getDate() + profile.name.length) % pool.length];
+  }
+
+  function routeProgressMiles() {
+    const destination = activeDestination();
+    const progress = progressForPhase() / 100;
+    if (state.phase === "return") return Math.round(data.route.totalReturnMiles * progress);
+    if (selectedDayDate() === "2026-07-31") return Math.round((destination.plannedMiles || 585) * progress);
+    if (selectedDayDate() === "2026-08-01") return Math.round(585 + (destination.plannedMiles || 460) * progress);
+    return Math.round(data.route.totalOutboundMiles * progress);
+  }
+
+  function nearbyRoutePlaces(limit = 3) {
+    const currentMiles = routeProgressMiles();
+    return [...data.route.routePlaces]
+      .filter((place) => place.milesFromStart !== undefined)
+      .sort((a, b) => Math.abs(a.milesFromStart - currentMiles) - Math.abs(b.milesFromStart - currentMiles))
+      .slice(0, limit);
   }
 
   function phaseProgressPercent() {
@@ -265,14 +294,15 @@
   }
 
   function milesLeft() {
-    if (state.gpsMilesToActiveDestination && state.phase !== "complete") {
+    if (state.gpsMilesToActiveDestination && state.phase !== "pretrip" && state.phase !== "complete") {
       return Math.round(state.gpsMilesToActiveDestination);
     }
-    if (state.gpsMilesToFinal && state.phase !== "return" && state.phase !== "complete") {
+    if (state.gpsMilesToFinal && state.phase !== "pretrip" && state.phase !== "return" && state.phase !== "complete") {
       return Math.round(state.gpsMilesToFinal * 1.18);
     }
     const progress = progressForPhase();
-    const total = state.phase === "return" ? data.route.totalReturnMiles : data.route.totalOutboundMiles;
+    const destination = activeDestination();
+    const total = state.phase === "return" ? data.route.totalReturnMiles : (destination.plannedMiles || data.route.totalOutboundMiles);
     if (state.phase === "island") return 0;
     if (state.phase === "complete") return 0;
     return Math.round(total * (1 - progress / 100));
@@ -314,8 +344,8 @@
 
   function nextStopText() {
     if (state.needNow) return `${state.needNow}: showing best cached options first.`;
-    if (state.phase === "pretrip") return "Trip has not started yet. Play countdown games, learn the route, and download the trip pack.";
-    if (state.phase === "outbound" && travelStage() === "road-to-south-bend") return "Next goal: clean stop rhythm, light lunch, and dinner in South Bend. No ferry logic today.";
+    if (state.phase === "pretrip") return "Trip has not started yet. Use the map, planning quests, and what-to-look-for cards to get ready.";
+    if (state.phase === "outbound" && travelStage() === "road-to-south-bend") return "Next goal: clean stops only when needed, light lunch, and dinner in South Bend. No ferry logic today.";
     if (state.phase === "outbound") return "Next goal: road miles to Cheboygan, top-off stop, then Plaunt ferry.";
     if (state.phase === "island") return "Build today's adventure. Nothing is locked until parents approve it.";
     if (state.phase === "return") return "Return mode: track miles and percent left to home.";
@@ -342,7 +372,7 @@
     byId("primaryProgressText").textContent = `${overallPercent}%`;
     byId("primaryProgressBar").style.width = `${overallPercent}%`;
     byId("phaseProgressLabel").textContent =
-      state.phase === "pretrip" ? "Pre-trip prep" :
+      state.phase === "pretrip" ? "Launch getting closer" :
       state.phase === "island" ? "Island time used" :
       state.phase === "return" ? "Return route complete" :
       state.phase === "outbound" ? "Current destination progress" : "Trip complete";
@@ -427,6 +457,7 @@
       }).addTo(routeMap).bindPopup(point.label);
     });
     routeMap.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
+    setTimeout(() => routeMap.invalidateSize(), 100);
   }
 
   function updateRealMap(point) {
@@ -446,6 +477,34 @@
     routeMap.panTo(latLng, { animate: true });
   }
 
+  function bestNeedStops() {
+    const dayStops = data.route.restStops.filter((stop) => stop.date === selectedDayDate());
+    const candidates = dayStops.length ? dayStops : data.route.restStops.filter((stop) => isTravelDay(stop.date));
+    const need = state.needNow;
+    const filtered = need ? candidates.filter((stop) => !stop.needs || stop.needs.includes(need)) : candidates;
+    const currentMiles = routeProgressMiles();
+    return [...filtered]
+      .sort((a, b) => Math.abs((a.milesFromStart || 0) - currentMiles) - Math.abs((b.milesFromStart || 0) - currentMiles))
+      .slice(0, 3);
+  }
+
+  function renderNeedResults() {
+    const container = byId("needResults");
+    if (!container) return;
+    if (!state.needNow) {
+      container.innerHTML = "";
+      return;
+    }
+    const stops = bestNeedStops();
+    container.innerHTML = `
+      <div class="choice-card">
+        <strong>${state.needNow}</strong>
+        <p>${state.phase === "pretrip" ? "Previewing likely route options. Live GPS will sort this by where you actually are once the trip starts." : "Sorted by the current trip segment and estimated route position."}</p>
+        <ul>${stops.map((stop) => `<li><strong>${stop.name}</strong> <span class="map-caption">${stop.timing}</span><br>${stop.note}</li>`).join("")}</ul>
+      </div>
+    `;
+  }
+
   function renderTripStatus() {
     const profile = currentProfile();
     const line = childTravelLine(profile);
@@ -453,13 +512,10 @@
     byId("nextStop").textContent = nextStopText();
     byId("kidTravelUpdate").innerHTML = `<strong>${line.title}</strong><p>${line.text}</p>`;
     byId("actionStatus").textContent = state.actionMessage || "No action yet.";
-    byId("packStatus").textContent = state.packDownloaded
-      ? `${state.packStatus === "partial" ? "Partial cache" : "Ready"} - ${new Date(state.packDownloaded).toLocaleString()}`
-      : "Not downloaded";
-    byId("sinceStop").textContent = state.phase === "pretrip" ? "Not started" : "Track every 4-5 hours";
     byId("gpsStatus").textContent = state.gpsStatus || "Not requested";
     byId("destinationStatus").textContent = state.destinationStatus || activeDestination().label;
     byId("trackingStatus").textContent = state.trackingStatus || "Off";
+    renderNeedResults();
   }
 
   function renderProfileTabs() {
@@ -507,33 +563,127 @@
     render();
   }
 
+  function placePreview(place, profile) {
+    const profileText = place.profiles[profile.id] || place.profiles.momdad;
+    return `
+      <div class="choice-card place-preview">
+        <img src="${place.image}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.style.display='none'">
+        <div>
+          <strong>${place.name}</strong>
+          <p>${place.place}. ${place.why}</p>
+          <p>${profileText}</p>
+          <div class="action-row">
+            <a class="external-link" href="${place.learnMore}" target="_blank" rel="noopener">Learn More</a>
+            <button type="button" data-favorite="${escapeHtml(place.name)}">Save place</button>
+            <button type="button" data-capture="${escapeHtml(place.name)}">Capture image/video</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function activityKey(activity) {
+    return `${activeProfile}:${activity.title}`;
+  }
+
+  function profileActivities(profile) {
+    const profileList = data.activityBoard[profile.id] || [];
+    const shared = profile.id === "momdad" ? [] : data.activityBoard.momdad.slice(0, 2);
+    return [...profileList, ...shared];
+  }
+
+  function renderActivityBoard(profile) {
+    ensureCollections();
+    const activities = profileActivities(profile);
+    const completedKeys = new Set(state.completed.filter((item) => item.profile === activeProfile && item.activityKey).map((item) => item.activityKey));
+    const pending = activities.filter((activity) => !completedKeys.has(activityKey(activity))).slice(0, 10);
+    const completed = state.completed
+      .filter((item) => item.profile === activeProfile && item.activityTitle)
+      .slice(-6)
+      .reverse();
+    return `
+      <div class="activity-board">
+        ${pending.map((activity) => `
+          <article class="activity-item">
+            <header>
+              <div>
+                <h4>${activity.title}</h4>
+                <span class="activity-meta">${activity.type} - Look for: ${activity.lookFor}</span>
+              </div>
+            </header>
+            <p>${activity.detail}</p>
+            <p><strong>Capture:</strong> ${activity.capture}</p>
+            <div class="action-row">
+              <a class="external-link" href="${activity.link}" target="_blank" rel="noopener">Learn More</a>
+              <button type="button" data-complete-activity="${escapeHtml(activity.title)}">Done</button>
+              <button type="button" data-capture="${escapeHtml(activity.title)}">Capture image/video</button>
+              <button type="button" data-favorite="${escapeHtml(activity.title)}">Save</button>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+      <div class="completed-list">
+        ${completed.length ? completed.map((item) => `<span class="saved-pill">Completed: ${item.activityTitle}</span>`).join("") : `<span class="saved-pill">Complete one activity and a new one will appear.</span>`}
+      </div>
+    `;
+  }
+
+  function renderRouteQuest() {
+    const profile = currentProfile();
+    const quest = planningQuestFor(profile);
+    const near = nearbyRoutePlaces(3);
+    byId("routeQuest").innerHTML = state.phase === "pretrip" ? `
+      <p class="eyebrow">Planning and learning quest</p>
+      <div class="choice-card">
+        <strong>${quest.title}</strong>
+        <p>${quest.prompt}</p>
+        <div class="action-row">
+          <button type="button" data-complete-prompt="${escapeHtml(`${quest.title}: ${quest.answer}`)}">Reveal / learned it</button>
+          <button type="button" data-favorite="${escapeHtml(quest.title)}">Save quest</button>
+        </div>
+      </div>
+    ` : `
+      <p class="eyebrow">What is close on the route</p>
+      <div class="activity-board">
+        ${near.map((place) => `
+          <article class="activity-item">
+            <h4>${place.name}</h4>
+            <p>${place.place}. ${place.profiles[profile.id] || place.profiles.momdad}</p>
+            <div class="action-row">
+              <a class="external-link" href="${place.learnMore}" target="_blank" rel="noopener">Learn More</a>
+              <button type="button" data-capture="${escapeHtml(place.name)}">Capture image/video</button>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    `;
+  }
+
   function renderProfile() {
     const day = selectedDay();
     const profile = currentProfile();
-    const adventure = data.adventureOptions.find((item) => item.bestFor.includes(profile.id)) || data.adventureOptions[0];
     const isJules = profile.id === "jules";
     const locationContext = currentRouteContext();
     const ferryHidden = profile.suppressFerryLogistics && isFerryRelevant();
     const profilePrompt = profile.prompts[(new Date(day.date).getDate() + profile.name.length) % profile.prompts.length];
     const travelLine = childTravelLine(profile);
-    const preGame = preTripGameFor(profile);
+    const quest = planningQuestFor(profile);
     const feature = dailyFeatureFor(profile);
     const routePlace = routePlaceFor(profile);
-    const routeProfileText = routePlace.profiles[profile.id] || routePlace.profiles.momdad;
     byId("profileView").style.setProperty("--profile-accent", profile.accent || "#1f78a4");
     if (state.phase === "pretrip") {
       byId("profileView").innerHTML = `
         <div class="profile-grid">
           <div>
-            <p class="eyebrow">Pre-trip game mode - ${profile.name}</p>
+            <p class="eyebrow">Planning and learning quest</p>
             <h3>Countdown Quest</h3>
             <p>${profile.lens}</p>
             <div class="choice-card kid-travel-update">
-              <strong>${preGame.title}</strong>
-              <p>${preGame.prompt}</p>
+              <strong>${quest.title}</strong>
+              <p>${quest.prompt}</p>
               <div class="action-row">
-                <button type="button" data-complete-prompt="${preGame.title}: ${preGame.answer}">Reveal / learned it</button>
-                <button type="button" data-favorite="${preGame.title}">Save game</button>
+                <button type="button" data-complete-prompt="${escapeHtml(`${quest.title}: ${quest.answer}`)}">Reveal / learned it</button>
+                <button type="button" data-favorite="${escapeHtml(quest.title)}">Save quest</button>
               </div>
             </div>
             <div class="choice-card">
@@ -541,33 +691,20 @@
               <p>${feature.text}</p>
               <p><strong>Look for:</strong> ${feature.lookFor}</p>
               <div class="action-row">
-                <button type="button" data-favorite="${feature.title}">Save feature</button>
-                <button type="button" data-complete-prompt="${feature.title}: ${feature.lookFor}">I know what to look for</button>
+                <button type="button" data-favorite="${escapeHtml(feature.title)}">Save feature</button>
+                <button type="button" data-complete-prompt="${escapeHtml(`${feature.title}: ${feature.lookFor}`)}">I know what to look for</button>
+                <button type="button" data-capture="${escapeHtml(feature.title)}">Capture image/video</button>
               </div>
             </div>
+            ${placePreview(routePlace, profile)}
             <div class="choice-card">
-              <strong>Real place preview: ${routePlace.name}</strong>
-              <p>${routePlace.place}. ${routePlace.why}</p>
-              <p>${routeProfileText}</p>
-            </div>
-            <div class="choice-card">
-              <strong>What ${profile.name} should watch for on the trip</strong>
+              <strong>What to watch for on the trip</strong>
               <ul>${profile.routeInterests.map((item) => `<li>${item}</li>`).join("")}</ul>
-            </div>
-            <div class="choice-card parent-callout">
-              <strong>Mom/Dad setup</strong>
-              <p>${profile.parentNote}</p>
-              <p>Use this before departure to build excitement without starting live travel mode.</p>
             </div>
           </div>
           <aside>
-            <h3>Before we leave</h3>
-            <p><strong>Goal:</strong> learn one thing, save one idea, and download the trip pack.</p>
-            <div class="action-row">
-              <button type="button" data-vote="${preGame.title}">Vote for this game</button>
-              <button type="button" data-favorite="What ${profile.name} wants to see">Save watch list</button>
-            </div>
-            ${renderSavedSummary()}
+            <h3>Interactive board</h3>
+            ${renderActivityBoard(profile)}
           </aside>
         </div>
       `;
@@ -578,46 +715,37 @@
       <div class="profile-grid">
         <div>
           <p class="eyebrow">${day.title} - ${locationContext}</p>
-          <h3>${profile.name}'s view</h3>
+          <h3>${profile.name === "Mom and Dad" ? "Full trip view" : "Today's view"}</h3>
           <p>${profile.lens}</p>
           <ul class="tag-list">${profile.tags.map((tag) => `<li>${tag}</li>`).join("")}</ul>
           <div class="choice-card">
-            <strong>${isJules ? "Captain Jules mission" : `${profile.name}'s prompt`}</strong>
+            <strong>${isJules ? "Captain mission" : "Today's prompt"}</strong>
             <p>${profilePrompt}</p>
             <div class="action-row">
-              <button type="button" data-save-prompt="${profilePrompt}">Save prompt</button>
-              <button type="button" data-complete-prompt="${profilePrompt}">Did it</button>
+              <button type="button" data-save-prompt="${escapeHtml(profilePrompt)}">Save prompt</button>
+              <button type="button" data-complete-prompt="${escapeHtml(profilePrompt)}">Did it</button>
             </div>
           </div>
           <div class="choice-card">
             <strong>Today's real trip feature: ${feature.title}</strong>
             <p>${feature.text}</p>
             <p><strong>Look for:</strong> ${feature.lookFor}</p>
-          </div>
-          <div class="choice-card">
-            <strong>Real place on the route: ${routePlace.name}</strong>
-            <p>${routePlace.place}. ${routePlace.why}</p>
-            <p>${routeProfileText}</p>
             <div class="action-row">
-              <button type="button" data-favorite="${routePlace.name}">Save place</button>
-              <button type="button" data-vote="${routePlace.name}">Vote</button>
+              <button type="button" data-capture="${escapeHtml(feature.title)}">Capture image/video</button>
             </div>
           </div>
+          ${placePreview(routePlace, profile)}
           <div class="choice-card kid-travel-update">
             <strong>${travelLine.title}</strong>
             <p>${travelLine.text}</p>
           </div>
-          <div class="choice-card parent-callout">
-            <strong>Mom/Dad note about ${profile.name}</strong>
-            <p>${profile.parentNote}</p>
-            <p><strong>Child-facing:</strong> ${profilePrompt}</p>
-          </div>
+          ${profile.id === "momdad" ? `<div class="choice-card parent-callout"><strong>Operating note</strong><p>${profile.parentNote}</p></div>` : ""}
           <div class="choice-card">
-            <strong>Stop along the route for ${profile.name}</strong>
+            <strong>Stop ideas that match this view</strong>
             <ul>${profile.routeInterests.map((item) => `<li>${item}</li>`).join("")}</ul>
             <div class="action-row">
-              <button type="button" data-favorite="Route stop for ${profile.name}">Save route idea</button>
-              <button type="button" data-vote="Route stop for ${profile.name}">Vote for this</button>
+              <button type="button" data-favorite="Route stop idea">Save route idea</button>
+              <button type="button" data-vote="Route stop idea">Vote for this</button>
             </div>
           </div>
           ${ferryHidden ? `
@@ -628,24 +756,8 @@
           ` : ""}
         </div>
         <aside>
-          <h3>${profile.name}'s specific pick</h3>
-          <p><strong>${adventure.name}</strong></p>
-          <p>${adventure.why}</p>
-          <ul>${profile.islandInterests.map((item) => `<li>${item}</li>`).join("")}</ul>
-          <div class="action-row">
-            <button type="button" data-favorite="${adventure.name}">Favorite</button>
-            <button type="button" data-vote="${adventure.name}">Vote</button>
-            <button type="button" data-approve="${adventure.name}">Approve</button>
-            <button type="button" data-dismiss="${adventure.name}">Skip</button>
-          </div>
-          <div class="choice-card parent-callout">
-            <strong>Why this fits ${profile.name}</strong>
-            <p>${profile.parentNote}</p>
-          </div>
-          <ul class="mini-list">
-            <li>${adventure.effort}</li>
-            <li>${adventure.bring}</li>
-          </ul>
+          <h3>Interactive board</h3>
+          ${renderActivityBoard(profile)}
         </aside>
       </div>
     `;
@@ -669,16 +781,16 @@
     const day = selectedDay();
     const profile = currentProfile();
     const travelStops = data.route.restStops.filter((stop) => stop.date === day.date);
-    const preGame = preTripGameFor(profile);
+    const quest = planningQuestFor(profile);
     const routePlace = routePlaceFor(profile);
     const stopsMarkup = state.phase === "pretrip"
-      ? `<p>Trip has not started. Stop planning is in preview mode: learn what the route will feel like before live travel begins.</p>
+      ? `<p>Trip has not started. Use this as a route preview and packing brain-starter before live GPS takes over.</p>
         <div class="choice-card">
-          <strong>Pre-trip route game</strong>
-          <p>${preGame.prompt}</p>
+          <strong>${quest.title}</strong>
+          <p>${quest.prompt}</p>
           <div class="action-row">
-            <button type="button" data-complete-prompt="${preGame.title}: ${preGame.answer}">Reveal / learned it</button>
-            <button type="button" data-favorite="${preGame.title}">Save game</button>
+            <button type="button" data-complete-prompt="${escapeHtml(`${quest.title}: ${quest.answer}`)}">Reveal / learned it</button>
+            <button type="button" data-favorite="${escapeHtml(quest.title)}">Save quest</button>
           </div>
         </div>`
       : isTravelDay(day.date)
@@ -687,7 +799,7 @@
       : `<p>No road-stop planner today. This only appears on travel days so island days stay open and flexible.</p>`;
     byId("stopsCard").innerHTML = `
       <p class="eyebrow">Smart stops</p>
-      <h3>${state.phase === "pretrip" ? "Pre-trip route games" : isTravelDay(day.date) ? "Route-specific stop plan" : "Island mode"}</h3>
+      <h3>${state.phase === "pretrip" ? "Planning quest" : isTravelDay(day.date) ? "Route-specific stop plan" : "Island mode"}</h3>
       ${stopsMarkup}
       <div class="action-row">
         <button type="button" data-need="Bathroom now">Bathroom now</button>
@@ -702,9 +814,9 @@
       <p class="eyebrow">Ferry</p>
       <h3>${ferryForElsie ? "Water crossing facts" : "Plaunt Transportation"}</h3>
       <p>${ferryForElsie ? "Adults handle timing. This view keeps ferry logistics out of Elsie's experience." : data.ferry.terminal}</p>
-      ${ferryForElsie ? `<div class="choice-card parent-callout"><strong>Mom/Dad note</strong><p>Elsie does not need ferry schedule pressure. Keep schedule/check-in decisions in the adult view and offer her observation prompts instead.</p></div>` : ""}
       <ul>${(ferryForElsie ? ["Look for boats, gulls, waves, and shoreline changes.", "Think about how islands depend on ferries.", "Save suspense for shipwreck stories, not schedule stress."] : data.ferry.reminders).map((item) => `<li>${item}</li>`).join("")}</ul>
       <div class="action-row">
+        <a class="external-link" href="${data.ferry.learnMore}" target="_blank" rel="noopener">Learn More</a>
         <button type="button" data-favorite="${ferryForElsie ? "Water crossing facts" : "Plaunt ferry plan"}">Save</button>
         ${profile.id === "momdad" ? `<button type="button" data-approve="Plaunt ferry plan">Approve ferry plan</button>` : ""}
       </div>
@@ -712,66 +824,56 @@
       <p class="eyebrow">Ferry</p>
       <h3>Not today</h3>
       <p>Today is the road segment to South Bend. Ferry timing stays hidden until the Cheboygan travel day.</p>
-      <div class="choice-card parent-callout">
-        <strong>Mom/Dad note</strong>
-        <p>Keep the focus on clean stops, lunch timing, and dinner in South Bend. The app will shift to ferry logic on August 1.</p>
-      </div>
     `;
     byId("starsCard").innerHTML = `
       <p class="eyebrow">Stars</p>
       <h3>Night-sky guide</h3>
       <p>${data.stars.tonight}</p>
+      <p><strong>Star viewing grade:</strong> ${data.stars.gradeRules[0]}</p>
+      <p><strong>Overhead:</strong> ${data.stars.overhead.slice(0, 2).join("; ")}.</p>
+      <p><strong>Horizon:</strong> ${data.stars.horizon.slice(0, 2).join("; ")}.</p>
       <ul>${data.stars.checklist.slice(0, 5).map((item) => `<li>${item}</li>`).join("")}</ul>
       <div class="action-row">
+        <a class="external-link" href="${data.stars.clearDarkSky}" target="_blank" rel="noopener">Learn More</a>
         <button type="button" data-favorite="Night-sky blanket session">Favorite stars</button>
         <button type="button" data-vote="Night-sky blanket session">Vote</button>
       </div>
     `;
     byId("adventureCard").innerHTML = `
       <p class="eyebrow">Island</p>
-      <h3>Kid-specific adventure board</h3>
-      <p>No generic local taste run. Each child gets specific ideas; parents approve the real plan.</p>
-      ${data.adventureOptions.filter((item) => item.bestFor.includes(profile.id) || item.bestFor.includes("all")).map((item) => `
-        <div class="choice-card">
-          <strong>${item.name}</strong>
-          <p>${item.why}</p>
-          <div class="action-row">
-            <button type="button" data-favorite="${item.name}">Favorite</button>
-            <button type="button" data-vote="${item.name}">Vote</button>
-            <button type="button" data-approve="${item.name}">Approve</button>
-            <button type="button" data-dismiss="${item.name}">Skip</button>
-          </div>
-        </div>
-      `).join("")}
-      ${renderSavedSummary()}
+      <h3>Interactive activity board</h3>
+      <p>Ten options show at a time. When one is completed, it moves down and the next option appears.</p>
+      ${renderActivityBoard(profile)}
     `;
     byId("eventsCard").innerHTML = `
       <p class="eyebrow">Real route content</p>
-      <h3>${routePlace.name}</h3>
-      <p>${routePlace.place}. ${routePlace.why}</p>
-      <p>${routePlace.profiles[profile.id] || routePlace.profiles.momdad}</p>
-      <div class="action-row">
-        <button type="button" data-favorite="${routePlace.name}">Save place</button>
-        <button type="button" data-complete-prompt="Learned about ${routePlace.name}">Learned it</button>
-      </div>
+      <h3>Real place preview</h3>
+      ${placePreview(routePlace, profile)}
     `;
-    byId("journalCard").innerHTML = `
-      <p class="eyebrow">Journal</p>
-      <h3>Memory prompts</h3>
-      <p>Save favorite facts, stops, family votes, sky sessions, and photos.</p>
-      <textarea id="journalNote" rows="5" placeholder="Today's best moment"></textarea>
-      <div class="action-row"><button id="saveJournal" type="button">Save note</button><span id="journalSaved"></span></div>
+    byId("summaryCard").innerHTML = `
+      <p class="eyebrow">Trip summary</p>
+      <h3>Captured story</h3>
+      <p>Photos and videos captured from activity cards build the trip story on this device.</p>
+      ${renderCaptureSummary()}
       ${renderSavedSummary()}
     `;
-    const save = byId("saveJournal");
-    save.addEventListener("click", () => {
-      localStorage.setItem(`journal-${selectedDay().date}`, byId("journalNote").value);
-      byId("journalSaved").textContent = "Saved on this device";
-      state.actionMessage = "Journal note saved.";
-      saveState();
-      renderTripStatus();
-    });
     wireDynamicActions();
+  }
+
+  function renderCaptureSummary() {
+    ensureCollections();
+    const captures = state.captures.filter((item) => item.profile === activeProfile).slice(-4).reverse();
+    if (!captures.length) return `<div class="saved-list"><span class="saved-pill">No captured moments yet</span></div>`;
+    return `
+      <div class="summary-grid">
+        ${captures.map((item) => `
+          <div class="summary-tile">
+            ${item.type.startsWith("image/") ? `<img class="summary-photo" src="${item.dataUrl}" alt="${escapeHtml(item.label)}">` : `<span>Video saved: ${escapeHtml(item.name || item.label)}</span>`}
+            <span>${escapeHtml(item.label)} - ${new Date(item.at).toLocaleDateString()}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
   }
 
   function renderSavedSummary() {
@@ -787,6 +889,71 @@
         ${approved.map((key) => `<span class="saved-pill">Approved: ${key.split(":").slice(2).join(":")}</span>`).join("")}
       </div>
     `;
+  }
+
+  function completeActivity(title) {
+    ensureCollections();
+    const profile = currentProfile();
+    const activity = profileActivities(profile).find((item) => item.title === title);
+    const key = activity ? activityKey(activity) : `${activeProfile}:${title}`;
+    if (!state.completed.some((item) => item.activityKey === key)) {
+      state.completed.push({
+        activityKey: key,
+        activityTitle: title,
+        profile: activeProfile,
+        date: selectedDayDate(),
+        at: new Date().toISOString()
+      });
+    }
+    setAction(`Completed ${title}. A new activity is ready.`);
+  }
+
+  function startCapture(label) {
+    state.pendingCaptureLabel = label;
+    saveState();
+    byId("captureInput").click();
+  }
+
+  function wireCaptureInput() {
+    const input = byId("captureInput");
+    input.addEventListener("change", () => {
+      const files = Array.from(input.files || []).slice(0, 3);
+      if (!files.length) return;
+      let remaining = files.length;
+      files.forEach((file) => {
+        if (file.size > 4500000) {
+          state.actionMessage = "That file is too large for this offline summary. Try a smaller photo or short clip.";
+          remaining -= 1;
+          if (!remaining) {
+            input.value = "";
+            saveState();
+            render();
+          }
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          ensureCollections();
+          state.captures.push({
+            profile: activeProfile,
+            date: selectedDayDate(),
+            label: state.pendingCaptureLabel || "Trip capture",
+            name: file.name,
+            type: file.type,
+            dataUrl: reader.result,
+            at: new Date().toISOString()
+          });
+          state.actionMessage = `Captured ${state.pendingCaptureLabel || "trip moment"} for the trip summary.`;
+          remaining -= 1;
+          if (!remaining) {
+            input.value = "";
+            saveState();
+            render();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    });
   }
 
   function wireDynamicActions() {
@@ -812,50 +979,18 @@
         setAction(`Marked complete for ${currentProfile().name}.`);
       };
     });
+    document.querySelectorAll("[data-complete-activity]").forEach((button) => {
+      button.onclick = () => completeActivity(button.dataset.completeActivity);
+    });
+    document.querySelectorAll("[data-capture]").forEach((button) => {
+      button.onclick = () => startCapture(button.dataset.capture);
+    });
     document.querySelectorAll("[data-need]").forEach((button) => {
       button.onclick = () => {
         state.needNow = button.dataset.need;
         setAction(`${button.dataset.need} selected. Showing cached best-fit guidance.`);
       };
     });
-  }
-
-  async function downloadTripPack() {
-    const button = byId("installPack");
-    button.textContent = "Downloading...";
-    button.disabled = true;
-    state.packDownloaded = new Date().toISOString();
-    state.cachedTripPack = {
-      route: data.route,
-      profiles: data.profiles,
-      days: data.days,
-      ferry: data.ferry,
-      stars: data.stars,
-      adventureOptions: data.adventureOptions
-    };
-    try {
-      if ("caches" in window) {
-        const cache = await caches.open("elskatemm-trip-v2");
-        await cache.addAll(["/", "/index.html", "/styles.css", "/app.js", "/trip-data.js", "/manifest.json", "/icon.svg", "/sw.js"]);
-      }
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        if (registration.active) registration.active.postMessage({ type: "CACHE_TRIP_PACK" });
-      }
-      state.packStatus = "ready";
-      state.actionMessage = "Trip Pack Ready. Offline basics are saved on this device.";
-      saveState();
-      button.textContent = "Trip Pack Ready";
-    } catch (error) {
-      state.packStatus = "partial";
-      state.packError = "Some files could not be cached. Try again while online.";
-      state.actionMessage = state.packError;
-      saveState();
-      button.textContent = "Try Download Again";
-    } finally {
-      button.disabled = false;
-      render();
-    }
   }
 
   function useLocation() {
@@ -898,7 +1033,6 @@
   }
 
   function wireEvents() {
-    byId("installPack").addEventListener("click", downloadTripPack);
     byId("activeTraveler").addEventListener("click", () => byId("splash").classList.remove("is-hidden"));
     byId("useLocation").addEventListener("click", useLocation);
     byId("stopLocation").addEventListener("click", stopLocation);
@@ -912,9 +1046,7 @@
 
   function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        byId("packStatus").textContent = "Offline worker unavailable";
-      });
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
   }
 
@@ -924,6 +1056,8 @@
     renderTripStatus();
     renderProfile();
     renderCards();
+    renderRouteQuest();
+    wireDynamicActions();
     renderMapProgress();
   }
 
@@ -936,6 +1070,7 @@
   }
   renderProfileTabs();
   wireEvents();
+  wireCaptureInput();
   registerServiceWorker();
   render();
 })();

@@ -1,25 +1,26 @@
 # Elskatemm Travel Companion
 
-Offline-first v1 of the family travel companion for the Olathe to Bois Blanc Island trip.
+Offline-first v2.1 of the family travel companion for the Olathe to Bois Blanc Island trip.
 
 ## What is included
 
 - Mobile-first PWA shell
 - Trip phase controls and countdown/progress tracking
-- Offline trip pack button and service worker
-- Cached route visualization
-- Smart stop planning copy for gas, food, clean restrooms, and breaks
-- Plaunt ferry page content
+- Real OpenStreetMap route view with offline fallback
+- Live GPS controls moved into the map/status area
+- Route-aware Bathroom, Gas, and Food buttons
+- Plaunt ferry page content with official Learn More link
 - Family profile views for Elsie, Katrina, Emma Grace, Eliette, Jules, Mom, and Dad
 - Day-driven outlooks for July 31 through August 8
-- Choose-your-own-adventure island activity board
-- Stargazing checklist and nightly guidance
+- Interactive kid-specific activity boards with links, completion, and capture buttons
+- Trip summary capture area for photos/videos saved on the device
+- Stargazing checklist, Clear Dark Sky link, viewing grade guidance, overhead targets, and horizon targets
 - Flat file structure for simple GitHub upload
 
 ## Run locally
 
 ```bash
-npm start
+python3 -m http.server 8788
 ```
 
 Then open:
@@ -30,22 +31,15 @@ http://localhost:8788
 
 ## Cloudflare Pages
 
-This v1 is static and can be deployed from the repository root.
+This v2.1 app is static and can be deployed from the repository root.
 
 Suggested settings:
 
 - Build command: leave blank
 - Build output directory: `.`
-- Functions directory: `functions`
+- Root directory: repository root
 
-Environment variables for future live integrations:
-
-- `MAPBOX_PUBLIC_TOKEN`
-- `MAPBOX_SECRET_TOKEN`
-- `NPS_API_KEY`
-- optional `OPENWEATHER_API_KEY`
-- optional `ASTRONOMY_API_KEY`
-- KV binding: `TRIP_CACHE`
+Do not upload `package.json`, `node_modules`, `functions`, `assets`, or old zip files for this flat version.
 
 ## Required files
 
