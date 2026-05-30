@@ -6,7 +6,6 @@
     <meta name="theme-color" content="#1f4f3a">
     <title>Elskatemm Travel Companion</title>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -72,12 +71,11 @@
         <section class="map-and-panel">
           <div class="map-panel">
             <div class="map-toolbar">
-              <strong>Route Map</strong>
-              <span id="mapMode">Live map when online</span>
+              <strong>Google Route Map</strong>
+              <span id="mapMode">Road-accurate route via Google Maps</span>
             </div>
-            <div id="map" class="route-map" role="img" aria-label="Simplified route map">
-              <div id="leafletMap" class="leaflet-map" aria-label="Live OpenStreetMap route"></div>
-              <svg id="routeSvg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="map" class="route-map google-map-panel" aria-label="Google Maps route panel">
+              <div id="googleMapEmbed" class="google-map-embed"></div>
             </div>
             <div id="routeQuest" class="route-quest"></div>
           </div>
@@ -120,14 +118,6 @@
           <div id="profileView" class="profile-view"></div>
         </section>
 
-        <section class="grid-section" aria-label="Travel tools">
-          <article class="tool-card" id="stopsCard"></article>
-          <article class="tool-card" id="ferryCard"></article>
-          <article class="tool-card" id="starsCard"></article>
-          <article class="tool-card" id="adventureCard"></article>
-          <article class="tool-card" id="eventsCard"></article>
-          <article class="tool-card" id="summaryCard"></article>
-        </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Primary navigation">
@@ -140,7 +130,6 @@
     </div>
     <input id="captureInput" type="file" accept="image/*,video/*" capture="environment" multiple hidden>
     <script src="/trip-data.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

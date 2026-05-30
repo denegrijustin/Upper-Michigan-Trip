@@ -5,9 +5,6 @@
   let activeProfile = state.profile || "elsie";
   let activePage = "home";
   let watchId = null;
-  let routeMap = null;
-  let routeLayer = null;
-  let userMarker = null;
   let lastGpsRender = 0;
 
   const phaseLabels = {
@@ -18,8 +15,8 @@
     complete: "Trip complete"
   };
 
-  const pages = ["home", "today", "route", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
-  const parentPages = ["home", "route", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
+  const pages = ["home", "today", "route", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
+  const parentPages = ["home", "route", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
   const julesFlow = ["Captain Today", "Weather", "Ferry / Boats", "Big Machines", "Stars", "Badges", "Photos", "Done / Next choice"];
 
   function defaultState() {
@@ -242,6 +239,8 @@
   }
 
   async function refreshWeatherCards() {
+    const container = byId("weatherBlocks");
+    if (container) container.innerHTML = `<div class="loading-note">Refreshing Open-Meteo weather...</div>`;
     const locations = weatherLocationsForContext();
     const results = await Promise.all(locations.map(getWeather));
     renderWeatherBlocks(results);
@@ -521,7 +520,7 @@
     state.destinationStatus = `${Math.round(percentToDestination)}% to ${destination.label}`;
     if (state.phase === "outbound") state.progress = percentToDestination;
     if (state.phase === "return") state.returnProgress = percentToDestination;
-    updateRealMap(point);
+    renderGoogleMapPanel();
     offerNearbyBadges(point);
     saveState();
     render();
@@ -562,45 +561,27 @@
     render();
   }
 
-  function initRealMap() {
-    const mapContainer = byId("map");
-    if (!window.L || routeMap) {
-      if (!window.L) {
-        mapContainer.classList.add("using-fallback");
-        byId("mapMode").textContent = "Approximate route overview";
-      }
-      return;
-    }
-    mapContainer.classList.remove("using-fallback");
-    byId("mapMode").textContent = "Approximate route context - open Google Maps for road-accurate route";
-    routeMap = L.map("leafletMap", { zoomControl: true, scrollWheelZoom: false });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 18,
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(routeMap);
-    const latLngs = data.route.mapStops.map((point) => [point.lat, point.lon]);
-    routeLayer = L.polyline(latLngs, { color: "#1f78a4", weight: 5, opacity: 0.78, dashArray: "8 8" }).addTo(routeMap);
-    data.route.mapStops.forEach((point) => {
-      L.circleMarker([point.lat, point.lon], {
-        radius: point.type === "route" ? 4 : 7,
-        color: point.type === "ferry" ? "#bd5a36" : "#163f33",
-        fillColor: "#fffdf7",
-        fillOpacity: 1,
-        weight: 3
-      }).addTo(routeMap).bindPopup(`${point.label} - route context only`);
-    });
-    routeMap.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
-    setTimeout(() => routeMap.invalidateSize(), 120);
+  function googleEmbedSrc() {
+    const key = data.googleMaps.embedApiKey;
+    if (!key) return "";
+    return `https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(key)}&origin=Olathe%2C%20KS&destination=Bois%20Blanc%20Island%2C%20MI&waypoints=South%20Bend%2C%20IN%7CPlaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&mode=driving`;
   }
 
-  function updateRealMap(point) {
-    if (!routeMap || !window.L) return;
-    const latLng = [point.lat, point.lon];
-    if (!userMarker) {
-      userMarker = L.circleMarker(latLng, { radius: 9, color: "#fff", fillColor: "#f2c14e", fillOpacity: 1, weight: 4 }).addTo(routeMap).bindPopup("You are here");
-    } else {
-      userMarker.setLatLng(latLng);
-    }
+  function renderGoogleMapPanel() {
+    const container = byId("googleMapEmbed");
+    if (!container) return;
+    const embed = googleEmbedSrc();
+    byId("mapMode").textContent = embed ? "Google Maps Embed API" : "Google Maps route links";
+    container.innerHTML = embed ? `
+      <iframe title="Google Maps road route from Olathe to Bois Blanc Island" src="${embed}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    ` : `
+      <div class="google-map-fallback">
+        <strong>Road-accurate route uses Google Maps</strong>
+        <p>Add a Google Maps Embed API key in <code>trip-data.js</code> at <code>googleMaps.embedApiKey</code> to show the map in this panel. Until then, every route button opens Google Maps directly.</p>
+        <div class="route-steps"><span>Olathe</span><span>South Bend</span><span>Cheboygan ferry</span><span>Bois Blanc Island</span></div>
+        <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a><a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
+      </div>
+    `;
   }
 
   function renderDaySelect() {
@@ -726,7 +707,7 @@
         <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open Google Maps route</a>
         <a class="external-link" href="${data.googleMaps.returnUrl}" target="_blank" rel="noopener">Open return route</a>
       </div>
-      <p class="map-caption">Leaflet is an approximate route context map. Use Google Maps for road-accurate directions.</p>
+      <p class="map-caption">Google Maps provides the road-accurate route. If no Embed API key is configured, use the route buttons.</p>
       ${renderBadgeShelf(profile.id)}
     `;
   }
@@ -777,6 +758,7 @@
           <p>${place.place}. ${place.why}</p>
           <p>${place.profiles?.[profile.id] || place.profiles?.momdad || ""}</p>
           <div class="action-row">
+            <button type="button" data-detail="${escapeHtml(place.name)}">View details</button>
             <a class="external-link" href="${sourceLinkForPlace(place)}" target="_blank" rel="noopener">${sourceLabelForPlace(place)}</a>
             <button type="button" data-source="${escapeHtml(place.name)}">Source checked</button>
             <button type="button" data-shortlist="${escapeHtml(place.name)}" data-category="Place" data-url="${sourceLinkForPlace(place)}">Save to Trip</button>
@@ -797,6 +779,12 @@
           <p>${profile.lens}</p>
           ${renderBadgeShelf(profile.id)}
         </div>
+        <div class="feature-strip">${data.route.routePlaces.slice(0, 4).map((place) => `
+          <button type="button" class="feature-card" data-detail="${escapeHtml(place.name)}">
+            <img src="${place.image}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.style.display='none'">
+            <span>${place.name}</span>
+          </button>
+        `).join("")}</div>
         <div class="dashboard-grid">${profileHomeTiles(profile)}</div>
       </div>
     `;
@@ -858,6 +846,7 @@
       today: () => renderTodayPage(profile, place),
       route: () => renderRoutePage(profile, place),
       gps: () => renderGpsPage(),
+      detail: () => renderDetailPage(profile),
       weather: () => renderWeatherPage(profile),
       stars: () => renderStarsPage(profile),
       ferry: () => renderFerryPage(profile),
@@ -870,6 +859,33 @@
       sources: () => renderSourcesPage()
     };
     return (map[page] || map.today)();
+  }
+
+  function selectedDetailPlace() {
+    const target = decodeURIComponent(location.hash.split("/")[2] || "");
+    return data.route.routePlaces.find((place) => place.name === target) || routePlaceForProfile(currentProfile());
+  }
+
+  function renderDetailPage(profile) {
+    const place = selectedDetailPlace();
+    return `
+      <article class="choice-card detail-hero">
+        <img src="${place.image || ""}" alt="${escapeHtml(place.name)}" loading="lazy" onerror="this.style.display='none'">
+        <div>
+          <p class="eyebrow">${place.place}</p>
+          <h3>${place.name}</h3>
+          <p>${place.why}</p>
+          <p>${place.profiles?.[profile.id] || place.profiles?.momdad || ""}</p>
+          <p><strong>Best fit:</strong> ${profile.name}. <strong>Route context:</strong> ${place.milesFromStart ? `${place.milesFromStart} miles from home area` : "Island or flexible context"}.</p>
+          <div class="action-row">
+            <a class="external-link" href="${sourceLinkForPlace(place)}" target="_blank" rel="noopener">${sourceLabelForPlace(place)}</a>
+            <button type="button" data-shortlist="${escapeHtml(place.name)}" data-category="Place" data-url="${sourceLinkForPlace(place)}">Save to Trip</button>
+            <button type="button" data-vote-item="${escapeHtml(place.name)}" data-choice="Yes">Family Vote: Yes</button>
+            <button type="button" data-capture="${escapeHtml(place.name)}">Capture image/video</button>
+          </div>
+        </div>
+      </article>
+    `;
   }
 
   function renderTodayPage(profile, place) {
@@ -927,7 +943,7 @@
       <div class="choice-card">
         <strong>Weather source status</strong>
         <p>Open-Meteo is used with no API key. Data is cached for 30 minutes and labeled when cached.</p>
-        <div class="action-row"><button type="button" id="refreshWeather">Refresh weather</button><a class="external-link" href="${data.sourceLinks.weather.url}" target="_blank" rel="noopener">Open weather source</a></div>
+        <div class="action-row"><button type="button" id="refreshWeather" data-weather-refresh="true">Refresh weather</button><a class="external-link" href="${data.sourceLinks.weather.url}" target="_blank" rel="noopener">Open weather source</a></div>
       </div>
       <div id="weatherBlocks" class="weather-grid">${renderWeatherBlocksMarkup(profile, weatherLocationsForContext().map((location) => state.weather[location.id] || { location, sourceStatus: "Not available" }))}</div>
     `;
@@ -1162,6 +1178,9 @@
     document.querySelectorAll("[data-nav]").forEach((button) => {
       button.onclick = () => navTo(button.dataset.nav);
     });
+    document.querySelectorAll("[data-detail]").forEach((button) => {
+      button.onclick = () => { location.hash = `/${activeProfile}/detail/${encodeURIComponent(button.dataset.detail)}`; };
+    });
     document.querySelectorAll("[data-shortlist]").forEach((button) => {
       button.onclick = () => saveShortlist({ name: button.dataset.shortlist, category: button.dataset.category, sourceUrl: button.dataset.url });
     });
@@ -1192,8 +1211,7 @@
         setAction(`Source checked: ${button.dataset.source}.`);
       };
     });
-    const refresh = byId("refreshWeather");
-    if (refresh) refresh.onclick = refreshWeatherCards;
+    document.querySelectorAll("[data-weather-refresh]").forEach((button) => { button.onclick = refreshWeatherCards; });
   }
 
   function wireEvents() {
@@ -1229,11 +1247,9 @@
     });
     renderCountdowns();
     renderTripStatus();
+    renderGoogleMapPanel();
     renderRouteQuest();
     renderProfile();
-    const grid = document.querySelector(".grid-section");
-    if (grid) grid.hidden = true;
-    initRealMap();
   }
 
   renderDaySelect();

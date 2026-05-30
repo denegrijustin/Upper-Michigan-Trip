@@ -61,7 +61,7 @@ window.TRIP_DATA = {
         day: "2026-07-31",
         milesFromStart: 260,
         image: "https://www.nps.gov/common/uploads/cropped_image/primary/3C7F2389-1DD8-B71B-0B89B5A435368B0E.jpg",
-        learnMore: "https://www.nps.gov/jeff/",
+        learnMore: "https://www.nps.gov/jeff/index.htm",
         why: "A 630-foot monument on the Mississippi River tied to westward expansion and river travel.",
         profiles: {
           elsie: "Suspense-light angle: giant metal arch, river crossings, and old travel stories make this feel dramatic without being scary.",
@@ -517,6 +517,8 @@ window.TRIP_DATA = {
 };
 
 window.TRIP_DATA.googleMaps = {
+  embedApiKey: "",
+  embedHelp: "Add a Google Maps Embed API key here to show an embedded Google map. Without a key, the app uses direct Google Maps route links.",
   outboundUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=Bois%20Blanc%20Island%2C%20MI&waypoints=South%20Bend%2C%20IN%7CPlaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",
   dayOneUrl: "https://www.google.com/maps/dir/?api=1&origin=Olathe%2C%20KS&destination=South%20Bend%2C%20IN&travelmode=driving",
   ferryDayUrl: "https://www.google.com/maps/dir/?api=1&origin=South%20Bend%2C%20IN&destination=Plaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI&travelmode=driving",
