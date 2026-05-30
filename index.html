@@ -90,7 +90,6 @@
       <nav class="bottom-nav" id="bottomNav" aria-label="Primary navigation"></nav>
     </div>
 
-    <!-- Hidden panels used by GPS/trip controls subpage only -->
     <div id="statusPanelData" hidden>
       <div id="actionStatus"></div>
       <div id="gpsStatus"></div>
@@ -101,7 +100,9 @@
 
     <input id="captureInput" type="file" accept="image/*,video/*" capture="environment" multiple hidden>
     <script src="/trip-data.js"></script>
+    <script src="/trip-date-patch.js"></script>
     <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
     <script src="/app.js"></script>
+    <script src="/trip-ui-polish.js"></script>
   </body>
 </html>
