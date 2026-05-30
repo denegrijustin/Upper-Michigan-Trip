@@ -1,0 +1,444 @@
+/* Mobile-first override layer for Elskatemm Travel Companion. Load after styles.css. */
+
+:root {
+  --mobile-gutter: clamp(10px, 3.6vw, 16px);
+  --tap-target: 44px;
+  --soft-shadow: 0 8px 24px rgba(20, 32, 26, 0.08);
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+}
+
+button,
+a,
+select,
+input {
+  min-height: var(--tap-target);
+}
+
+button,
+.external-link,
+.bottom-nav a {
+  touch-action: manipulation;
+}
+
+.app-shell {
+  width: 100%;
+  padding: var(--mobile-gutter) var(--mobile-gutter) calc(92px + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  top: max(6px, env(safe-area-inset-top));
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 253, 247, 0.98);
+  box-shadow: var(--soft-shadow);
+}
+
+.topbar-identity {
+  min-width: 0;
+}
+
+.topbar h1,
+.topbar-identity h1 {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(1rem, 5vw, 1.18rem);
+}
+
+.topbar-meta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 8px;
+  justify-content: stretch;
+}
+
+.status-pill,
+.traveler-chip {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.traveler-chip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-summary-card,
+.progress-band,
+.profile-section,
+.map-and-panel,
+.grid-section,
+.dashboard-grid,
+.profile-dashboard,
+.dashboard-tiles,
+.summary-grid,
+.profile-grid {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  grid-template-columns: 1fr !important;
+}
+
+.today-summary-card {
+  padding: 16px;
+  gap: 12px;
+  border-radius: 18px;
+}
+
+.today-summary-card h2 {
+  font-size: clamp(1.45rem, 9vw, 2.05rem);
+  overflow-wrap: anywhere;
+}
+
+.today-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.today-stats span {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 253, 247, 0.10);
+}
+
+.today-stats strong {
+  font-size: clamp(1.12rem, 8vw, 1.45rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.today-stats small {
+  font-size: 0.64rem;
+  line-height: 1.15;
+}
+
+.next-action-card {
+  min-height: auto;
+}
+
+.today-primary-actions,
+.action-row,
+.trip-controls,
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.today-primary-actions button,
+.action-row button,
+.action-row a,
+.trip-controls button,
+.quick-actions button,
+.external-link {
+  width: 100%;
+  min-height: var(--tap-target);
+}
+
+.progress-band {
+  gap: 10px;
+}
+
+.progress-band article {
+  padding: 12px;
+}
+
+.progress-band article > div:first-child,
+dl div {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+dl div {
+  gap: 4px;
+}
+
+dd {
+  text-align: left;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+#daySelect {
+  width: 100%;
+  max-width: none;
+}
+
+.profile-view,
+.status-panel,
+.map-panel,
+.choice-card,
+.activity-item,
+.dashboard-tile,
+.detail-card,
+.tool-card {
+  border-radius: 16px;
+}
+
+.profile-view {
+  padding: 14px;
+}
+
+.dashboard-grid,
+.dashboard-tiles,
+.profile-dashboard {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-tile,
+.detail-card,
+.choice-card,
+.activity-item {
+  min-width: 0;
+  padding: 12px;
+}
+
+.dashboard-tile h3,
+.dashboard-tile h4,
+.choice-card h3,
+.choice-card h4,
+.activity-item h4 {
+  overflow-wrap: anywhere;
+}
+
+.map-and-panel {
+  gap: 12px;
+}
+
+.map-toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 12px;
+}
+
+.route-map,
+.maplibre-panel,
+.maplibre-canvas,
+.map-fallback {
+  min-height: min(58vh, 360px) !important;
+}
+
+.route-steps {
+  grid-template-columns: 1fr 1fr;
+}
+
+.route-quest {
+  padding: 12px;
+}
+
+.badge-shelf,
+.route-badge-shelf,
+.recent-badges,
+.upcoming-badges {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 10px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.badge-shelf > *,
+.route-badge-shelf > *,
+.recent-badges > *,
+.upcoming-badges > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.badge,
+.badge-card,
+.badge-button,
+[class*="badge"] button {
+  min-height: var(--tap-target);
+}
+
+.place-preview,
+.summary-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.place-preview img,
+.summary-photo {
+  min-height: 160px;
+  max-height: 260px;
+}
+
+.bottom-nav {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav a,
+.bottom-nav button {
+  min-width: 0;
+  min-height: 54px;
+  padding: 10px 3px calc(10px + env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  font-size: clamp(0.68rem, 3vw, 0.78rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.splash-screen {
+  grid-template-columns: 1fr;
+  min-height: 100svh;
+  background: linear-gradient(180deg, #12392f 0%, #1d6d93 32%, #fffaf0 32.2%, #fffaf0 100%);
+}
+
+.splash-visual {
+  min-height: 150px;
+}
+
+.splash-content {
+  padding: 20px var(--mobile-gutter) 28px;
+}
+
+.splash-content h1 {
+  font-size: clamp(2.2rem, 14vw, 3.4rem);
+}
+
+.splash-profiles {
+  grid-template-columns: 1fr;
+  max-width: none;
+}
+
+.splash-profile {
+  min-height: 112px;
+}
+
+@media (max-width: 380px) {
+  .today-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .top-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .route-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 620px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .top-actions {
+    width: auto;
+    grid-template-columns: auto auto;
+  }
+
+  .today-primary-actions,
+  .action-row,
+  .quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trip-controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-grid,
+  .dashboard-tiles,
+  .profile-dashboard,
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 860px) {
+  .app-shell {
+    padding: 16px 16px 88px;
+  }
+
+  .topbar,
+  .today-summary-card,
+  .progress-band,
+  .profile-section,
+  .map-and-panel,
+  .grid-section {
+    max-width: 1180px;
+  }
+
+  .today-summary-card {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr) !important;
+    padding: 20px 22px;
+  }
+
+  .progress-band {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .map-and-panel {
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.5fr) !important;
+  }
+
+  .profile-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr) !important;
+  }
+
+  .dashboard-grid,
+  .dashboard-tiles,
+  .profile-dashboard {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .place-preview {
+    grid-template-columns: 128px minmax(0, 1fr) !important;
+  }
+}

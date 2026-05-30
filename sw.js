@@ -1,8 +1,9 @@
-const CACHE_NAME = "elskatemm-trip-v10";
+const CACHE_NAME = "elskatemm-trip-v11";
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/styles.css",
+  "/mobile-first-fix.css",
   "/app.js",
   "/trip-data.js",
   "/manifest.json",
@@ -24,7 +25,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
-  const networkFirst = ["/", "/index.html", "/styles.css", "/app.js", "/trip-data.js", "/sw.js"].includes(url.pathname);
+  const networkFirst = ["/", "/index.html", "/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/sw.js"].includes(url.pathname);
   if (networkFirst) {
     event.respondWith(
       fetch(event.request)
