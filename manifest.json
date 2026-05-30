@@ -8,7 +8,7 @@
   "description": "Offline-first family road trip companion for Bois Blanc Island.",
   "icons": [
     {
-      "src": "/assets/icon.svg",
+      "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

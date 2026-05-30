@@ -4,9 +4,9 @@ const CORE_ASSETS = [
   "/index.html",
   "/styles.css",
   "/app.js",
-  "/data/trip-data.js",
+  "/trip-data.js",
   "/manifest.json",
-  "/assets/icon.svg"
+  "/icon.svg"
 ];
 
 self.addEventListener("install", (event) => {

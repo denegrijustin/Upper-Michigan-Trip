@@ -14,7 +14,7 @@ Offline-first v1 of the family travel companion for the Olathe to Bois Blanc Isl
 - Day-driven outlooks for July 31 through August 8
 - Choose-your-own-adventure island activity board
 - Stargazing checklist and nightly guidance
-- Cloudflare Pages Function stubs for ferry, events, and trip pack data
+- Flat file structure for simple GitHub upload
 
 ## Run locally
 
@@ -46,6 +46,20 @@ Environment variables for future live integrations:
 - optional `OPENWEATHER_API_KEY`
 - optional `ASTRONOMY_API_KEY`
 - KV binding: `TRIP_CACHE`
+
+## Required files
+
+Upload these files at the root of the GitHub repository:
+
+- `index.html`
+- `styles.css`
+- `app.js`
+- `trip-data.js`
+- `manifest.json`
+- `sw.js`
+- `icon.svg`
+- `package.json`
+- `README.md`
 
 ## Privacy note
 
