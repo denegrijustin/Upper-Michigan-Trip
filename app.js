@@ -16,7 +16,7 @@
     complete: "Trip complete"
   };
 
-  const pages = ["home", "today", "route", "gps", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
+  const pages = ["home", "today", "route", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
   const parentPages = ["home", "route", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
   const julesFlow = ["Captain Today", "Weather", "Ferry / Boats", "Big Machines", "Stars", "Badges", "Photos", "Done / Next choice"];
 
@@ -373,6 +373,8 @@
   }
 
   function sourceLinkForPlace(place) {
+    if (place.source?.url) return place.source.url;
+    if (place.sourceUrl) return place.sourceUrl;
     if (place.learnMore) return place.learnMore;
     const links = data.sourceLinks;
     if (place.name.includes("Gateway")) return links.gatewayArch.url;
@@ -386,17 +388,12 @@
   }
 
   function sourceLabelForPlace(place) {
-    if (place.name.includes("Gateway")) return "Open official NPS page";
-    if (place.name.includes("Brown")) return "Open official NPS page";
-    if (place.name.includes("Notre")) return "Open official Notre Dame page";
-    if (place.name.includes("Studebaker")) return "Open official museum page";
-    if (place.name.includes("Dunes")) return "Open official NPS page";
-    if (place.name.includes("Mackinac")) return "Open official bridge page";
-    if (place.name.includes("Plaunt")) return "Open official ferry schedule";
-    return "Open official source";
+    return place.source?.label || place.sourceLabel || "Learn More";
   }
 
   function routeVisualForPlace(place) {
+    const imageUrl = place.image?.url || place.imageUrl || (typeof place.image === "string" ? place.image : "");
+    if (imageUrl) return imageUrl;
     const title = place.name.replace(" / ", "\n").replace(" National Historical Park", "").replace(" Transportation", "");
     const subtitle = place.place || "Trip stop";
     const kind = place.name.includes("Notre") ? "campus" :
@@ -494,13 +491,13 @@
     const earned = badgeStore()[badgeId];
     const profile = currentProfile();
     const includeProfile = profile.id === "momdad";
-    const message = [
-      badge.title,
-      earned ? badge.earned : badge.locked,
-      earned ? `Earned ${new Date(earned.earnedAt).toLocaleString()}.` : "Not earned yet.",
-      includeProfile ? `Profile: ${profile.name}` : ""
-    ].filter(Boolean).join(" — ");
-    setAction(message);
+    byId("actionStatus").innerHTML = `
+      <strong>${badge.title}</strong><br>
+      ${earned ? badge.earned : badge.locked}<br>
+      ${earned ? `Earned ${new Date(earned.earnedAt).toLocaleString()}.` : "Not earned yet."}
+      ${includeProfile ? `<br>Profile: ${profile.name}` : ""}
+      ${badge.sourceUrl ? `<br><a href="${badge.sourceUrl}" target="_blank" rel="noopener">Open official source</a>` : ""}
+    `;
   }
 
   function saveShortlist(item) {
@@ -865,41 +862,6 @@
     location.hash = `/${activeProfile}/${page}`;
   }
 
-  const profileNavs = {
-    child: [
-      ["home", "Home"],
-      ["route", "Route"],
-      ["weather", "Weather"],
-      ["badges", "Badges"],
-      ["photos", "Photos"]
-    ],
-    momdad: [
-      ["home", "Home"],
-      ["route", "Route & GPS"],
-      ["weather", "Weather"],
-      ["ferry", "Ferry"],
-      ["stops", "Stops"]
-    ],
-    jules: [
-      ["home", "Home"],
-      ["ferry", "Boats"],
-      ["stars", "Stars"],
-      ["badges", "Badges"],
-      ["photos", "Photos"]
-    ]
-  };
-
-  function renderBottomNav() {
-    const nav = byId("bottomNav");
-    if (!nav) return;
-    const profile = currentProfile();
-    const navItems = profile.id === "momdad" ? profileNavs.momdad : profile.id === "jules" ? profileNavs.jules : profileNavs.child;
-    nav.innerHTML = navItems.map(([page, label]) => {
-      const isActive = activePage === page;
-      return `<a href="#/${activeProfile}/${page}" data-page="${page}" class="${isActive ? "is-active" : ""}" ${isActive ? 'aria-current="page"' : ""}>${label}</a>`;
-    }).join("");
-  }
-
   function renderCountdowns() {
     const now = new Date();
     const depart = new Date(data.dates.depart);
@@ -912,8 +874,8 @@
     byId("percentLeft").textContent = `${Math.round(100 - progressForPhase())}%`;
     byId("phaseLabel").textContent = phaseLabels[state.phase] || "Pre-trip";
     byId("heroTitle").textContent = state.phase === "return" ? "Homeward Bound" : state.phase === "island" ? selectedDay().title : "Bois Blanc Bound";
-    const heroText = byId("heroText");
-    if (heroText) { heroText.textContent = ""; heroText.hidden = true; }
+    byId("heroText").textContent = "";
+    byId("heroText").hidden = true;
     byId("primaryProgressLabel").textContent = state.phase === "pretrip" ? "Countdown to launch" : "Whole trip progress";
     byId("primaryProgressText").textContent = `${Math.round(wholeTrip)}%`;
     byId("primaryProgressBar").style.width = `${wholeTrip}%`;
@@ -930,49 +892,14 @@
     const timeText = `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
     const childText = profile.id === "jules"
       ? `Next big thing: ${destination.label}.`
-      : `${milesLeft().toLocaleString()} mi · ~${timeText} to ${destination.label}.`;
-
-    // Online status pill
-    const pill = byId("onlineStatus");
-    if (pill) {
-      pill.textContent = navigator.onLine ? "Online" : "Offline";
-      pill.className = `status-pill ${navigator.onLine ? "is-online" : "is-offline"}`;
-    }
-
-    // Topbar identity
-    const topbarTitle = byId("topbarTitle");
-    const topbarMeta = byId("topbarMeta");
-    const day = selectedDay();
-    if (topbarTitle) topbarTitle.textContent = profile.id === "momdad" ? "Mom/Dad Logistics" : `${profile.name}'s Trip`;
-    if (topbarMeta) topbarMeta.textContent = `${day.date.slice(5)} · ${day.title} · ${phaseLabels[state.phase] || "Pre-trip"}`;
-
-    // Next stop in today-summary-card
-    const nextStopEl = byId("nextStop");
-    if (nextStopEl) {
-      nextStopEl.textContent = state.needNow
-        ? `${state.needNow}: see Route page for stops.`
-        : state.phase === "pretrip"
-          ? "Pre-trip · Use planning and Route pages."
-          : `Next target: ${destination.label}.`;
-    }
-
-    // Compact travel update in today-summary-card
-    const kidUpdateEl = byId("kidTravelUpdate");
-    if (kidUpdateEl) {
-      const nearbyNote = state.nearbyBadgeMessage ? ` · ${state.nearbyBadgeMessage}` : "";
-      kidUpdateEl.textContent = state.phase !== "pretrip" ? `${childText}${nearbyNote}` : "";
-    }
-
-    // Hidden elements (for GPS subpage reads)
-    const actionEl = byId("actionStatus");
-    if (actionEl) actionEl.textContent = state.actionMessage || "No action yet.";
-    const gpsEl = byId("gpsStatus");
-    if (gpsEl) gpsEl.textContent = state.gpsStatus || "Off";
-    const destEl = byId("destinationStatus");
-    if (destEl) destEl.textContent = state.destinationStatus || destination.label;
-    const trackEl = byId("trackingStatus");
-    if (trackEl) trackEl.textContent = state.trackingStatus || "Off";
-
+      : `${milesLeft().toLocaleString()} miles, about ${timeText}, to ${destination.label}.`;
+    byId("onlineStatus").textContent = navigator.onLine ? "Online" : "Offline - using cached trip data";
+    byId("nextStop").textContent = state.needNow ? `${state.needNow}: route-aware options below.` : state.phase === "pretrip" ? "Trip has not started. Use planning, route, weather, and badge prep." : `Next target: ${destination.label}.`;
+    byId("kidTravelUpdate").innerHTML = `<strong>${profile.id === "momdad" ? "Adult GPS readout" : "Road update"}</strong><p>${childText}</p>${state.nearbyBadgeMessage ? `<p>${state.nearbyBadgeMessage}</p>` : ""}`;
+    byId("actionStatus").textContent = state.actionMessage || "No action yet.";
+    byId("gpsStatus").textContent = state.gpsStatus || "Off";
+    byId("destinationStatus").textContent = state.destinationStatus || destination.label;
+    byId("trackingStatus").textContent = state.trackingStatus || "Off";
     renderNeedResults();
   }
 
@@ -1002,10 +929,8 @@
   }
 
   function renderRouteQuest() {
-    const container = byId("routeQuest");
-    if (!container) return;
     const profile = currentProfile();
-    container.innerHTML = `
+    byId("routeQuest").innerHTML = `
       <div class="route-actions">
         <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open phone driving route</a>
         <a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a>
@@ -1019,7 +944,6 @@
     const childTiles = [
       ["today", "Today", "What to look for right now."],
       ["route", "Route", "Road, stops, and source-linked places."],
-      ["gps", "GPS & Controls", "Start GPS, needs, trip phase."],
       ["weather", "Weather", "Open-Meteo plan guidance."],
       ["stars", "Stars", "STARZ directions and sky checks."],
       ["ferry", "Ferry / Boats", "Water crossing context."],
@@ -1030,7 +954,6 @@
     ];
     const parentTiles = [
       ["route", "Route & GPS", "Road-accurate links and GPS detail."],
-      ["gps", "Trip Controls", "Start/stop GPS, needs, phase controls."],
       ["weather", "Weather & Road Risk", "Open-Meteo, ferry wind, backup plans."],
       ["ferry", "Ferry Plan", "Official Plaunt links and reminders."],
       ["stops", "Stops & Supplies", "Clean stops, gas, food, last mainland prep."],
@@ -1229,16 +1152,6 @@
           <a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a>
         </div>
       </div>
-      <div class="map-panel">
-        <div class="map-toolbar">
-          <strong>Live Route Map</strong>
-          <span id="mapMode">${state.lastPosition ? "Live GPS active" : "Tap Start GPS to show your location"}</span>
-        </div>
-        <div id="map" class="route-map maplibre-panel" aria-label="Live route map">
-          <div id="routeMapPanel" class="maplibre-panel"></div>
-        </div>
-        <div id="routeQuest" class="route-quest"></div>
-      </div>
       ${placeCard(place, profile)}
       ${renderStopsPage()}
     `;
@@ -1247,43 +1160,19 @@
   function renderGpsPage() {
     const pos = state.lastPosition;
     return `
-      <div class="gps-subpage">
-        <div class="choice-card">
-          <strong>GPS and tracking</strong>
-          <p>Status: ${state.gpsStatus || "Off"} — ${state.trackingStatus || "Off"}</p>
-          <dl>
-            <div><dt>Accuracy</dt><dd>${pos ? `${Math.round(pos.accuracy)} meters` : "Not available"}</dd></div>
-            <div><dt>Coordinates</dt><dd>${pos ? `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}` : "Not available"}</dd></div>
-            <div><dt>Last updated</dt><dd>${pos ? new Date(pos.updatedAt).toLocaleString() : "Not available"}</dd></div>
-            <div><dt>Destination</dt><dd>${state.destinationStatus || activeDestination().label}</dd></div>
-            <div><dt>Miles left</dt><dd>${milesLeft().toLocaleString()}</dd></div>
-          </dl>
-          <div class="trip-controls-grid">
-            <button id="useLocationSub" type="button" class="primary-action">Start GPS</button>
-            <button id="stopLocationSub" type="button">Stop GPS</button>
-            <button id="startTripSub" type="button">We Left</button>
-            <button id="markArrivedSub" type="button">On Island</button>
-            <button id="startReturnSub" type="button">Return</button>
-            <button id="completeTripSub" type="button">Complete</button>
-          </div>
-        </div>
-        <div class="choice-card">
-          <strong>Needs</strong>
-          <p>Tap a need to see nearby route-aware stops.</p>
-          <div class="quick-needs-grid">
-            <button data-need="Bathroom now" type="button">Bathroom now</button>
-            <button data-need="Gas now" type="button">Gas now</button>
-            <button data-need="Food now" type="button">Food now</button>
-          </div>
-          <div id="needResultsSub" class="need-results"></div>
-        </div>
-        <div class="choice-card">
-          <p class="eyebrow">Last action</p>
-          <p>${state.actionMessage || "No action yet."}</p>
-        </div>
+      <div class="choice-card">
+        <strong>GPS status: ${state.gpsStatus || "Off"}</strong>
+        <p>${state.trackingStatus || "Off"}</p>
+        <dl>
+          <div><dt>Accuracy</dt><dd>${pos ? `${Math.round(pos.accuracy)} meters` : "Not available"}</dd></div>
+          <div><dt>Coordinates</dt><dd>${pos ? `${pos.lat.toFixed(5)}, ${pos.lon.toFixed(5)}` : "Not available"}</dd></div>
+          <div><dt>Last updated</dt><dd>${pos ? new Date(pos.updatedAt).toLocaleString() : "Not available"}</dd></div>
+          <div><dt>Destination miles</dt><dd>${milesLeft().toLocaleString()}</dd></div>
+        </dl>
       </div>
     `;
   }
+
   function renderWeatherPage(profile) {
     return `
       <div class="choice-card">
@@ -1506,15 +1395,22 @@
     byId("profileView").innerHTML = renderSubpage(profile);
     byId("activeTraveler").textContent = `${profile.name}'s view`;
     wireDynamicActions();
-    if (activePage === "route") {
-      renderRouteMapPanel();
-      renderRouteQuest();
-    }
     if (activePage === "weather" && navigator.onLine && !Object.keys(state.weather || {}).length) {
       setTimeout(refreshWeatherCards, 0);
     }
   }
 
+  function renderCards() {
+    const profile = currentProfile();
+    const place = routePlaceForProfile(profile);
+    byId("stopsCard").innerHTML = `<p class="eyebrow">Stops</p><h3>Bathroom, food, gas</h3>${renderStopsPage()}`;
+    byId("ferryCard").innerHTML = `<p class="eyebrow">Ferry</p>${renderFerryPage(profile)}`;
+    byId("starsCard").innerHTML = `<p class="eyebrow">STARZ</p>${renderStarsPage(profile)}`;
+    byId("adventureCard").innerHTML = `<p class="eyebrow">Activities</p><h3>Interactive board</h3>${renderActivitiesPage(profile)}`;
+    byId("eventsCard").innerHTML = `<p class="eyebrow">Source-linked place</p>${placeCard(place, profile)}`;
+    byId("summaryCard").innerHTML = `<p class="eyebrow">Trip story</p><h3>Photos and shortlist</h3>${renderPhotosPage(profile)}${renderSavedPage(profile)}`;
+    wireDynamicActions();
+  }
 
   function wireDynamicActions() {
     document.querySelectorAll("[data-nav]").forEach((button) => {
@@ -1555,47 +1451,26 @@
     });
     document.querySelectorAll("[data-weather-refresh]").forEach((button) => { button.onclick = refreshWeatherCards; });
     document.querySelectorAll("[data-start-gps]").forEach((button) => { button.onclick = useLocation; });
-    wireSubpageGpsControls();
   }
 
   function wireEvents() {
     byId("activeTraveler").addEventListener("click", () => byId("splash").classList.remove("is-hidden"));
-    // Primary GPS button in today-summary-card
     byId("useLocation").addEventListener("click", useLocation);
-    // Today-summary-card navigation buttons
-    document.querySelectorAll("[data-nav-global]").forEach((button) => {
-      button.addEventListener("click", () => navTo(button.dataset.navGlobal));
-    });
-    window.addEventListener("hashchange", render);
-    window.addEventListener("online", renderTripStatus);
-    window.addEventListener("offline", renderTripStatus);
-  }
-
-  function wireSubpageGpsControls() {
-    const sub = (id, fn) => { const el = byId(id); if (el) el.addEventListener("click", fn); };
-    sub("useLocationSub", useLocation);
-    sub("stopLocationSub", stopLocation);
-    sub("startTripSub", () => setPhase("outbound"));
-    sub("markArrivedSub", () => setPhase("island"));
-    sub("startReturnSub", () => setPhase("return"));
-    sub("completeTripSub", () => setPhase("complete"));
-    document.querySelectorAll(".gps-subpage [data-need]").forEach((button) => {
+    byId("stopLocation").addEventListener("click", stopLocation);
+    byId("startTrip").addEventListener("click", () => setPhase("outbound"));
+    byId("markArrived").addEventListener("click", () => setPhase("island"));
+    byId("startReturn").addEventListener("click", () => setPhase("return"));
+    byId("completeTrip").addEventListener("click", () => setPhase("complete"));
+    document.querySelectorAll("[data-need]").forEach((button) => {
       button.addEventListener("click", () => {
         state.needNow = button.dataset.need;
         awardByTrigger("need", { need: state.needNow });
         setAction(`${state.needNow} selected. Showing route-aware options.`);
-        const container = byId("needResultsSub");
-        if (container) {
-          container.innerHTML = `
-            <div class="choice-card">
-              <strong>${state.needNow}</strong>
-              <p>${state.phase === "pretrip" ? "Previewing likely route options." : "Sorted by current route position."}</p>
-              <ul>${bestNeedStops().map((stop) => `<li><strong>${stop.name}</strong><br>${stop.timing}. ${stop.note}</li>`).join("")}</ul>
-            </div>
-          `;
-        }
       });
     });
+    window.addEventListener("hashchange", render);
+    window.addEventListener("online", renderTripStatus);
+    window.addEventListener("offline", renderTripStatus);
   }
 
   function registerServiceWorker() {
@@ -1605,9 +1480,14 @@
   function render() {
     parseHash();
     if (!state.hasChosenProfile) byId("splash").classList.remove("is-hidden");
-    renderBottomNav();
+    document.querySelectorAll(".bottom-nav a").forEach((link) => {
+      const page = link.getAttribute("data-page");
+      if (page) link.href = `#/${activeProfile}/${page}`;
+    });
     renderCountdowns();
     renderTripStatus();
+    renderRouteMapPanel();
+    renderRouteQuest();
     renderProfile();
   }
 
