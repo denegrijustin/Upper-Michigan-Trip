@@ -378,7 +378,6 @@
     if (place.learnMore) return place.learnMore;
     const links = data.sourceLinks;
     if (place.name.includes("Gateway")) return links.gatewayArch.url;
-    if (place.name.includes("Brown")) return links.brownBoard.url;
     if (place.name.includes("Notre")) return links.notreDame.url;
     if (place.name.includes("Studebaker")) return links.studebaker.url;
     if (place.name.includes("Dunes")) return links.indianaDunes.url;
@@ -389,6 +388,22 @@
 
   function sourceLabelForPlace(place) {
     return place.source?.label || place.sourceLabel || "Learn More";
+  }
+
+  function fallbackImageForPlace(place) {
+    const title = escapeHtml(place.name || "Trip stop");
+    const subtitle = escapeHtml(place.place || "Route discovery");
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+        <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1f4f3a"/><stop offset="1" stop-color="#f7efd9"/></linearGradient></defs>
+        <rect width="900" height="520" fill="url(#g)"/>
+        <circle cx="720" cy="120" r="70" fill="#f2c14e" opacity=".85"/>
+        <path d="M 170 330 C 265 230 365 370 485 250" fill="none" stroke="#fffdf7" stroke-width="28" stroke-linecap="round"/>
+        <rect x="46" y="348" width="808" height="118" rx="22" fill="rgba(255,253,247,.92)"/>
+        <text x="78" y="397" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="#17211b">${title}</text>
+        <text x="78" y="440" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#536159">${subtitle}</text>
+      </svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
 
   function routeVisualForPlace(place) {
@@ -491,13 +506,25 @@
     const earned = badgeStore()[badgeId];
     const profile = currentProfile();
     const includeProfile = profile.id === "momdad";
-    byId("actionStatus").innerHTML = `
-      <strong>${badge.title}</strong><br>
-      ${earned ? badge.earned : badge.locked}<br>
-      ${earned ? `Earned ${new Date(earned.earnedAt).toLocaleString()}.` : "Not earned yet."}
-      ${includeProfile ? `<br>Profile: ${profile.name}` : ""}
-      ${badge.sourceUrl ? `<br><a href="${badge.sourceUrl}" target="_blank" rel="noopener">Open official source</a>` : ""}
+    document.getElementById("badgeDetailOverlay")?.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "badgeDetailOverlay";
+    overlay.className = "app-modal";
+    overlay.innerHTML = `
+      <div class="app-modal-card" role="dialog" aria-modal="true" aria-label="${escapeHtml(badge.title)}">
+        <button type="button" class="modal-close" data-close-modal>Close</button>
+        <p class="eyebrow">${escapeHtml(badge.category || "Badge")}</p>
+        <h3>${escapeHtml(badge.title)}</h3>
+        <p>${escapeHtml(earned ? badge.earned : badge.locked)}</p>
+        <p>${earned ? `Earned ${new Date(earned.earnedAt).toLocaleString()}.` : "Not earned yet. Complete the action or learn about the place to unlock it."}</p>
+        ${includeProfile ? `<p><strong>Profile:</strong> ${escapeHtml(profile.name)}</p>` : ""}
+        <div class="action-row">
+          ${badge.sourceUrl ? `<a class="external-link" href="${badge.sourceUrl}" target="_blank" rel="noopener">Learn More</a>` : ""}
+          <button type="button" data-close-modal>Done</button>
+        </div>
+      </div>
     `;
+    document.body.appendChild(overlay);
   }
 
   function saveShortlist(item) {
@@ -831,10 +858,10 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "splash-profile";
+      button.dataset.profileChoice = profile.id;
       button.style.setProperty("--profile-accent", profile.accent || "#1f78a4");
       const ageLabel = profile.age === "adult" ? "Adult full-detail view" : `Age ${profile.age} view`;
       button.innerHTML = `<strong>${profile.name}</strong><em>${ageLabel}</em><span>${profile.lens}</span>`;
-      button.addEventListener("click", () => chooseProfile(profile.id));
       container.appendChild(button);
     });
   }
@@ -988,7 +1015,7 @@
   function placeCard(place, profile) {
     return `
       <article class="choice-card place-preview">
-        <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.name)}" loading="lazy">
+        <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.image?.alt || place.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(place)}';">
         <div>
           <strong>${place.name}</strong>
           <p>${place.place}. ${place.why}</p>
@@ -1017,7 +1044,7 @@
         </div>
         <div class="feature-strip">${data.route.routePlaces.slice(0, 4).map((place) => `
           <button type="button" class="feature-card" data-detail="${escapeHtml(place.name)}">
-            <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.name)}" loading="lazy">
+            <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.image?.alt || place.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(place)}';">
             <span>${place.name}</span>
           </button>
         `).join("")}</div>
@@ -1107,7 +1134,7 @@
     const place = selectedDetailPlace();
     return `
       <article class="choice-card detail-hero">
-        <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.name)}" loading="lazy">
+        <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.image?.alt || place.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(place)}';">
         <div>
           <p class="eyebrow">${place.place}</p>
           <h3>${place.name}</h3>
@@ -1458,6 +1485,69 @@
     document.querySelectorAll("[data-start-gps]").forEach((button) => { button.onclick = useLocation; });
   }
 
+  function handleAppTap(event) {
+    const target = event.target.closest("button, a");
+    if (!target) return;
+    if (target.matches("[data-close-modal]")) {
+      document.getElementById("badgeDetailOverlay")?.remove();
+      return;
+    }
+    if (target.id === "activeTraveler") {
+      byId("splash")?.classList.remove("is-hidden");
+      return;
+    }
+    if (target.dataset.profileChoice) {
+      event.preventDefault();
+      chooseProfile(target.dataset.profileChoice);
+      return;
+    }
+    if (target.dataset.nav) {
+      event.preventDefault();
+      navTo(target.dataset.nav);
+      return;
+    }
+    if (target.dataset.detail) {
+      event.preventDefault();
+      location.hash = `/${activeProfile}/detail/${encodeURIComponent(target.dataset.detail)}`;
+      return;
+    }
+    if (target.dataset.badge) {
+      event.preventDefault();
+      showBadgeDetail(target.dataset.badge);
+      return;
+    }
+    if (target.dataset.shortlist) {
+      event.preventDefault();
+      saveShortlist({ name: target.dataset.shortlist, category: target.dataset.category, sourceUrl: target.dataset.url });
+      return;
+    }
+    if (target.dataset.completeActivity) {
+      event.preventDefault();
+      completeActivity(target.dataset.completeActivity);
+      return;
+    }
+    if (target.dataset.capture) {
+      event.preventDefault();
+      startCapture(target.dataset.capture);
+      return;
+    }
+    if (target.dataset.source) {
+      event.preventDefault();
+      awardBadge("source-checker", { source: target.dataset.source });
+      setAction(`Source checked: ${target.dataset.source}.`);
+      return;
+    }
+    if (target.dataset.weatherRefresh !== undefined) {
+      event.preventDefault();
+      refreshWeatherCards();
+      return;
+    }
+    if (target.dataset.startGps !== undefined) {
+      event.preventDefault();
+      useLocation();
+    }
+  }
+
   function wireEvents() {
     const on = (id, eventName, handler) => {
       const element = byId(id);
@@ -1483,6 +1573,7 @@
     window.addEventListener("hashchange", render);
     window.addEventListener("online", renderTripStatus);
     window.addEventListener("offline", renderTripStatus);
+    document.addEventListener("click", handleAppTap);
   }
 
   function registerServiceWorker() {

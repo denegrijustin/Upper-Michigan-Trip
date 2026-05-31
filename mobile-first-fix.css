@@ -50,6 +50,39 @@ body.splash-open .topbar {
   max-width: 100vw;
 }
 
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(12, 24, 20, 0.48);
+}
+
+.app-modal-card {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(78vh, 680px);
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid rgba(20, 32, 26, 0.14);
+  border-radius: 18px;
+  background: #fffdf7;
+  box-shadow: 0 22px 70px rgba(20, 32, 26, 0.28);
+}
+
+.app-modal-card h3 {
+  margin: 4px 0 10px;
+  font-size: 1.55rem;
+}
+
+.modal-close {
+  float: right;
+  min-height: 42px;
+  padding-inline: 14px;
+}
+
 @media (max-width: 840px) {
   .splash-screen {
     display: block;

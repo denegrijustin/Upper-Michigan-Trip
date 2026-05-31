@@ -1,9 +1,9 @@
 window.TRIP_DATA = {
   dates: {
-    depart: "2026-07-31T08:00:00-05:00",
-    arriveIsland: "2026-08-01T17:00:00-04:00",
-    departIsland: "2026-08-08T09:00:00-04:00",
-    complete: "2026-08-09T21:00:00-05:00"
+    depart: "2026-07-24T08:00:00-05:00",
+    arriveIsland: "2026-07-25T17:00:00-04:00",
+    departIsland: "2026-08-01T09:00:00-04:00",
+    complete: "2026-08-02T21:00:00-05:00"
   },
   route: {
     totalOutboundMiles: 1065,
@@ -39,20 +39,21 @@ window.TRIP_DATA = {
     ],
     routePlaces: [
       {
-        name: "Brown v. Board of Education National Historical Park",
-        place: "Topeka, Kansas",
+        name: "Columbia / Rocheport Missouri River stretch",
+        place: "Columbia and Rocheport, Missouri",
         day: "2026-07-31",
-        milesFromStart: 63,
-        image: "https://www.nps.gov/common/uploads/cropped_image/primary/1F543FE8-9A95-59BC-26528737C31A8748.jpg",
-        learnMore: "https://www.nps.gov/brvb/planyourvisit/index.htm",
-        why: "A real civil-rights landmark about school segregation and the Supreme Court decision that changed American education.",
+        milesFromStart: 150,
+        image: "https://www.visitcolumbiamo.com/wp-content/uploads/2021/04/VisitColumbiaMO.jpg",
+        learnMore: "https://www.visitcolumbiamo.com/",
+        sourceLabel: "Learn More",
+        why: "A practical first reset zone on I-70 with college-town energy, Missouri River context, and good service density.",
         profiles: {
-          elsie: "Teacher lens: this is about why schools should be fair for children. Think about how you would explain fairness to kindergarteners.",
-          katrina: "Historical-fiction lens: imagine being a student walking into a school where adults were arguing about whether you belonged there.",
-          emma: "Everyday-life lens: this is about school, families, classrooms, and how rules affect real kids.",
-          eliette: "Detail lens: look for classroom objects, signs, photos, and small details that show what school felt like then.",
-          jules: "Why lens: people fought to change a rule because it was unfair. The reason was simple: kids should be treated fairly.",
-          momdad: "Good meaningful stop if timing allows; not a quick bathroom stop. Best as context content if not stopping."
+          elsie: "Animal and setting lens: watch how the road changes around river bluffs, trees, and open Missouri stretches.",
+          katrina: "Why question: why do towns grow near rivers, highways, and colleges?",
+          emma: "Everyday-life lens: college towns show food, sports, traffic, students, and routines all at once.",
+          eliette: "Detail hunt: look for murals, signs, campus colors, river-town textures, and small stop souvenirs.",
+          jules: "Captain reset: decide if the crew needs bathroom, snack, or truck spotting.",
+          momdad: "Good first eastbound reset window; route-relevant and practical before St. Louis."
         }
       },
       {
@@ -62,14 +63,51 @@ window.TRIP_DATA = {
         milesFromStart: 260,
         image: "https://www.nps.gov/common/uploads/cropped_image/primary/3C7F2389-1DD8-B71B-0B89B5A435368B0E.jpg",
         learnMore: "https://www.nps.gov/jeff/index.htm",
-        why: "A 630-foot monument on the Mississippi River tied to westward expansion and river travel.",
+        sourceLabel: "Learn More",
+        why: "A 630-foot monument on the Mississippi River tied to westward expansion, river travel, engineering, and the big St. Louis route moment.",
         profiles: {
           elsie: "Suspense-light angle: giant metal arch, river crossings, and old travel stories make this feel dramatic without being scary.",
           katrina: "Random fact: the Arch is as wide as it is tall. Ask why a monument about movement is shaped like a doorway.",
-          emma: "Big-picture angle: St. Louis grew because rivers, roads, and people all connected there.",
-          eliette: "Shiny thing alert: stainless steel outside, river views, and souvenir possibilities.",
-          jules: "Big build question: how did people build something that tall and curved without it falling over?",
-          momdad: "Potential visual landmark rather than required stop; downtown detour may cost time."
+          emma: "Big-picture angle: St. Louis grew because rivers, roads, sports, food, and people all connected there.",
+          eliette: "Shiny thing alert: stainless steel outside, river views, souvenir possibilities, and a strong photo moment.",
+          jules: "Big build question: how did people build something that tall and curved?",
+          momdad: "Strong visual landmark on the eastbound route. Downtown detour may cost time, but it is route-relevant."
+        }
+      },
+      {
+        name: "Big Things Small Town",
+        place: "Casey, Illinois",
+        day: "2026-07-31",
+        milesFromStart: 405,
+        image: "https://www.enjoyillinois.com/assets/Tourism-Operators/images/Big-Things-in-a-Small-Town-wind-chime-3627822d4a0ff3df2f9a278efabed4c7.jpg",
+        learnMore: "https://www.bigthingssmalltown.com/",
+        sourceLabel: "Learn More",
+        why: "A playful I-70 stop full of oversized everyday objects, photo moments, and quick kid-friendly curiosity.",
+        profiles: {
+          elsie: "Teacher lens: giant everyday objects are easy to explain because everyone knows what a chair, pencil, or mailbox is.",
+          katrina: "Why question: why would a small town build giant objects, and how can one odd idea become local history?",
+          emma: "Everyday-life lens: normal things become funny and interesting when scale changes. Great compare-and-rate stop.",
+          eliette: "Detail and nicknack radar: look for tiny souvenirs near the giant things, fun signs, colors, and photo angles.",
+          jules: "Captain mission: find the biggest thing and announce what job it would do if a giant used it.",
+          momdad: "Good morale stop near I-70 if timing allows. It is eastbound, memorable, and easier than a deep city detour."
+        }
+      },
+      {
+        name: "Indianapolis Motor Speedway Museum",
+        place: "Speedway / Indianapolis, Indiana",
+        day: "2026-07-31",
+        milesFromStart: 500,
+        image: "https://www.indianapolismotorspeedway.com/-/media/IMS/images/at-the-track/museum/museum-exterior.jpg",
+        learnMore: "https://www.indianapolismotorspeedway.com/at-the-track/museum",
+        sourceLabel: "Learn More",
+        why: "A route-relevant Indiana stop about race cars, engineering, speed, teamwork, and the Indianapolis 500.",
+        profiles: {
+          elsie: "Story lens: racing has pressure, timing, decisions, and suspense without needing horror.",
+          katrina: "History lens: ask how one race became a tradition people know all over the country.",
+          emma: "Sports and real-life lens: teams, fans, routines, food, traffic, and community all organize around race day.",
+          eliette: "Shiny detail watch: paint colors, numbers, trophies, logos, helmets, and small design choices.",
+          jules: "Big machine jackpot: cars, wheels, speed, engines, and a huge track.",
+          momdad: "Possible indoor route stop if time allows; verify hours/tours before committing."
         }
       },
       {
@@ -79,14 +117,15 @@ window.TRIP_DATA = {
         milesFromStart: 585,
         image: "https://www.nd.edu/assets/images/about/history/1200/sorin-arrives-1200.jpg",
         learnMore: "https://www.nd.edu/about/history/",
+        sourceLabel: "Learn More",
         why: "A famous university town stop with campus, sports history, architecture, and dinner nearby.",
         profiles: {
           elsie: "Look for campus details that feel like a story setting: old buildings, symbols, and quiet paths.",
           katrina: "Ask what makes a college become famous over generations: sports, traditions, buildings, people, or stories?",
           emma: "Sports and everyday-life angle: college towns revolve around games, students, food, and routines.",
           eliette: "Look for bookstore/souvenir possibilities, pretty architecture, and small details on signs or buildings.",
-          jules: "Football place. Big field energy. Captain question: would you pick food first or a quick look around first?",
-          momdad: "Good dinner-area anchor for July 31; keep meal goal protected."
+          jules: "Football place. Big field energy. Captain question: food first or quick look first?",
+          momdad: "Good dinner-area anchor for July 24; keep meal goal protected."
         }
       },
       {
@@ -96,6 +135,7 @@ window.TRIP_DATA = {
         milesFromStart: 585,
         image: "https://studebakermuseum.org/wp-content/uploads/2020/08/SNM-Exterior.jpg",
         learnMore: "https://studebakermuseum.org/",
+        sourceLabel: "Learn More",
         why: "A museum about vehicles and the Studebaker company, from wagons to cars.",
         profiles: {
           elsie: "Cause-and-effect: wagons became cars because people needed better ways to move families and goods.",
@@ -355,12 +395,12 @@ window.TRIP_DATA = {
       { title: "Notre Dame story setting", type: "Route", detail: "Look for one campus detail that could start a scene.", link: "https://www.nd.edu/about/history/", lookFor: "Old building, symbol, arch, path", capture: "Photo of the detail" },
       { title: "Storm science fact", type: "Sky", detail: "Learn why Great Lakes weather can change fast.", link: "https://www.weather.gov/greatlakes/", lookFor: "Clouds, wind, wave changes", capture: "Sky photo" },
       { title: "Suspense sound map", type: "Island", detail: "List five sounds that make the island feel alive at dusk.", link: "https://www.michigan.org/city/bois-blanc-island", lookFor: "Leaves, water, birds, boats, insects", capture: "Audio/video clip if allowed" },
-      { title: "Teacher fact card", type: "Route", detail: "Turn Brown v. Board into one fairness fact for younger kids.", link: "https://www.nps.gov/brvb/planyourvisit/index.htm", lookFor: "School, fairness, classroom clues", capture: "Photo of your written fact" },
+      { title: "Arch teacher fact card", type: "Route", detail: "Turn the Gateway Arch into one simple fact younger kids could understand.", link: "https://www.nps.gov/jeff/index.htm", lookFor: "River, shape, height, travel story", capture: "Photo or note of your simple fact" },
       { title: "Night creature question", type: "Stars", detail: "Ask what animals might be active while humans look at stars.", link: "https://www.michigan.gov/dnr/education/michigan-species", lookFor: "Sounds, tracks, safe distance", capture: "No flash; note only" },
       { title: "Mystery object", type: "Island", detail: "Choose one object and write the non-scary mystery behind it.", link: "https://www.boisblanctownship.org/", lookFor: "Rope, sign, dock, weathered wood", capture: "Object photo" }
     ],
     katrina: [
-      { title: "Brown v. Board why chain", type: "Route", detail: "Build a three-step why chain: problem, decision, change.", link: "https://www.nps.gov/brvb/learn/historyculture/kansas.htm", lookFor: "Who made the choice and why", capture: "Photo of your why chain" },
+      { title: "Missouri River why chain", type: "Route", detail: "Build a three-step why chain: river, road, town.", link: "https://www.visitcolumbiamo.com/", lookFor: "Why towns and roads gather near rivers", capture: "Photo of your why chain" },
       { title: "Arch fact collector", type: "Route", detail: "Find the weirdest Gateway Arch fact and quiz the car.", link: "https://www.nps.gov/jeff/", lookFor: "Height, shape, river, engineering", capture: "Quiz video" },
       { title: "Notre Dame origin story", type: "Route", detail: "Learn how Notre Dame began in 1842 and turn it into historical fiction.", link: "https://www.nd.edu/about/history/", lookFor: "Founder, cold day, mission, campus", capture: "Read your first sentence" },
       { title: "Studebaker transformation", type: "Route", detail: "Track how a company moved from wagons to cars.", link: "https://studebakermuseum.org/", lookFor: "What changed in transportation", capture: "Before/after note" },
@@ -457,7 +497,7 @@ window.TRIP_DATA = {
   ],
   dailyProfileFeatures: {
     elsie: [
-      { title: "Teacher Fact", text: "Brown v. Board is a real school-history stop about fairness for children and classrooms.", lookFor: "A sign, school image, or story you could explain simply." },
+      { title: "Teacher Fact", text: "The Gateway Arch is a real route landmark that can be explained through rivers, travel, engineering, and symbols.", lookFor: "A river, arch shape, or travel story you could explain simply." },
       { title: "Suspense-Lite Watch", text: "Great Lakes travel has real shipwreck and storm stories; suspense here comes from weather, water, and choices.", lookFor: "Water, fog, old boats, or dramatic shoreline." },
       { title: "Small Creature Science", text: "Squirrels and chipmunks survive by reading habitat: trees, food, hiding places, and people.", lookFor: "Tracks, nests, nuts, holes, or quick movement." }
     ],
@@ -526,40 +566,40 @@ window.TRIP_DATA.mapLinks = {
 
 window.TRIP_DATA.profilePlacePreferences = {
   elsie: [
-    "Studebaker National Museum",
-    "Mackinac Bridge / Straits of Mackinac",
-    "Plaunt Transportation Ferry",
-    "Brown v. Board of Education National Historical Park"
-  ],
-  katrina: [
-    "Brown v. Board of Education National Historical Park",
     "Gateway Arch",
     "Notre Dame",
+    "Studebaker National Museum",
+    "Mackinac Bridge / Straits of Mackinac"
+  ],
+  katrina: [
+    "Gateway Arch",
+    "Notre Dame",
+    "Columbia / Rocheport Missouri River stretch",
     "Mackinac Bridge / Straits of Mackinac"
   ],
   emma: [
     "Notre Dame",
+    "Indianapolis Motor Speedway Museum",
     "Studebaker National Museum",
-    "Plaunt Transportation Ferry",
     "Indiana Dunes National Park"
   ],
   eliette: [
+    "Big Things Small Town",
     "Gateway Arch",
     "Notre Dame",
-    "Studebaker National Museum",
-    "Plaunt Transportation Ferry"
+    "Studebaker National Museum"
   ],
   jules: [
+    "Indianapolis Motor Speedway Museum",
     "Studebaker National Museum",
     "Plaunt Transportation Ferry",
-    "Mackinac Bridge / Straits of Mackinac",
-    "Indiana Dunes National Park"
+    "Mackinac Bridge / Straits of Mackinac"
   ],
   momdad: [
+    "Columbia / Rocheport Missouri River stretch",
+    "Gateway Arch",
     "Notre Dame",
-    "Plaunt Transportation Ferry",
-    "Brown v. Board of Education National Historical Park",
-    "Gateway Arch"
+    "Studebaker National Museum"
   ]
 };
 
@@ -573,7 +613,6 @@ window.TRIP_DATA.weatherLocations = [
 window.TRIP_DATA.sourceLinks = {
   weather: { label: "Open weather source", url: "https://open-meteo.com/en/docs?timezone=America%2FChicago&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,cloud_cover,wind_speed_10m,wind_gusts_10m,cape,convective_inhibition&forecast_hours=12&models=best_match&daily=sunrise,sunset,daylight_duration&location_mode=bounding_box&bounding_box=-90,-180,90,180" },
   gatewayArch: { label: "Open official NPS Gateway Arch page", url: "https://www.nps.gov/jeff/index.htm" },
-  brownBoard: { label: "Open official NPS Brown v. Board page", url: "https://www.nps.gov/brvb/planyourvisit/index.htm" },
   indianaDunes: { label: "Open official NPS Indiana Dunes page", url: "https://www.nps.gov/indu/planyourvisit/things2do.htm" },
   notreDame: { label: "Open official Notre Dame history page", url: "https://www.nd.edu/about/history/" },
   studebaker: { label: "Open official museum page", url: "https://studebakermuseum.org/" },
@@ -588,7 +627,9 @@ window.TRIP_DATA.badgeCatalog = [
   ["launch-crew","Launch Crew","Route","Olathe departure","startTrip",["all"],"The trip officially started.","You started the trip.",""],
   ["first-miles-marker","First Miles Marker","Route","Kansas outbound","manual",["all"],"Leave the first real miles behind.","The first miles are behind you.",""],
   ["kansas-road-reader","Kansas Road Reader","Route","Kansas","activity",["all"],"Notice the route instead of only riding through it.","You started reading the road.",""],
-  ["fairness-fact-finder","Fairness Fact Finder","Place","Brown v. Board","source",["elsie","katrina","momdad"],"Learn why this school-history stop matters.","You learned a fairness fact.","https://www.nps.gov/brvb/planyourvisit/index.htm"],
+  ["columbia-reset-scout","Columbia Reset Scout","Stops","Columbia / Rocheport","source",["all"],"Learn why this is a smart first eastbound reset zone.","You found the first reset story.","https://www.visitcolumbiamo.com/"],
+  ["big-things-finder","Big Things Finder","Place","Casey Big Things","source",["eliette","jules","emma"],"Find the giant roadside idea in Casey, Illinois.","You found a giant little-town story.","https://www.bigthingssmalltown.com/"],
+  ["speedway-story","Speedway Story","Place","Indianapolis Motor Speedway","source",["emma","jules","katrina"],"Learn why Indianapolis became a racing landmark.","You unlocked the speedway story.","https://www.indianapolismotorspeedway.com/at-the-track/museum"],
   ["first-reset-pro","First Reset Pro","Stops","Columbia reset","need",["all"],"Use a smart first stop before everyone is desperate.","You made the first smart reset.",""],
   ["missouri-miles","Missouri Miles","Route","Missouri crossing","manual",["all"],"Cross into the next big part of the drive.","Missouri miles unlocked.",""],
   ["arch-spotter","Arch Spotter","Place","Gateway Arch","source",["all"],"Spot or learn about the Gateway Arch.","You found the Arch story.","https://www.nps.gov/jeff/index.htm"],
@@ -650,3 +691,24 @@ window.TRIP_DATA.badgeCatalog = [
   id, title, category, segment, trigger, profiles, locked, earned, sourceUrl,
   icon: category.toLowerCase().replaceAll(" ", "-")
 }));
+
+window.TRIP_DATA.dateDisplayMap = {
+  "2026-07-31": "2026-07-24",
+  "2026-08-01": "2026-07-25",
+  "2026-08-02": "2026-07-26",
+  "2026-08-03": "2026-07-27",
+  "2026-08-04": "2026-07-28",
+  "2026-08-05": "2026-07-29",
+  "2026-08-06": "2026-07-30",
+  "2026-08-07": "2026-07-31",
+  "2026-08-08": "2026-08-01",
+  "2026-08-09": "2026-08-02"
+};
+
+window.TRIP_DATA.displayDate = function displayDate(date) {
+  return window.TRIP_DATA.dateDisplayMap[date] || date;
+};
+
+window.TRIP_DATA.days.forEach((day) => {
+  day.displayDate = window.TRIP_DATA.displayDate(day.date);
+});
