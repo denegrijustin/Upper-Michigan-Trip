@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v17";
+const CACHE_NAME = "elskatemm-trip-v18";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -11,6 +11,7 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
 });
 
@@ -18,15 +19,17 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-    )
+    ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
-  const networkFirst = ["/", "/index.html", "/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/sw.js"].includes(url.pathname);
-  if (networkFirst) {
+  if (url.origin !== self.location.origin) return;
+  const appShell = ["/", "/index.html"].includes(url.pathname);
+  const staticAsset = ["/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/manifest.json", "/icon.svg"].includes(url.pathname);
+  if (appShell) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -38,18 +41,18 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
+  if (staticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const update = fetch(event.request).then((response) => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
-        })
-        .catch(() => caches.match("/index.html"));
-    })
-  );
+        }).catch(() => cached);
+        return cached || update;
+      })
+    );
+  }
 });
 
 self.addEventListener("message", (event) => {

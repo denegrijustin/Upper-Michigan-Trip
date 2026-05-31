@@ -3,7 +3,7 @@
   const WEATHER_TTL = 30 * 60 * 1000;
   const state = loadState();
   let activeProfile = state.profile || "elsie";
-  let activePage = "home";
+  let activePage = "today";
   let watchId = null;
   let lastGpsRender = 0;
   let routeMap = null;
@@ -17,8 +17,8 @@
     complete: "Trip complete"
   };
 
-  const pages = ["home", "today", "route", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
-  const parentPages = ["home", "route", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
+  const pages = ["today", "route", "learn", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
+  const parentPages = ["today", "route", "learn", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
   const julesFlow = ["Captain Today", "Weather", "Ferry / Boats", "Big Machines", "Stars", "Badges", "Photos", "Done / Next choice"];
 
   function defaultState() {
@@ -346,6 +346,7 @@
     renderWeatherBlocks(results);
     awardBadge("weather-watch");
     if (results.some((weather) => weatherFlags(weather).includes("Stargazing risk"))) awardBadge("cloud-cover-checker");
+    saveState();
   }
 
   function weatherLocationsForContext() {
@@ -461,7 +462,6 @@
     const store = badgeStore();
     if (store[badgeId]) return false;
     store[badgeId] = { id: badgeId, earnedAt: new Date().toISOString(), context };
-    saveState();
     return true;
   }
 
@@ -541,12 +541,14 @@
     };
     awardBadge("trip-shortlist-starter");
     saveState();
+    if (["rewards", "memories"].includes(activePage)) renderProfile();
     setAction(`Saved to Trip Shortlist: ${item.name || item}.`);
   }
 
   function removeShortlist(key) {
     delete state.shortlist[key];
     saveState();
+    renderProfile();
     setAction("Removed from Trip Shortlist.");
   }
 
@@ -557,6 +559,7 @@
     awardBadge("family-vote-starter");
     if (activeProfile === "jules") awardBadge("captain-choice");
     saveState();
+    if (activePage === "rewards") renderProfile();
     setAction(`Family Vote saved: ${choice}.`);
   }
 
@@ -567,6 +570,7 @@
     awardBadge("logistics-captain");
     if (name.toLowerCase().includes("ferry")) awardBadge("ferry-ready");
     saveState();
+    if (activePage === "rewards") renderProfile();
     setAction(`Approved into the real plan: ${name}.`);
   }
 
@@ -582,6 +586,7 @@
     if (lower.includes("detail") || lower.includes("shiny") || lower.includes("treasure")) awardBadge("tiny-treasure-scout");
     if (lower.includes("daily") || lower.includes("life") || lower.includes("community")) awardBadge("real-life-explorer");
     saveState();
+    if (["today", "learn", "rewards"].includes(activePage)) renderProfile();
     setAction(`Completed ${title}.`);
   }
 
@@ -642,7 +647,7 @@
   function setAction(message) {
     state.actionMessage = message;
     saveState();
-    render();
+    renderTripStatus();
   }
 
   function setPhase(phase) {
@@ -689,7 +694,7 @@
     renderRouteMapPanel();
     offerNearbyBadges(point);
     saveState();
-    render();
+    renderTripStatus();
     refreshGpsWeatherIfNeeded();
   }
 
@@ -898,7 +903,9 @@
     if (profileIds.includes(parts[0])) activeProfile = parts[0];
     const profile = currentProfile();
     const validPages = profile.id === "momdad" ? parentPages : pages;
-    activePage = validPages.includes(parts[1]) ? parts[1] : "home";
+    const aliases = { home: "today", activities: "learn", stars: "learn", ferry: "learn", badges: "rewards", saved: "rewards", photos: "memories" };
+    const requestedPage = aliases[parts[1]] || parts[1];
+    activePage = validPages.includes(requestedPage) ? requestedPage : "today";
   }
 
   function chooseProfile(profileId) {
@@ -906,7 +913,7 @@
     state.profile = profileId;
     state.hasChosenProfile = true;
     saveState();
-    location.hash = `/${profileId}/home`;
+    location.hash = `/${profileId}/today`;
     byId("splash").classList.add("is-hidden");
     render();
     if (!state.lastPosition && state.gpsStatus !== "Active") {
@@ -921,10 +928,7 @@
   function renderBottomNav() {
     const nav = byId("bottomNav");
     if (!nav) return;
-    const profile = currentProfile();
-    const items = profile.id === "momdad"
-      ? [["home", "Home"], ["route", "Route"], ["weather", "Weather"], ["stops", "Stops"], ["saved", "Saved"]]
-      : [["home", "Home"], ["route", "Route"], ["weather", "Weather"], ["activities", "Quest"], ["photos", "Photos"]];
+    const items = [["today", "Today"], ["route", "Route"], ["learn", "Learn"], ["rewards", "Rewards"], ["memories", "Memories"]];
     nav.innerHTML = items.map(([page, label]) => `
       <a href="#/${activeProfile}/${page}" data-page="${page}" aria-current="${activePage === page ? "page" : "false"}">${label}</a>
     `).join("");
@@ -1071,24 +1075,7 @@
   }
 
   function renderDashboard(profile) {
-    if (profile.id === "jules") return renderJules();
-    return `
-      <div class="profile-dashboard">
-        <div class="dashboard-hero">
-          <p class="eyebrow">${profile.id === "momdad" ? "Logistics dashboard" : `${profile.name}'s dashboard`}</p>
-          <h3>${profile.id === "momdad" ? "Full Trip Control" : "Choose what you want to do"}</h3>
-          <p>${profile.lens}</p>
-          ${renderBadgeShelf(profile.id)}
-        </div>
-        <div class="feature-strip">${data.route.routePlaces.slice(0, 4).map((place) => `
-          <button type="button" class="feature-card" data-detail="${escapeHtml(place.name)}">
-            <img src="${routeVisualForPlace(place)}" alt="${escapeHtml(place.image?.alt || place.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(place)}';">
-            <span>${place.name}</span>
-          </button>
-        `).join("")}</div>
-        <div class="dashboard-grid">${profileHomeTiles(profile)}</div>
-      </div>
-    `;
+    return renderTodayPage(profile, routePlaceForProfile(profile));
   }
 
   function renderJules() {
@@ -1128,12 +1115,12 @@
   }
 
   function renderSubpage(profile) {
-    if (activePage === "home") return renderDashboard(profile);
+    if (activePage === "today") return renderTodayPage(profile, routePlaceForProfile(profile));
     const title = activePage === "gps" ? "GPS" : activePage[0].toUpperCase() + activePage.slice(1);
     return `
       <div class="subpage">
         <div class="subpage-head">
-          <button type="button" data-nav="home">Back to Profile Home</button>
+          <button type="button" data-nav="today">Back to Today</button>
           <h3>${title}</h3>
         </div>
         ${renderPageContent(profile, activePage)}
@@ -1146,6 +1133,9 @@
     const map = {
       today: () => renderTodayPage(profile, place),
       route: () => renderRoutePage(profile, place),
+      learn: () => renderLearnPage(profile, place),
+      rewards: () => renderRewardsPage(profile),
+      memories: () => renderMemoriesPage(profile),
       gps: () => renderGpsPage(),
       detail: () => renderDetailPage(profile),
       weather: () => renderWeatherPage(profile),
@@ -1160,6 +1150,52 @@
       sources: () => renderSourcesPage()
     };
     return (map[page] || map.today)();
+  }
+
+  function renderLearnPage(profile, place) {
+    return `
+      <div class="learning-hub">
+        <div class="choice-card">
+          <strong>Learning hub</strong>
+          <p>Pick one thing to notice, learn, or capture. This keeps the trip playful before we leave and useful while we are moving.</p>
+          <div class="action-row">
+            <button type="button" data-nav="activities">Activities</button>
+            <button type="button" data-nav="stars">Stars</button>
+            <button type="button" data-nav="ferry">Ferry</button>
+            <button type="button" data-nav="weather">Weather</button>
+          </div>
+        </div>
+        ${placeCard(place, profile)}
+        ${renderActivitiesPage(profile)}
+        ${renderStarsPage(profile)}
+        ${renderFerryPage(profile)}
+      </div>
+    `;
+  }
+
+  function renderRewardsPage(profile) {
+    return `
+      <div class="learning-hub">
+        <div class="choice-card">
+          <strong>Rewards and family picks</strong>
+          <p>See what has been earned, saved, voted on, or approved without hunting through separate tabs.</p>
+        </div>
+        ${renderBadgesPage(profile)}
+        ${renderSavedPage(profile)}
+      </div>
+    `;
+  }
+
+  function renderMemoriesPage(profile) {
+    return `
+      <div class="learning-hub">
+        <div class="choice-card">
+          <strong>Trip story</strong>
+          <p>Capture photos, videos, and moments that turn the route and island time into a trip summary.</p>
+        </div>
+        ${renderPhotosPage(profile)}
+      </div>
+    `;
   }
 
   function selectedDetailPlace() {
@@ -1195,17 +1231,26 @@
     const dayIndex = Math.max(0, data.days.findIndex((day) => day.date === selectedDayDate()));
     const feature = features[dayIndex % features.length];
     return `
-      <div class="profile-grid">
-        <div>
-          <div class="choice-card">
-            <strong>${feature.title}</strong>
-            <p>${feature.text}</p>
-            <p><strong>Look for:</strong> ${feature.lookFor}</p>
-            <div class="action-row"><button type="button" data-complete-activity="${escapeHtml(feature.title)}">Done</button><button type="button" data-capture="${escapeHtml(feature.title)}">Capture image/video</button></div>
+      <div class="learning-hub">
+        <div class="dashboard-hero">
+          <p class="eyebrow">${profile.id === "momdad" ? "Family learning hub" : `${profile.name}'s learning hub`}</p>
+          <h3>What can we learn today?</h3>
+          <p>${profile.lens}</p>
+          <div class="action-row">
+            <button type="button" data-nav="route">Route</button>
+            <button type="button" data-nav="learn">Learn</button>
+            <button type="button" data-nav="rewards">Rewards</button>
+            <button type="button" data-nav="memories">Memories</button>
           </div>
-          ${placeCard(place, profile)}
         </div>
-        <aside>${renderBadgesMini(profile)}</aside>
+        <div class="choice-card">
+          <strong>${feature.title}</strong>
+          <p>${feature.text}</p>
+          <p><strong>Look for:</strong> ${feature.lookFor}</p>
+          <div class="action-row"><button type="button" data-complete-activity="${escapeHtml(feature.title)}">Done</button><button type="button" data-capture="${escapeHtml(feature.title)}">Capture image/video</button></div>
+        </div>
+        ${placeCard(place, profile)}
+        ${renderBadgesMini(profile)}
       </div>
     `;
   }
@@ -1221,6 +1266,13 @@
           <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open phone driving route</a>
           <a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a>
         </div>
+      </div>
+      <div class="maplibre-panel">
+        <div class="section-head compact-head">
+          <strong>Route map</strong>
+          <span id="mapMode" class="map-caption">Open map; tap Start GPS to show your location</span>
+        </div>
+        <div id="routeMapPanel"></div>
       </div>
       ${placeCard(place, profile)}
       ${renderStopsPage()}
@@ -1250,7 +1302,30 @@
         <p>Open-Meteo is used with no API key. Data is cached for 30 minutes, follows live GPS when location is enabled, and displays Fahrenheit, mph, and inches.</p>
         <div class="action-row"><button type="button" id="refreshWeather" data-weather-refresh="true">Refresh weather</button><a class="external-link" href="${data.sourceLinks.weather.url}" target="_blank" rel="noopener">Open weather source</a></div>
       </div>
+      ${renderRadarPanel()}
       <div id="weatherBlocks" class="weather-grid">${renderWeatherBlocksMarkup(profile, weatherLocationsForContext().map((location) => state.weather[location.id] || { location, sourceStatus: "Not available" }))}</div>
+    `;
+  }
+
+  function activeRadarStation() {
+    if (state.phase === "island" || state.phase === "return") return data.radarStations.find((station) => station.id === "KAPX");
+    if (selectedDayDate() === "2026-08-01") return data.radarStations.find((station) => station.id === "KAPX");
+    if (selectedDayDate() === "2026-07-31") return data.radarStations.find((station) => station.id === "KIWX");
+    return data.radarStations.find((station) => station.id === "KAPX") || data.radarStations[0];
+  }
+
+  function renderRadarPanel() {
+    const active = activeRadarStation();
+    const stations = data.radarStations || [];
+    return `
+      <article class="choice-card radar-card">
+        <strong>Live radar</strong>
+        <p>National Weather Service radar station: ${active.label}. If the embedded view is slow, use the station buttons below.</p>
+        <iframe title="NWS radar ${active.id}" loading="lazy" src="${active.url}"></iframe>
+        <div class="radar-links">
+          ${stations.map((station) => `<a class="external-link" href="${station.url}" target="_blank" rel="noopener">${station.id}: ${station.label}</a>`).join("")}
+        </div>
+      </article>
     `;
   }
 
@@ -1469,59 +1544,6 @@
     }
   }
 
-  function renderCards() {
-    const profile = currentProfile();
-    const place = routePlaceForProfile(profile);
-    byId("stopsCard").innerHTML = `<p class="eyebrow">Stops</p><h3>Bathroom, food, gas</h3>${renderStopsPage()}`;
-    byId("ferryCard").innerHTML = `<p class="eyebrow">Ferry</p>${renderFerryPage(profile)}`;
-    byId("starsCard").innerHTML = `<p class="eyebrow">STARZ</p>${renderStarsPage(profile)}`;
-    byId("adventureCard").innerHTML = `<p class="eyebrow">Activities</p><h3>Interactive board</h3>${renderActivitiesPage(profile)}`;
-    byId("eventsCard").innerHTML = `<p class="eyebrow">Source-linked place</p>${placeCard(place, profile)}`;
-    byId("summaryCard").innerHTML = `<p class="eyebrow">Trip story</p><h3>Photos and shortlist</h3>${renderPhotosPage(profile)}${renderSavedPage(profile)}`;
-    wireDynamicActions();
-  }
-
-  function wireDynamicActions() {
-    document.querySelectorAll("[data-nav]").forEach((button) => {
-      button.onclick = () => navTo(button.dataset.nav);
-    });
-    document.querySelectorAll("[data-detail]").forEach((button) => {
-      button.onclick = () => { location.hash = `/${activeProfile}/detail/${encodeURIComponent(button.dataset.detail)}`; };
-    });
-    document.querySelectorAll("[data-shortlist]").forEach((button) => {
-      button.onclick = () => saveShortlist({ name: button.dataset.shortlist, category: button.dataset.category, sourceUrl: button.dataset.url });
-    });
-    document.querySelectorAll("[data-remove-shortlist]").forEach((button) => {
-      button.onclick = () => removeShortlist(button.dataset.removeShortlist);
-    });
-    document.querySelectorAll("[data-vote-item]").forEach((button) => {
-      button.onclick = () => familyVote(button.dataset.voteItem, button.dataset.choice);
-    });
-    document.querySelectorAll("[data-approve]").forEach((button) => {
-      button.onclick = () => approvePlan(button.dataset.approve);
-    });
-    document.querySelectorAll("[data-complete-activity]").forEach((button) => {
-      button.onclick = () => completeActivity(button.dataset.completeActivity);
-    });
-    document.querySelectorAll("[data-capture]").forEach((button) => {
-      button.onclick = () => startCapture(button.dataset.capture);
-    });
-    document.querySelectorAll("[data-delete-capture]").forEach((button) => {
-      button.onclick = () => deleteCapture(Number(button.dataset.deleteCapture));
-    });
-    document.querySelectorAll("[data-badge]").forEach((button) => {
-      button.onclick = () => showBadgeDetail(button.dataset.badge);
-    });
-    document.querySelectorAll("[data-source]").forEach((button) => {
-      button.onclick = () => {
-        awardBadge("source-checker", { source: button.dataset.source });
-        setAction(`Source checked: ${button.dataset.source}.`);
-      };
-    });
-    document.querySelectorAll("[data-weather-refresh]").forEach((button) => { button.onclick = refreshWeatherCards; });
-    document.querySelectorAll("[data-start-gps]").forEach((button) => { button.onclick = useLocation; });
-  }
-
   function handleAppTap(event) {
     const target = event.target.closest("button, a");
     if (!target) return;
@@ -1543,6 +1565,15 @@
       navTo(target.dataset.nav);
       return;
     }
+    if (target.dataset.navGlobal) {
+      event.preventDefault();
+      if (!state.hasChosenProfile) {
+        byId("splash")?.classList.remove("is-hidden");
+        return;
+      }
+      navTo(target.dataset.navGlobal);
+      return;
+    }
     if (target.dataset.detail) {
       event.preventDefault();
       location.hash = `/${activeProfile}/detail/${encodeURIComponent(target.dataset.detail)}`;
@@ -1558,6 +1589,21 @@
       saveShortlist({ name: target.dataset.shortlist, category: target.dataset.category, sourceUrl: target.dataset.url });
       return;
     }
+    if (target.dataset.removeShortlist) {
+      event.preventDefault();
+      removeShortlist(target.dataset.removeShortlist);
+      return;
+    }
+    if (target.dataset.voteItem) {
+      event.preventDefault();
+      familyVote(target.dataset.voteItem, target.dataset.choice);
+      return;
+    }
+    if (target.dataset.approve) {
+      event.preventDefault();
+      approvePlan(target.dataset.approve);
+      return;
+    }
     if (target.dataset.completeActivity) {
       event.preventDefault();
       completeActivity(target.dataset.completeActivity);
@@ -1566,6 +1612,11 @@
     if (target.dataset.capture) {
       event.preventDefault();
       startCapture(target.dataset.capture);
+      return;
+    }
+    if (target.dataset.deleteCapture) {
+      event.preventDefault();
+      deleteCapture(Number(target.dataset.deleteCapture));
       return;
     }
     if (target.dataset.source) {

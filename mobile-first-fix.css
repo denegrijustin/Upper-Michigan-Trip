@@ -86,8 +86,29 @@ body.splash-open .topbar {
 .badge-grid,
 .source-grid,
 .dashboard-grid,
-.feature-strip {
+.feature-strip,
+.learning-hub {
   max-width: 100%;
+}
+
+.learning-hub {
+  display: grid;
+  gap: 14px;
+}
+
+.radar-card iframe {
+  width: 100%;
+  min-height: 360px;
+  border: 1px solid rgba(20, 32, 26, 0.14);
+  border-radius: 14px;
+  background: #eef4f1;
+}
+
+.radar-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .app-modal {
@@ -197,5 +218,22 @@ body.splash-open .topbar {
   .bottom-nav a {
     font-size: 0.72rem;
     padding-inline: 2px;
+  }
+
+  .badge-shelf {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .radar-card iframe {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 430px) {
+  .badge-shelf {
+    grid-template-columns: 1fr;
   }
 }

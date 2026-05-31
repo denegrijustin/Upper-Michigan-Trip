@@ -610,6 +610,14 @@ window.TRIP_DATA.weatherLocations = [
   { id: "boisBlanc", name: "Bois Blanc Island", lat: 45.7465, lon: -84.4948, role: "Island" }
 ];
 
+window.TRIP_DATA.radarStations = [
+  { id: "KEAX", label: "Kansas City / Olathe launch", url: "https://radar.weather.gov/station/KEAX/standard", source: "National Weather Service" },
+  { id: "KLSX", label: "St. Louis / Gateway Arch stretch", url: "https://radar.weather.gov/station/KLSX/standard", source: "National Weather Service" },
+  { id: "KIND", label: "Indianapolis route stretch", url: "https://radar.weather.gov/station/KIND/standard", source: "National Weather Service" },
+  { id: "KIWX", label: "South Bend / northern Indiana", url: "https://radar.weather.gov/station/KIWX/standard", source: "National Weather Service" },
+  { id: "KAPX", label: "Northern Michigan / Bois Blanc area", url: "https://radar.weather.gov/station/KAPX/standard", source: "National Weather Service" }
+];
+
 window.TRIP_DATA.sourceLinks = {
   weather: { label: "Open weather source", url: "https://open-meteo.com/en/docs?timezone=America%2FChicago&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,cloud_cover,wind_speed_10m,wind_gusts_10m,cape,convective_inhibition&forecast_hours=12&models=best_match&daily=sunrise,sunset,daylight_duration&location_mode=bounding_box&bounding_box=-90,-180,90,180" },
   gatewayArch: { label: "Open official NPS Gateway Arch page", url: "https://www.nps.gov/jeff/index.htm" },
