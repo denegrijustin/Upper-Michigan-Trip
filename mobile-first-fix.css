@@ -50,6 +50,46 @@ body.splash-open .topbar {
   max-width: 100vw;
 }
 
+.bottom-nav a[aria-current="page"] {
+  color: #1f78a4;
+  background: rgba(31, 120, 164, 0.1);
+}
+
+.badge-shelf {
+  grid-auto-columns: minmax(128px, max-content);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
+}
+
+.badge-pill {
+  min-height: 56px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.badge-pill span,
+.badge-pill small {
+  display: block;
+}
+
+.action-row {
+  max-width: 100%;
+}
+
+.action-row > * {
+  min-width: 0;
+}
+
+.weather-grid,
+.badge-grid,
+.source-grid,
+.dashboard-grid,
+.feature-strip {
+  max-width: 100%;
+}
+
 .app-modal {
   position: fixed;
   inset: 0;
@@ -129,5 +169,33 @@ body.splash-open .topbar {
   .dashboard-hero {
     max-width: 100%;
     overflow-wrap: anywhere;
+  }
+
+  .dashboard-grid,
+  .weather-grid,
+  .badge-grid,
+  .source-grid,
+  .feature-strip,
+  .route-actions,
+  .sun-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    min-height: 118px;
+  }
+
+  .feature-card img {
+    height: 88px;
+  }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-nav a {
+    font-size: 0.72rem;
+    padding-inline: 2px;
   }
 }

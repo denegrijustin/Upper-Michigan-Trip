@@ -7,6 +7,7 @@
   let watchId = null;
   let lastGpsRender = 0;
   let routeMap = null;
+  let mapLibreLoading = null;
 
   const phaseLabels = {
     pretrip: "Pre-trip",
@@ -777,16 +778,41 @@
     if (!window.maplibregl) {
       container.innerHTML = `
         <div class="map-fallback">
-          <strong>Map will load when online</strong>
-          <p>The trip route and GPS tracker still work from saved trip data. Open the full route in your phone maps if you need turn-by-turn directions.</p>
+          <strong>Loading route map</strong>
+          <p>The full map loads only when this page is open so the rest of the app stays fast. Phone-map buttons still work immediately.</p>
           <div class="route-steps"><span>Olathe</span><span>South Bend</span><span>Cheboygan ferry</span><span>Bois Blanc Island</span></div>
           <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open driving route</a><a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
         </div>
       `;
+      loadMapLibre();
       return;
     }
     container.innerHTML = `<div id="mapLibreCanvas" class="maplibre-canvas" role="img" aria-label="Open route map"></div>`;
     drawRouteMap();
+  }
+
+  function loadMapLibre() {
+    if (window.maplibregl || mapLibreLoading || !navigator.onLine) return;
+    if (!document.querySelector('link[data-maplibre-css]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.css";
+      link.dataset.maplibreCss = "true";
+      document.head.appendChild(link);
+    }
+    mapLibreLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js";
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    }).then(() => {
+      mapLibreLoading = null;
+      renderRouteMapPanel();
+    }).catch(() => {
+      mapLibreLoading = null;
+    });
   }
 
   function mapPoint(stop) {
@@ -844,7 +870,7 @@
     data.days.forEach((day) => {
       const option = document.createElement("option");
       option.value = day.date;
-      option.textContent = `${day.date.slice(5)} - ${day.title}`;
+      option.textContent = `${data.displayDate ? data.displayDate(day.date).slice(5) : day.date.slice(5)} - ${day.title}`;
       select.appendChild(option);
     });
     select.value = data.days[0].date;
@@ -890,6 +916,18 @@
 
   function navTo(page) {
     location.hash = `/${activeProfile}/${page}`;
+  }
+
+  function renderBottomNav() {
+    const nav = byId("bottomNav");
+    if (!nav) return;
+    const profile = currentProfile();
+    const items = profile.id === "momdad"
+      ? [["home", "Home"], ["route", "Route"], ["weather", "Weather"], ["stops", "Stops"], ["saved", "Saved"]]
+      : [["home", "Home"], ["route", "Route"], ["weather", "Weather"], ["activities", "Quest"], ["photos", "Photos"]];
+    nav.innerHTML = items.map(([page, label]) => `
+      <a href="#/${activeProfile}/${page}" data-page="${page}" aria-current="${activePage === page ? "page" : "false"}">${label}</a>
+    `).join("");
   }
 
   function renderCountdowns() {
@@ -1426,7 +1464,6 @@
     byId("profileTitle").textContent = profile.id === "jules" ? "Captain Jules" : profile.id === "momdad" ? "Mom/Dad logistics" : `${profile.name}'s dashboard`;
     byId("profileView").innerHTML = renderSubpage(profile);
     byId("activeTraveler").textContent = `${profile.name}'s view`;
-    wireDynamicActions();
     if (activePage === "weather" && navigator.onLine && !Object.keys(state.weather || {}).length) {
       setTimeout(refreshWeatherCards, 0);
     }
@@ -1583,15 +1620,12 @@
   function render() {
     parseHash();
     if (!state.hasChosenProfile) byId("splash").classList.remove("is-hidden");
-    document.querySelectorAll(".bottom-nav a").forEach((link) => {
-      const page = link.getAttribute("data-page");
-      if (page) link.href = `#/${activeProfile}/${page}`;
-    });
     renderCountdowns();
     renderTripStatus();
+    renderProfile();
     renderRouteMapPanel();
     renderRouteQuest();
-    renderProfile();
+    renderBottomNav();
   }
 
   renderDaySelect();

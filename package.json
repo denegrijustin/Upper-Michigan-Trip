@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "mkdir -p dist && cp index.html styles.css mobile-first-fix.css app.js trip-data.js trip-ui-polish.js manifest.json sw.js icon.svg README.md dist/",
+    "build": "mkdir -p dist && cp index.html styles.css mobile-first-fix.css app.js trip-data.js manifest.json sw.js icon.svg README.md dist/",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
