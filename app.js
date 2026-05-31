@@ -537,6 +537,22 @@
     `;
   }
 
+  function renderTopBadgePreview() {
+    const container = byId("topBadgePreview");
+    if (!container) return;
+    const profile = currentProfile();
+    container.innerHTML = `
+      <div class="section-head compact-head">
+        <div>
+          <p class="eyebrow">Badges</p>
+          <strong>${profile.name}'s earned and available badges</strong>
+        </div>
+        <button type="button" data-nav-global="rewards">View all</button>
+      </div>
+      ${renderBadgeShelf(profile.id)}
+    `;
+  }
+
   function showBadgeDetail(badgeId) {
     const badge = data.badgeCatalog.find((item) => item.id === badgeId);
     if (!badge) return;
@@ -948,16 +964,53 @@
     if (!container) return;
     if (!window.maplibregl) {
       container.innerHTML = `
-        <div class="map-fallback">
-          <strong>Loading Explore Map</strong>
-          <p>Every route-relevant attraction is listed below while the map library loads.</p>
-        </div>
+        ${renderExploreClusterFallback()}
+        <p class="map-caption">Map tiles are loading. These clusters are generated from the same route data and stay visible offline.</p>
       `;
       loadMapLibre();
       return;
     }
-    container.innerHTML = `<div id="exploreMapCanvas" class="maplibre-canvas" role="img" aria-label="Explore route attractions"></div>`;
+    container.innerHTML = `
+      <div id="exploreMapCanvas" class="maplibre-canvas" role="img" aria-label="Explore route attractions"></div>
+      ${renderExploreClusterFallback()}
+    `;
     drawExploreMap();
+  }
+
+  function attractionClusterGroups() {
+    const groups = new Map();
+    allAttractions()
+      .sort((a, b) => (a.milesFromStart || 0) - (b.milesFromStart || 0))
+      .forEach((item) => {
+        const key = item.routeSegment || "Route";
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      });
+    return Array.from(groups.entries());
+  }
+
+  function renderExploreClusterFallback() {
+    const groups = attractionClusterGroups();
+    return `
+      <div class="fallback-cluster-map" aria-label="Route attraction clusters">
+        ${groups.map(([segment, items]) => `
+          <section class="cluster-card">
+            <button type="button" class="cluster-head" data-cluster-segment="${escapeHtml(segment)}">
+              <span>${items.length}</span>
+              <strong>${escapeHtml(segment)}</strong>
+            </button>
+            <div class="cluster-items">
+              ${items.map((item) => `
+                <button type="button" data-detail="${escapeHtml(item.title)}">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <small>${escapeHtml(item.place)}${item.milesFromStart ? ` · mile ${item.milesFromStart}` : ""}</small>
+                </button>
+              `).join("")}
+            </div>
+          </section>
+        `).join("")}
+      </div>
+    `;
   }
 
   function attractionFeatureCollection() {
@@ -1037,6 +1090,7 @@
         const item = allAttractions().find((entry) => entry.title === title);
         if (item) showAttractionDetail(item);
       });
+      attractions.forEach((item) => addExploreAttractionMarker(item));
       if (state.lastPosition) addExploreGpsMarker();
       const first = attractions[0];
       if (first) {
@@ -1044,6 +1098,20 @@
         exploreMap.fitBounds(bounds, { padding: 44, maxZoom: 7, duration: 0 });
       }
     });
+    exploreMap.on("error", () => {
+      const status = byId("exploreMapStatus");
+      if (status) status.textContent = "Map tiles had trouble loading; route clusters below are still active.";
+    });
+  }
+
+  function addExploreAttractionMarker(item) {
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = "map-marker is-attraction";
+    marker.title = item.title;
+    marker.textContent = "•";
+    marker.addEventListener("click", () => showAttractionDetail(item));
+    new maplibregl.Marker({ element: marker }).setLngLat([item.lon, item.lat]).setPopup(new maplibregl.Popup().setText(item.title)).addTo(exploreMap);
   }
 
   function addExploreGpsMarker() {
@@ -1365,6 +1433,7 @@
       </div>
       <div class="maplibre-panel">
         <div class="section-head compact-head"><strong>Attraction clusters</strong><span class="map-caption">${attractions.length} route places</span></div>
+        <p id="exploreMapStatus" class="map-caption">Route clusters and map pins use the same verified attraction list.</p>
         <div id="exploreMapPanel"></div>
       </div>
       <div id="exploreDetail"></div>
@@ -1979,6 +2048,7 @@
     if (!state.hasChosenProfile) byId("splash").classList.remove("is-hidden");
     renderCountdowns();
     renderTripStatus();
+    renderTopBadgePreview();
     renderProfile();
     renderRouteMapPanel();
     renderExploreMapPanel();

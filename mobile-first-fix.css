@@ -145,6 +145,86 @@ body.splash-open .topbar {
   margin-bottom: 12px;
 }
 
+.top-badge-preview {
+  max-width: 1180px;
+  margin: 0 auto 14px;
+  border: 1px solid rgba(20, 32, 26, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 253, 247, 0.88);
+  padding: 12px;
+  box-shadow: 0 14px 34px rgba(20, 32, 26, 0.08);
+}
+
+.fallback-cluster-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(20, 32, 26, 0.12);
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(31, 120, 164, 0.12), transparent 42%),
+    #f7fbf9;
+}
+
+.cluster-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(20, 32, 26, 0.12);
+  border-radius: 16px;
+  background: #fffdf7;
+  padding: 10px;
+}
+
+.cluster-head {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  text-align: left;
+}
+
+.cluster-head span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #1f78a4;
+  color: #fffdf7;
+  font-weight: 900;
+}
+
+.cluster-items {
+  display: grid;
+  gap: 6px;
+}
+
+.cluster-items button {
+  display: grid;
+  gap: 2px;
+  min-height: 58px;
+  text-align: left;
+}
+
+.cluster-items small {
+  color: #536159;
+  font-weight: 750;
+}
+
+.map-marker.is-attraction {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #163f33;
+  background: #f2c14e;
+  color: #163f33;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
 .journal-entry {
   display: grid;
   grid-template-columns: 148px minmax(0, 1fr);
@@ -252,6 +332,7 @@ body.splash-open .topbar {
 
   .today-summary-card,
   .progress-band,
+  .top-badge-preview,
   .profile-section,
   .profile-view,
   .choice-card,
