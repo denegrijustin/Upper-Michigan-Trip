@@ -18,18 +18,19 @@
     complete: "Trip complete"
   };
 
-  const pages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos", "sources"];
-  const parentPages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
+  const pages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos", "sources", "settings"];
+  const parentPages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources", "settings"];
   const mainMenuItems = [
     ["route", "Route", "Live route map and travel stops"],
-    ["explore", "Explore", "All route attractions on a cluster map"],
+    ["explore", "Attractions", "All route attractions on a cluster map"],
     ["nearby", "Nearby", "Closest route-relevant places"],
     ["lens", "Real Life Lens", "Analyze a photo and save the story"],
-    ["memories", "Photo Journal", "Saved photos and AI summaries"],
+    ["memories", "Trip Summary", "Saved photos, stats, and timeline"],
+    ["photos", "Photos", "Captured media"],
     ["rewards", "Badges", "Earned and upcoming trip badges"],
     ["weather", "Weather", "Forecast and radar"],
-    ["learn", "Ferry Status", "Ferry, stars, and activities"],
-    ["sources", "Trip Info", "Sources and data status"]
+    ["ferry", "Ferry Information", "Plaunt ferry and weather context"],
+    ["settings", "Settings", "Storage, offline, and app status"]
   ];
   const julesFlow = ["Captain Today", "Weather", "Ferry / Boats", "Big Machines", "Stars", "Badges", "Photos", "Done / Next choice"];
 
@@ -48,6 +49,7 @@
       completed: [],
       captures: [],
       journal: [],
+      draftPhotos: [],
       pendingAnalyze: false,
       badges: {},
       weather: {},
@@ -79,6 +81,13 @@
     state.completed ||= [];
     state.captures ||= [];
     state.journal ||= [];
+    state.draftPhotos ||= [];
+    [state.captures, state.journal, state.draftPhotos].forEach((list) => {
+      list.forEach((item) => {
+        item.id ||= makeId("photo");
+        item.notes ||= "";
+      });
+    });
     state.badges ||= {};
     state.weather ||= {};
   }
@@ -86,7 +95,12 @@
   function saveState() {
     ensureCollections();
     state.profile = activeProfile;
-    localStorage.setItem("tripState", JSON.stringify(state));
+    try {
+      localStorage.setItem("tripState", JSON.stringify(state));
+      state.storageWarning = "";
+    } catch {
+      state.storageWarning = "Storage is nearly full on this device. Save fewer large photos or remove older entries.";
+    }
   }
 
   function byId(id) {
@@ -148,6 +162,10 @@
 
   function attractionForName(name) {
     return allAttractions().find((item) => item.name === name || item.title === name);
+  }
+
+  function makeId(prefix = "item") {
+    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
   function nearestAttractions(point = state.lastPosition, limit = 8) {
@@ -529,6 +547,7 @@
       <div class="badge-shelf" aria-label="Badges">
         ${badges.map((badge) => `
           <button type="button" class="badge-pill ${badge.upcoming ? "is-locked" : "is-earned"}" data-badge="${badge.id}" aria-label="${badge.upcoming ? "Upcoming badge" : "Earned badge"}: ${badge.title}">
+            <i aria-hidden="true">${badge.upcoming ? "○" : "●"}</i>
             <span>${badge.title}</span>
             <small>${badge.upcoming ? "Upcoming" : badge.category}</small>
           </button>
@@ -643,13 +662,31 @@
   }
 
   function deleteCapture(index) {
-    const item = state.journal[index] || state.captures[index];
-    if (!item) return;
-    if (!confirm(`Delete ${item.label || "this captured moment"}?`)) return;
-    if (state.journal[index]) state.journal.splice(index, 1);
-    else state.captures.splice(index, 1);
+    state.captures.splice(index, 1);
     saveState();
     render();
+  }
+
+  function requestDeletePhoto(collection, id) {
+    state.pendingDelete = { collection, id };
+    saveState();
+    renderProfile();
+  }
+
+  function cancelDeletePhoto() {
+    state.pendingDelete = null;
+    saveState();
+    renderProfile();
+  }
+
+  function confirmDeletePhoto(collection, id) {
+    if (collection === "draft") state.draftPhotos = state.draftPhotos.filter((item) => item.id !== id);
+    if (collection === "journal") state.journal = state.journal.filter((item) => item.id !== id);
+    if (collection === "capture") state.captures = state.captures.filter((item, index) => (item.id || String(index)) !== id);
+    state.pendingDelete = null;
+    saveState();
+    render();
+    setAction("Photo removed.");
   }
 
   function startCapture(label, analyze = false) {
@@ -690,6 +727,7 @@
         const reader = new FileReader();
         reader.onload = async () => {
           const entry = {
+            id: makeId("photo"),
             profile: activeProfile,
             date: selectedDayDate(),
             label: state.pendingCaptureLabel || "Trip capture",
@@ -698,20 +736,14 @@
             dataUrl: reader.result,
             gps: state.lastPosition ? { ...state.lastPosition } : null,
             nearest: nearestAttractions(state.lastPosition, 1)[0]?.title || "",
-            at: new Date().toISOString()
+            at: new Date().toISOString(),
+            notes: ""
           };
           if (state.pendingAnalyze && entry.type.startsWith("image/")) {
-            try {
-              state.actionMessage = "Analyzing photo with Real Life Lens...";
-              const analysis = await analyzePhotoEntry(entry);
-              entry.analysis = analysis;
-              state.journal.unshift(entry);
-              state.actionMessage = "Real Life Lens added this to the Photo Journal.";
-            } catch (error) {
-              entry.analysisError = error.message;
-              state.journal.unshift(entry);
-              state.actionMessage = `Photo saved, but analysis needs Cloudflare/OpenAI setup: ${error.message}`;
-            }
+            entry.status = "Ready to analyze";
+            entry.notes = "";
+            state.draftPhotos.unshift(entry);
+            state.actionMessage = "Photo ready. Tap Analyze, then Save.";
           } else {
             state.captures.push(entry);
             state.actionMessage = "Captured to the trip summary on this device.";
@@ -730,6 +762,96 @@
         reader.readAsDataURL(file);
       });
     });
+  }
+
+  function draftPhoto(index) {
+    ensureCollections();
+    return state.draftPhotos[index];
+  }
+
+  function analysisViewModel(analysis = {}, profile = currentProfile()) {
+    return {
+      what: analysis.likelySubject || analysis.whatItIs || analysis.summary || "Photo subject identified after analysis.",
+      why: analysis.whyItMatters || analysis.childFriendlyFact || "This connects to the route, place, weather, nature, history, or family story.",
+      trip: analysis.tripConnection || "Use this as a route memory and compare it with nearby attractions.",
+      kids: analysis.forKids?.[profile.id] || analysis.forKids || analysis.childFriendlyFact || profile.prompts?.[0] || "What do you notice first?",
+      fact: analysis.funFact || analysis.childFriendlyFact || "Small details make the best trip memories.",
+      tags: Array.isArray(analysis.tags) ? analysis.tags : []
+    };
+  }
+
+  async function analyzeDraftPhoto(index) {
+    const entry = draftPhoto(index);
+    if (!entry) return;
+    entry.status = "Analyzing...";
+    saveState();
+    renderProfile();
+    try {
+      entry.analysis = await analyzePhotoEntry(entry);
+      entry.status = "Analyzed";
+      awardBadge("first-photo-captured");
+      saveState();
+      render();
+      setAction("Photo analysis complete. Add notes or save to Trip Summary.");
+    } catch (error) {
+      entry.analysisError = error.message;
+      entry.status = "Needs API setup";
+      saveState();
+      render();
+      setAction(`Analysis did not finish: ${error.message}`);
+    }
+  }
+
+  async function analyzeDraftPhotoById(id) {
+    const index = state.draftPhotos.findIndex((item) => item.id === id);
+    if (index >= 0) await analyzeDraftPhoto(index);
+  }
+
+  function saveDraftPhoto(index) {
+    const entry = draftPhoto(index);
+    if (!entry) return;
+    entry.savedAt = new Date().toISOString();
+    entry.status = "Saved";
+    state.journal.unshift(entry);
+    state.draftPhotos.splice(index, 1);
+    awardBadge("first-photo-captured");
+    if (state.phase === "island") awardBadge("first-island-photo");
+    saveState();
+    render();
+    setAction("Saved to Trip Summary.");
+  }
+
+  function saveDraftPhotoById(id) {
+    const index = state.draftPhotos.findIndex((item) => item.id === id);
+    if (index >= 0) saveDraftPhoto(index);
+  }
+
+  function updateDraftNote(index, value) {
+    const entry = draftPhoto(index);
+    if (!entry) return;
+    entry.notes = value;
+    saveState();
+  }
+
+  function updateDraftNoteById(id, value) {
+    const entry = state.draftPhotos.find((item) => item.id === id);
+    if (!entry) return;
+    entry.notes = value;
+    saveState();
+  }
+
+  function updateJournalNote(index, value) {
+    const entry = state.journal[index];
+    if (!entry) return;
+    entry.notes = value;
+    saveState();
+  }
+
+  function updateJournalNoteById(id, value) {
+    const entry = state.journal.find((item) => item.id === id);
+    if (!entry) return;
+    entry.notes = value;
+    saveState();
   }
 
   function setAction(message) {
@@ -883,6 +1005,104 @@
     }
     container.innerHTML = `<div id="mapLibreCanvas" class="maplibre-canvas" role="img" aria-label="Open route map"></div>`;
     drawRouteMap();
+  }
+
+  function renderHomeMapPanel() {
+    const container = byId("homeRouteMapPanel");
+    if (!container) return;
+    const points = data.route.mapStops || [];
+    const attractions = allAttractions();
+    container.innerHTML = `
+      <div class="static-route-map">
+        <svg viewBox="0 0 1000 560" role="img" aria-label="Route from Olathe to Bois Blanc Island">
+          <path class="static-route-shadow" d="M 78 450 C 210 430 270 465 370 420 S 500 360 570 305 S 620 230 678 180 S 760 126 846 82" />
+          <path class="static-route-line" d="M 78 450 C 210 430 270 465 370 420 S 500 360 570 305 S 620 230 678 180 S 760 126 846 82" />
+          ${points.map((stop, index) => {
+            const x = 78 + (index / Math.max(1, points.length - 1)) * 768;
+            const y = 450 - (index / Math.max(1, points.length - 1)) * 368 + (index % 2 ? 24 : -10);
+            return `<g><circle class="static-stop ${stop.type}" cx="${x}" cy="${y}" r="13"/><text x="${x + 18}" y="${y + 5}">${escapeHtml(stop.label)}</text></g>`;
+          }).join("")}
+          ${attractions.map((item) => {
+            const pct = clamp((item.milesFromStart || 0) / data.route.totalOutboundMiles, 0, 1);
+            const x = 78 + pct * 768;
+            const y = 450 - pct * 368 + (Math.round(pct * 10) % 2 ? -42 : 42);
+            return `<g class="static-attraction" data-title="${escapeHtml(item.title)}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x + 12}" y="${y + 4}">${escapeHtml(item.title)}</text></g>`;
+          }).join("")}
+          ${state.lastPosition ? `<circle class="static-gps" cx="${78 + progressForPhase() / 100 * 768}" cy="${450 - progressForPhase() / 100 * 368}" r="15"><title>Current GPS location</title></circle>` : ""}
+        </svg>
+        <div class="static-map-pins">
+          ${attractions.map((item) => `<button type="button" data-detail="${escapeHtml(item.title)}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.routeSegment || item.place)}</span></button>`).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function showAttractionPreview(item) {
+    const profile = currentProfile();
+    const previewTargets = [byId("homeAttractionPreview"), byId("exploreDetail")].filter(Boolean);
+    const markup = `
+      <article class="attraction-preview-card">
+        <img src="${routeVisualForPlace(item)}" alt="${escapeHtml(item.title || item.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(item)}';">
+        <div>
+          <p class="eyebrow">${escapeHtml(item.routeSegment || item.place || "Route discovery")}</p>
+          <h3>${escapeHtml(item.title || item.name)}</h3>
+          <p>${escapeHtml(item.summary || item.why || "")}</p>
+          <p>${escapeHtml(item.profiles?.[profile.id] || item.profiles?.momdad || "")}</p>
+          <div class="compact-actions">
+            <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+            <button type="button" data-shortlist="${escapeHtml(item.title || item.name)}" data-category="Place" data-url="${sourceLinkForPlace(item)}">Save</button>
+            <a class="external-link" href="https://maps.apple.com/?daddr=${encodeURIComponent(item.place || item.title || item.name)}" target="_blank" rel="noopener">Navigate</a>
+            <button type="button" data-open-detail="${escapeHtml(item.title || item.name)}">Full details</button>
+          </div>
+        </div>
+      </article>
+    `;
+    previewTargets.forEach((target) => {
+      target.hidden = false;
+      target.innerHTML = markup;
+    });
+  }
+
+  function renderBottomDrawer() {
+    const drawer = byId("bottomDrawer");
+    if (!drawer) return;
+    const profile = currentProfile();
+    const nearest = nearestAttractions(state.lastPosition, 4);
+    const weather = weatherLocationsForContext().map((location) => state.weather[location.id]).find(Boolean);
+    drawer.innerHTML = `
+      <details open>
+        <summary>
+          <span><strong>${nearest[0]?.title || "Next discovery"}</strong><small>${milesLeft().toLocaleString()} miles left · ${state.gpsStatus || "GPS off"}</small></span>
+          <b>${state.phase === "pretrip" ? "Prep" : "Live"}</b>
+        </summary>
+        <div class="drawer-grid">
+          <section>
+            <h3>Nearby</h3>
+            ${nearest.map((item) => `
+              <button type="button" class="drawer-row" data-detail="${escapeHtml(item.title)}">
+                <strong>${escapeHtml(item.title)}</strong>
+                <span>${Number.isFinite(item.distance) ? `${item.distance.toFixed(1)} mi` : item.routeSegment || item.place}</span>
+              </button>
+            `).join("")}
+          </section>
+          <section>
+            <h3>Trip Pulse</h3>
+            <div class="drawer-chips">
+              <button type="button" data-need="Bathroom now">Bathroom</button>
+              <button type="button" data-need="Gas now">Gas</button>
+              <button type="button" data-need="Food now">Food</button>
+              <button type="button" data-nav-global="weather">Weather</button>
+              <button type="button" data-nav-global="lens">Lens</button>
+            </div>
+            <p>${weather ? weatherSummaryFor(profile, weather, weather.location?.name || "Weather") : "Weather appears after refresh or GPS weather check."}</p>
+          </section>
+          <section>
+            <h3>Badges</h3>
+            ${renderBadgeShelf(profile.id)}
+          </section>
+        </div>
+      </details>
+    `;
   }
 
   function loadMapLibre() {
@@ -1162,7 +1382,7 @@
     state.profile = profileId;
     state.hasChosenProfile = true;
     saveState();
-    location.hash = `/${profileId}/today`;
+    location.hash = `/${profileId}/route`;
     byId("splash").classList.add("is-hidden");
     render();
     if (!state.lastPosition && state.gpsStatus !== "Active") {
@@ -1177,10 +1397,8 @@
   function renderBottomNav() {
     const nav = byId("bottomNav");
     if (!nav) return;
-    const items = [["today", "Today"], ["route", "Route"], ["learn", "Learn"], ["rewards", "Rewards"], ["memories", "Memories"]];
-    nav.innerHTML = items.map(([page, label]) => `
-      <a href="#/${activeProfile}/${page}" data-page="${page}" aria-current="${activePage === page ? "page" : "false"}">${label}</a>
-    `).join("");
+    nav.hidden = true;
+    nav.innerHTML = "";
   }
 
   function renderMainMenu() {
@@ -1418,7 +1636,8 @@
       votes: () => renderVotesPage(true),
       stops: () => renderStopsPage(),
       photos: () => renderPhotosPage(profile),
-      sources: () => renderSourcesPage()
+      sources: () => renderSourcesPage(),
+      settings: () => renderSettingsPage()
     };
     return (map[page] || map.today)();
   }
@@ -1469,17 +1688,68 @@
   }
 
   function renderLensPage(profile) {
+    const drafts = state.draftPhotos.filter((item) => profile.id === "momdad" || item.profile === activeProfile);
     const last = state.journal[0];
     return `
       <div class="choice-card lens-card">
         <strong>Real Life Lens</strong>
-        <p>Take or upload a real photo from the route or island. The app sends it to the Cloudflare Worker, asks OpenAI to explain what it might be, then saves the result in the Photo Journal with GPS context when available.</p>
+        <p>Take or upload a real photo. It stays here after Use Photo, then you can analyze it, add notes, and save it to the Trip Summary.</p>
         <div class="action-row">
-          <button type="button" data-capture="Real Life Lens" data-analyze-photo="true">Analyze a photo</button>
+          <button type="button" data-capture="Real Life Lens" data-analyze-photo="true">Take Photo</button>
           <button type="button" data-nav="memories">Open Photo Journal</button>
         </div>
       </div>
-      ${last ? renderJournalEntry(last, 0, profile) : `<p class="map-caption">No analyzed photos yet.</p>`}
+      <div class="photo-analysis-stack">
+        ${drafts.map((item) => renderDraftPhotoCard(item, profile)).join("") || `<p class="map-caption">No photo waiting. Tap Take Photo to start.</p>`}
+      </div>
+      ${last ? `<h4>Last saved</h4>${renderJournalEntry(last, 0, profile)}` : ""}
+    `;
+  }
+
+  function renderDraftPhotoCard(item, profile) {
+    const analysis = analysisViewModel(item.analysis, profile);
+    const pendingDelete = state.pendingDelete?.collection === "draft" && state.pendingDelete?.id === item.id;
+    return `
+      <article class="photo-analysis-card">
+        <img src="${item.dataUrl}" alt="${escapeHtml(item.label)}">
+        <div class="photo-analysis-body">
+          <div class="section-head compact-head">
+            <div>
+              <p class="eyebrow">${escapeHtml(item.status || "Ready")}</p>
+              <h3>${escapeHtml(item.label || "Photo Analysis")}</h3>
+            </div>
+            <small>${new Date(item.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</small>
+          </div>
+          <div class="compact-actions">
+            <button type="button" data-analyze-draft="${item.id}">Analyze</button>
+            <button type="button" data-save-draft="${item.id}">Save</button>
+            <button type="button" data-remove-photo="draft:${item.id}">Remove</button>
+          </div>
+          ${pendingDelete ? renderInlineDelete("draft", item.id) : ""}
+          <div class="analysis-result">
+            ${item.status === "Analyzing..." ? `<p><strong>Analyzing...</strong></p>` : ""}
+            ${item.analysisError ? `<p class="warning-note">${escapeHtml(item.analysisError)}</p>` : ""}
+            ${item.analysis ? `
+              <h4>What it is</h4><p>${escapeHtml(analysis.what)}</p>
+              <h4>Why it matters</h4><p>${escapeHtml(analysis.why)}</p>
+              <h4>Trip connection</h4><p>${escapeHtml(analysis.trip)}</p>
+              <h4>For kids</h4><p>${escapeHtml(analysis.kids)}</p>
+              <h4>Fun fact</h4><p>${escapeHtml(analysis.fact)}</p>
+            ` : `<p class="map-caption">Analysis result will appear here.</p>`}
+          </div>
+          <label class="notes-field">Notes<textarea data-draft-note="${item.id}" placeholder="What made this memorable?">${escapeHtml(item.notes || "")}</textarea></label>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderInlineDelete(collection, id) {
+    return `
+      <div class="inline-confirm">
+        <span>Remove this photo?</span>
+        <button type="button" data-confirm-remove="${collection}:${id}">Remove</button>
+        <button type="button" data-cancel-remove="true">Keep</button>
+      </div>
     `;
   }
 
@@ -1521,10 +1791,30 @@
     return `
       <div class="learning-hub">
         <div class="choice-card">
-          <strong>Trip story</strong>
-          <p>Capture photos, videos, and moments that turn the route and island time into a trip summary.</p>
+          <strong>Trip Summary</strong>
+          <p>Saved photos, attraction history, badges, notes, and route stats become the family travel scrapbook.</p>
+          ${renderTripStats(profile)}
+          <div class="action-row"><button type="button" data-nav="lens">Take Photo</button><button type="button" data-nav="nearby">Nearby attractions</button></div>
         </div>
         ${renderPhotosPage(profile)}
+      </div>
+    `;
+  }
+
+  function renderTripStats(profile) {
+    const savedPlaces = Object.values(state.shortlist || {}).filter((item) => profile.id === "momdad" || item.profile === profile.id);
+    const badgeCount = badgesForProfile(profile.id).length;
+    const historical = allAttractions().filter((item) => /museum|history|historic|arch|dame|studebaker/i.test(`${item.title} ${item.summary}`)).length;
+    const parks = allAttractions().filter((item) => /national park|dunes|nps/i.test(`${item.title} ${item.summary}`)).length;
+    return `
+      <div class="trip-stats">
+        <span><strong>${data.route.totalOutboundMiles.toLocaleString()}</strong><small>route miles</small></span>
+        <span><strong>6</strong><small>states</small></span>
+        <span><strong>${savedPlaces.length}</strong><small>saved</small></span>
+        <span><strong>${state.journal.length}</strong><small>photos</small></span>
+        <span><strong>${badgeCount}</strong><small>badges</small></span>
+        <span><strong>${parks}</strong><small>parks</small></span>
+        <span><strong>${historical}</strong><small>history stops</small></span>
       </div>
     `;
   }
@@ -1837,21 +2127,27 @@
   }
 
   function renderPhotosPage(profile) {
+    const drafts = state.draftPhotos.filter((item) => profile.id === "momdad" || item.profile === activeProfile);
     const journal = state.journal.map((item, index) => ({ ...item, index })).filter((item) => profile.id === "momdad" || item.profile === activeProfile);
     const captures = state.captures.map((item, index) => ({ ...item, index })).filter((item) => profile.id === "momdad" || item.profile === activeProfile);
     return `
-      <div class="action-row"><button type="button" data-capture="Real Life Lens" data-analyze-photo="true">Analyze photo</button><button type="button" data-capture="Trip photo">Save photo/video</button></div>
+      ${state.storageWarning ? `<p class="warning-note">${escapeHtml(state.storageWarning)}</p>` : ""}
+      <div class="action-row"><button type="button" data-nav="lens">Take Photo</button><button type="button" data-capture="Trip photo">Save photo/video</button></div>
+      ${drafts.length ? `<h4>Ready to save</h4><div class="photo-analysis-stack">${drafts.map((item) => renderDraftPhotoCard(item, profile)).join("")}</div>` : ""}
       <h4>Photo Journal</h4>
       <div class="journal-list">
         ${journal.map((item) => renderJournalEntry(item, item.index, profile)).join("") || `<p>No analyzed journal entries yet.</p>`}
       </div>
+      <h4>Family Memory Timeline</h4>
+      <div class="memory-timeline">${journal.map((item) => `<article><strong>${new Date(item.at).toLocaleDateString()}</strong><span>${escapeHtml(item.label)} · ${escapeHtml(item.nearest || "route memory")}</span></article>`).join("") || `<p>No saved timeline entries yet.</p>`}</div>
       <h4>Saved media</h4>
       <div class="summary-grid">
         ${captures.map((item) => `
           <div class="summary-tile">
             ${item.type.startsWith("image/") ? `<img class="summary-photo" src="${item.dataUrl}" alt="${escapeHtml(item.label)}">` : `<span>Video saved: ${escapeHtml(item.name || item.label)}</span>`}
             <span>${escapeHtml(item.label)} - ${new Date(item.at).toLocaleDateString()}${profile.id === "momdad" ? ` - ${profileName(item.profile)}` : ""}</span>
-            <button type="button" data-delete-capture="${item.index}">Delete</button>
+            ${state.pendingDelete?.collection === "capture" && state.pendingDelete?.id === (item.id || String(item.index)) ? renderInlineDelete("capture", item.id || String(item.index)) : ""}
+            <button type="button" data-remove-photo="capture:${item.id || item.index}">Delete</button>
           </div>
         `).join("") || `<p>No captured moments yet.</p>`}
       </div>
@@ -1861,19 +2157,24 @@
 
   function renderJournalEntry(item, index, profile) {
     const analysis = item.analysis || {};
+    const model = analysisViewModel(analysis, profile);
     const summary = analysis.summary || analysis.description || item.analysisError || "Analysis is not available yet.";
     const tags = Array.isArray(analysis.tags) ? analysis.tags : [];
+    const pendingDelete = state.pendingDelete?.collection === "journal" && state.pendingDelete?.id === item.id;
     return `
       <article class="choice-card journal-entry">
         ${item.type?.startsWith("image/") ? `<img class="summary-photo" src="${item.dataUrl}" alt="${escapeHtml(item.label)}">` : ""}
         <div>
           <strong>${escapeHtml(item.label || "Trip photo")}</strong>
           <p>${escapeHtml(summary)}</p>
+          ${item.analysis ? `<details><summary>Analysis</summary><p><strong>What it is:</strong> ${escapeHtml(model.what)}</p><p><strong>Why it matters:</strong> ${escapeHtml(model.why)}</p><p><strong>Trip connection:</strong> ${escapeHtml(model.trip)}</p><p><strong>For kids:</strong> ${escapeHtml(model.kids)}</p><p><strong>Fun fact:</strong> ${escapeHtml(model.fact)}</p></details>` : ""}
           <p><strong>Nearest:</strong> ${escapeHtml(item.nearest || "Unknown until GPS is enabled")}</p>
           <p><strong>GPS:</strong> ${item.gps ? `${item.gps.lat.toFixed(5)}, ${item.gps.lon.toFixed(5)}` : "Not saved"}</p>
           ${tags.length ? `<div class="tag-list">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+          <label class="notes-field">Notes<textarea data-journal-note="${item.id}" placeholder="What made this memorable?">${escapeHtml(item.notes || "")}</textarea></label>
+          ${pendingDelete ? renderInlineDelete("journal", item.id) : ""}
           <div class="action-row">
-            <button type="button" data-delete-capture="${index}">Delete</button>
+            <button type="button" data-remove-photo="journal:${item.id}">Delete</button>
             ${profile.id === "momdad" ? `<button type="button" data-approve="${escapeHtml(item.label || "Photo Journal item")}">Approve into story</button>` : ""}
           </div>
         </div>
@@ -1887,6 +2188,17 @@
       <div class="source-grid">
         <div class="choice-card"><strong>Data status</strong><p>Weather: ${weatherStatus}. GPS: ${state.gpsStatus}. Route map: MapLibre/OpenFreeMap in the app; phone-map links open outside the app for turn-by-turn driving.</p></div>
         ${Object.values(data.sourceLinks).map((source) => `<div class="choice-card"><strong>${source.label}</strong><p><a class="external-link" href="${source.url}" target="_blank" rel="noopener">${source.label}</a></p></div>`).join("")}
+      </div>
+    `;
+  }
+
+  function renderSettingsPage() {
+    return `
+      <div class="source-grid">
+        <div class="choice-card"><strong>Location</strong><p>GPS status: ${state.gpsStatus}. ${state.trackingStatus || ""}</p><button type="button" data-start-gps="true">Start GPS</button></div>
+        <div class="choice-card"><strong>Offline cache</strong><p>The app shell and trip data are cached for road use. Cache version: v22.</p></div>
+        <div class="choice-card"><strong>Photo storage</strong><p>${state.storageWarning || "Photos are stored on this device for the trip summary."}</p></div>
+        <div class="choice-card"><strong>Sources</strong><p>Official links and data status are available in Trip Info.</p><button type="button" data-nav="sources">Trip Info</button></div>
       </div>
     `;
   }
@@ -1951,7 +2263,13 @@
     }
     if (target.dataset.detail) {
       event.preventDefault();
-      location.hash = `/${activeProfile}/detail/${encodeURIComponent(target.dataset.detail)}`;
+      const item = attractionForName(target.dataset.detail) || data.route.routePlaces.find((place) => place.name === target.dataset.detail);
+      if (item) showAttractionPreview(item);
+      return;
+    }
+    if (target.dataset.openDetail) {
+      event.preventDefault();
+      location.hash = `/${activeProfile}/detail/${encodeURIComponent(target.dataset.openDetail)}`;
       return;
     }
     if (target.dataset.badge) {
@@ -1962,6 +2280,16 @@
     if (target.dataset.shortlist) {
       event.preventDefault();
       saveShortlist({ name: target.dataset.shortlist, category: target.dataset.category, sourceUrl: target.dataset.url });
+      return;
+    }
+    if (target.dataset.need) {
+      event.preventDefault();
+      state.needNow = target.dataset.need;
+      awardByTrigger("need", { need: state.needNow });
+      saveState();
+      renderBottomDrawer();
+      renderNeedResults();
+      setAction(`${state.needNow} selected. Showing route-aware options.`);
       return;
     }
     if (target.dataset.removeShortlist) {
@@ -1987,6 +2315,33 @@
     if (target.dataset.capture) {
       event.preventDefault();
       startCapture(target.dataset.capture, target.dataset.analyzePhoto !== undefined);
+      return;
+    }
+    if (target.dataset.analyzeDraft) {
+      event.preventDefault();
+      analyzeDraftPhotoById(target.dataset.analyzeDraft);
+      return;
+    }
+    if (target.dataset.saveDraft) {
+      event.preventDefault();
+      saveDraftPhotoById(target.dataset.saveDraft);
+      return;
+    }
+    if (target.dataset.removePhoto) {
+      event.preventDefault();
+      const [collection, id] = target.dataset.removePhoto.split(":");
+      requestDeletePhoto(collection, id);
+      return;
+    }
+    if (target.dataset.confirmRemove) {
+      event.preventDefault();
+      const [collection, id] = target.dataset.confirmRemove.split(":");
+      confirmDeletePhoto(collection, id);
+      return;
+    }
+    if (target.dataset.cancelRemove) {
+      event.preventDefault();
+      cancelDeletePhoto();
       return;
     }
     if (target.dataset.deleteCapture) {
@@ -2037,6 +2392,11 @@
     window.addEventListener("online", renderTripStatus);
     window.addEventListener("offline", renderTripStatus);
     document.addEventListener("click", handleAppTap);
+    document.addEventListener("input", (event) => {
+      const target = event.target;
+      if (target.dataset?.draftNote) updateDraftNoteById(target.dataset.draftNote, target.value);
+      if (target.dataset?.journalNote) updateJournalNoteById(target.dataset.journalNote, target.value);
+    });
   }
 
   function registerServiceWorker() {
@@ -2049,6 +2409,8 @@
     renderCountdowns();
     renderTripStatus();
     renderTopBadgePreview();
+    renderHomeMapPanel();
+    renderBottomDrawer();
     renderProfile();
     renderRouteMapPanel();
     renderExploreMapPanel();
@@ -2060,7 +2422,7 @@
   renderDaySelect();
   renderSplashProfiles();
   if (state.hasChosenProfile) byId("splash").classList.add("is-hidden");
-  if (!location.hash) location.hash = `/${activeProfile}/today`;
+  if (!location.hash) location.hash = `/${activeProfile}/route`;
   wireEvents();
   wireCaptureInput();
   registerServiceWorker();

@@ -47,7 +47,7 @@ async function analyzeImage(request, env) {
         content: [
           {
             type: "input_text",
-            text: `You are helping a family road trip learning hub. Profile: ${body.profile || "family"}. Context: ${body.tripContext || "Bois Blanc Island trip"}. Return concise JSON with keys summary, likelySubject, childFriendlyFact, questions, tags, confidence.`
+            text: `You are helping a family road trip learning hub. Profile: ${body.profile || "family"}. Context: ${body.tripContext || "Bois Blanc Island trip"}. Return concise JSON. Make it useful for a family road trip photo card, not generic image captioning.`
           },
           { type: "input_image", image_url: imageDataUrl }
         ]
@@ -62,12 +62,16 @@ async function analyzeImage(request, env) {
             properties: {
               summary: { type: "string" },
               likelySubject: { type: "string" },
+              whyItMatters: { type: "string" },
+              tripConnection: { type: "string" },
+              forKids: { type: "string" },
+              funFact: { type: "string" },
               childFriendlyFact: { type: "string" },
               questions: { type: "array", items: { type: "string" } },
               tags: { type: "array", items: { type: "string" } },
               confidence: { type: "number" }
             },
-            required: ["summary", "likelySubject", "childFriendlyFact", "questions", "tags", "confidence"]
+            required: ["summary", "likelySubject", "whyItMatters", "tripConnection", "forKids", "funFact", "childFriendlyFact", "questions", "tags", "confidence"]
           }
         }
       }
