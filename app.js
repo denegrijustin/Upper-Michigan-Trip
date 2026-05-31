@@ -7,6 +7,7 @@
   let watchId = null;
   let lastGpsRender = 0;
   let routeMap = null;
+  let exploreMap = null;
   let mapLibreLoading = null;
 
   const phaseLabels = {
@@ -17,8 +18,19 @@
     complete: "Trip complete"
   };
 
-  const pages = ["today", "route", "learn", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos"];
-  const parentPages = ["today", "route", "learn", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
+  const pages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos", "sources"];
+  const parentPages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources"];
+  const mainMenuItems = [
+    ["route", "Route", "Live route map and travel stops"],
+    ["explore", "Explore", "All route attractions on a cluster map"],
+    ["nearby", "Nearby", "Closest route-relevant places"],
+    ["lens", "Real Life Lens", "Analyze a photo and save the story"],
+    ["memories", "Photo Journal", "Saved photos and AI summaries"],
+    ["rewards", "Badges", "Earned and upcoming trip badges"],
+    ["weather", "Weather", "Forecast and radar"],
+    ["learn", "Ferry Status", "Ferry, stars, and activities"],
+    ["sources", "Trip Info", "Sources and data status"]
+  ];
   const julesFlow = ["Captain Today", "Weather", "Ferry / Boats", "Big Machines", "Stars", "Badges", "Photos", "Done / Next choice"];
 
   function defaultState() {
@@ -35,6 +47,8 @@
       dismissed: [],
       completed: [],
       captures: [],
+      journal: [],
+      pendingAnalyze: false,
       badges: {},
       weather: {},
       actionMessage: "No action yet.",
@@ -64,6 +78,7 @@
     state.dismissed ||= [];
     state.completed ||= [];
     state.captures ||= [];
+    state.journal ||= [];
     state.badges ||= {};
     state.weather ||= {};
   }
@@ -91,8 +106,11 @@
   }
 
   function selectedDay() {
-    const select = byId("daySelect");
-    return data.days.find((day) => day.date === select.value) || data.days[0];
+    const now = new Date();
+    const depart = new Date(data.dates.depart);
+    const dayMs = 24 * 60 * 60 * 1000;
+    const index = clamp(Math.floor((now - depart) / dayMs), 0, data.days.length - 1);
+    return data.days[index] || data.days[0];
   }
 
   function selectedDayDate() {
@@ -120,6 +138,24 @@
     const lat2 = toRad(b.lat);
     const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
     return radius * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+
+  function allAttractions() {
+    return (data.attractions || data.route.routePlaces || [])
+      .map((item) => ({ ...item, title: item.title || item.name, sourceUrl: item.sourceUrl || item.learnMore }))
+      .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lon));
+  }
+
+  function attractionForName(name) {
+    return allAttractions().find((item) => item.name === name || item.title === name);
+  }
+
+  function nearestAttractions(point = state.lastPosition, limit = 8) {
+    if (!point) return allAttractions().slice(0, limit);
+    return allAttractions()
+      .map((item) => ({ ...item, distance: haversineMiles(point, item) }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, limit);
   }
 
   function activeDestination() {
@@ -591,18 +627,36 @@
   }
 
   function deleteCapture(index) {
-    const item = state.captures[index];
+    const item = state.journal[index] || state.captures[index];
     if (!item) return;
     if (!confirm(`Delete ${item.label || "this captured moment"}?`)) return;
-    state.captures.splice(index, 1);
+    if (state.journal[index]) state.journal.splice(index, 1);
+    else state.captures.splice(index, 1);
     saveState();
     render();
   }
 
-  function startCapture(label) {
+  function startCapture(label, analyze = false) {
     state.pendingCaptureLabel = label;
+    state.pendingAnalyze = analyze;
     saveState();
     byId("captureInput").click();
+  }
+
+  async function analyzePhotoEntry(entry) {
+    const response = await fetch("/api/analyze-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageDataUrl: entry.dataUrl,
+        mimeType: entry.type,
+        profile: currentProfile().name,
+        tripContext: "Family road trip learning hub from Olathe, Kansas to South Bend, Cheboygan, and Bois Blanc Island."
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "Image analysis unavailable");
+    return payload;
   }
 
   function wireCaptureInput() {
@@ -618,23 +672,41 @@
           return;
         }
         const reader = new FileReader();
-        reader.onload = () => {
-          state.captures.push({
+        reader.onload = async () => {
+          const entry = {
             profile: activeProfile,
             date: selectedDayDate(),
             label: state.pendingCaptureLabel || "Trip capture",
             name: file.name,
             type: file.type || "file",
             dataUrl: reader.result,
+            gps: state.lastPosition ? { ...state.lastPosition } : null,
+            nearest: nearestAttractions(state.lastPosition, 1)[0]?.title || "",
             at: new Date().toISOString()
-          });
+          };
+          if (state.pendingAnalyze && entry.type.startsWith("image/")) {
+            try {
+              state.actionMessage = "Analyzing photo with Real Life Lens...";
+              const analysis = await analyzePhotoEntry(entry);
+              entry.analysis = analysis;
+              state.journal.unshift(entry);
+              state.actionMessage = "Real Life Lens added this to the Photo Journal.";
+            } catch (error) {
+              entry.analysisError = error.message;
+              state.journal.unshift(entry);
+              state.actionMessage = `Photo saved, but analysis needs Cloudflare/OpenAI setup: ${error.message}`;
+            }
+          } else {
+            state.captures.push(entry);
+            state.actionMessage = "Captured to the trip summary on this device.";
+          }
           awardBadge("first-photo-captured");
           if (state.phase === "island") awardBadge("first-island-photo");
           if (activeProfile === "eliette") awardBadge("detail-collector");
-          state.actionMessage = "Captured to the trip summary on this device.";
           remaining -= 1;
           if (!remaining) {
             byId("captureInput").value = "";
+            state.pendingAnalyze = false;
             saveState();
             render();
           }
@@ -692,6 +764,7 @@
     if (state.phase === "outbound") state.progress = percentToDestination;
     if (state.phase === "return") state.returnProgress = percentToDestination;
     renderRouteMapPanel();
+    renderExploreMapPanel();
     offerNearbyBadges(point);
     saveState();
     renderTripStatus();
@@ -699,8 +772,8 @@
   }
 
   function offerNearbyBadges(point) {
-    const nearby = data.route.routePlaces.find((place) => place.lat && haversineMiles(point, place) < 5);
-    if (nearby) state.nearbyBadgeMessage = `Badge available nearby: ${nearby.name}`;
+    const nearby = nearestAttractions(point, 1)[0];
+    if (nearby && nearby.distance < 10) state.nearbyBadgeMessage = `Nearby learning stop: ${nearby.title || nearby.name}`;
   }
 
   function useLocation() {
@@ -815,6 +888,7 @@
     }).then(() => {
       mapLibreLoading = null;
       renderRouteMapPanel();
+      renderExploreMapPanel();
     }).catch(() => {
       mapLibreLoading = null;
     });
@@ -869,17 +943,124 @@
     new maplibregl.Marker({ element: marker }).setLngLat([point.lon, point.lat]).setPopup(new maplibregl.Popup().setText(label)).addTo(routeMap);
   }
 
-  function renderDaySelect() {
-    const select = byId("daySelect");
-    if (select.children.length) return;
-    data.days.forEach((day) => {
-      const option = document.createElement("option");
-      option.value = day.date;
-      option.textContent = `${data.displayDate ? data.displayDate(day.date).slice(5) : day.date.slice(5)} - ${day.title}`;
-      select.appendChild(option);
+  function renderExploreMapPanel() {
+    const container = byId("exploreMapPanel");
+    if (!container) return;
+    if (!window.maplibregl) {
+      container.innerHTML = `
+        <div class="map-fallback">
+          <strong>Loading Explore Map</strong>
+          <p>Every route-relevant attraction is listed below while the map library loads.</p>
+        </div>
+      `;
+      loadMapLibre();
+      return;
+    }
+    container.innerHTML = `<div id="exploreMapCanvas" class="maplibre-canvas" role="img" aria-label="Explore route attractions"></div>`;
+    drawExploreMap();
+  }
+
+  function attractionFeatureCollection() {
+    return {
+      type: "FeatureCollection",
+      features: allAttractions().map((item) => ({
+        type: "Feature",
+        properties: { id: item.id, title: item.title, place: item.place, segment: item.routeSegment },
+        geometry: { type: "Point", coordinates: [item.lon, item.lat] }
+      }))
+    };
+  }
+
+  function drawExploreMap() {
+    const canvas = byId("exploreMapCanvas");
+    if (!canvas || !window.maplibregl) return;
+    const attractions = allAttractions();
+    if (exploreMap) {
+      exploreMap.remove();
+      exploreMap = null;
+    }
+    exploreMap = new maplibregl.Map({
+      container: canvas,
+      style: data.mapLinks.styleUrl,
+      center: [-90.1848, 39.8],
+      zoom: 4.5
     });
-    select.value = data.days[0].date;
-    select.addEventListener("change", render);
+    exploreMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    exploreMap.on("load", () => {
+      exploreMap.addSource("attractions", {
+        type: "geojson",
+        data: attractionFeatureCollection(),
+        cluster: true,
+        clusterMaxZoom: 10,
+        clusterRadius: 48
+      });
+      exploreMap.addLayer({
+        id: "clusters",
+        type: "circle",
+        source: "attractions",
+        filter: ["has", "point_count"],
+        paint: { "circle-color": "#1f78a4", "circle-radius": ["step", ["get", "point_count"], 20, 4, 28, 8, 36], "circle-opacity": 0.9 }
+      });
+      exploreMap.addLayer({
+        id: "cluster-count",
+        type: "symbol",
+        source: "attractions",
+        filter: ["has", "point_count"],
+        layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 13 },
+        paint: { "text-color": "#fffdf7" }
+      });
+      exploreMap.addLayer({
+        id: "unclustered-attraction",
+        type: "circle",
+        source: "attractions",
+        filter: ["!", ["has", "point_count"]],
+        paint: { "circle-color": "#f2c14e", "circle-radius": 9, "circle-stroke-width": 3, "circle-stroke-color": "#163f33" }
+      });
+      exploreMap.addLayer({
+        id: "attraction-labels",
+        type: "symbol",
+        source: "attractions",
+        filter: ["!", ["has", "point_count"]],
+        layout: { "text-field": ["get", "title"], "text-offset": [0, 1.25], "text-size": 12 },
+        paint: { "text-color": "#17211b", "text-halo-color": "#fffdf7", "text-halo-width": 1 }
+      });
+      exploreMap.on("click", "clusters", (event) => {
+        const features = exploreMap.queryRenderedFeatures(event.point, { layers: ["clusters"] });
+        const clusterId = features[0].properties.cluster_id;
+        exploreMap.getSource("attractions").getClusterExpansionZoom(clusterId, (error, zoom) => {
+          if (error) return;
+          exploreMap.easeTo({ center: features[0].geometry.coordinates, zoom });
+        });
+      });
+      exploreMap.on("click", "unclustered-attraction", (event) => {
+        const title = event.features[0].properties.title;
+        const item = allAttractions().find((entry) => entry.title === title);
+        if (item) showAttractionDetail(item);
+      });
+      if (state.lastPosition) addExploreGpsMarker();
+      const first = attractions[0];
+      if (first) {
+        const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
+        exploreMap.fitBounds(bounds, { padding: 44, maxZoom: 7, duration: 0 });
+      }
+    });
+  }
+
+  function addExploreGpsMarker() {
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = "map-marker is-gps";
+    marker.textContent = "You";
+    new maplibregl.Marker({ element: marker }).setLngLat([state.lastPosition.lon, state.lastPosition.lat]).setPopup(new maplibregl.Popup().setText("Current GPS location")).addTo(exploreMap);
+  }
+
+  function showAttractionDetail(item) {
+    const profile = currentProfile();
+    byId("exploreDetail").innerHTML = placeCard(item, profile);
+  }
+
+  function renderDaySelect() {
+    return selectedDay();
   }
 
   function renderSplashProfiles() {
@@ -932,6 +1113,25 @@
     nav.innerHTML = items.map(([page, label]) => `
       <a href="#/${activeProfile}/${page}" data-page="${page}" aria-current="${activePage === page ? "page" : "false"}">${label}</a>
     `).join("");
+  }
+
+  function renderMainMenu() {
+    const container = byId("mainMenuLinks");
+    if (!container) return;
+    container.innerHTML = mainMenuItems.map(([page, title, copy]) => `
+      <button type="button" data-menu-nav="${page}" class="menu-link">
+        <strong>${title}</strong>
+        <span>${copy}</span>
+      </button>
+    `).join("");
+  }
+
+  function toggleMainMenu(open) {
+    const menu = byId("mainMenu");
+    const button = byId("mainMenuButton");
+    if (!menu || !button) return;
+    menu.hidden = !open;
+    button.setAttribute("aria-expanded", String(open));
   }
 
   function renderCountdowns() {
@@ -1133,7 +1333,10 @@
     const map = {
       today: () => renderTodayPage(profile, place),
       route: () => renderRoutePage(profile, place),
+      explore: () => renderExplorePage(profile),
+      nearby: () => renderNearbyPage(profile),
       learn: () => renderLearnPage(profile, place),
+      lens: () => renderLensPage(profile),
       rewards: () => renderRewardsPage(profile),
       memories: () => renderMemoriesPage(profile),
       gps: () => renderGpsPage(),
@@ -1150,6 +1353,65 @@
       sources: () => renderSourcesPage()
     };
     return (map[page] || map.today)();
+  }
+
+  function renderExplorePage(profile) {
+    const attractions = allAttractions();
+    return `
+      <div class="choice-card">
+        <strong>Explore Map</strong>
+        <p>Every route-relevant place in the trip data appears here. Tap a marker for a detail card, or open the list below while offline.</p>
+        <div class="action-row"><button type="button" data-start-gps="true">Start GPS</button><button type="button" data-nav="nearby">Nearest places</button></div>
+      </div>
+      <div class="maplibre-panel">
+        <div class="section-head compact-head"><strong>Attraction clusters</strong><span class="map-caption">${attractions.length} route places</span></div>
+        <div id="exploreMapPanel"></div>
+      </div>
+      <div id="exploreDetail"></div>
+      <div class="attraction-list">
+        ${attractions.map((item) => placeCard(item, profile)).join("")}
+      </div>
+    `;
+  }
+
+  function renderNearbyPage(profile) {
+    const items = nearestAttractions(state.lastPosition, 10);
+    return `
+      <div class="choice-card">
+        <strong>Nearby learning stops</strong>
+        <p>${state.lastPosition ? "Sorted from your live GPS location." : "Start GPS to sort these by where you actually are. Until then, this shows the route learning set."}</p>
+        <div class="action-row"><button type="button" data-start-gps="true">Start GPS</button><button type="button" data-nav="explore">Open Explore Map</button></div>
+      </div>
+      <div class="nearby-list">
+        ${items.map((item) => `
+          <article class="choice-card nearby-card">
+            <strong>${item.title}</strong>
+            <p>${item.place}. ${item.summary || item.why}</p>
+            ${Number.isFinite(item.distance) ? `<p><strong>${item.distance.toFixed(1)} miles away</strong> by straight-line GPS estimate.</p>` : ""}
+            <div class="action-row">
+              <button type="button" data-detail="${escapeHtml(item.title)}">View details</button>
+              <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">${sourceLabelForPlace(item)}</a>
+              <button type="button" data-capture="${escapeHtml(item.title)}">Capture image/video</button>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderLensPage(profile) {
+    const last = state.journal[0];
+    return `
+      <div class="choice-card lens-card">
+        <strong>Real Life Lens</strong>
+        <p>Take or upload a real photo from the route or island. The app sends it to the Cloudflare Worker, asks OpenAI to explain what it might be, then saves the result in the Photo Journal with GPS context when available.</p>
+        <div class="action-row">
+          <button type="button" data-capture="Real Life Lens" data-analyze-photo="true">Analyze a photo</button>
+          <button type="button" data-nav="memories">Open Photo Journal</button>
+        </div>
+      </div>
+      ${last ? renderJournalEntry(last, 0, profile) : `<p class="map-caption">No analyzed photos yet.</p>`}
+    `;
   }
 
   function renderLearnPage(profile, place) {
@@ -1506,9 +1768,15 @@
   }
 
   function renderPhotosPage(profile) {
+    const journal = state.journal.map((item, index) => ({ ...item, index })).filter((item) => profile.id === "momdad" || item.profile === activeProfile);
     const captures = state.captures.map((item, index) => ({ ...item, index })).filter((item) => profile.id === "momdad" || item.profile === activeProfile);
     return `
-      <div class="action-row"><button type="button" data-capture="Trip photo">Capture image/video</button></div>
+      <div class="action-row"><button type="button" data-capture="Real Life Lens" data-analyze-photo="true">Analyze photo</button><button type="button" data-capture="Trip photo">Save photo/video</button></div>
+      <h4>Photo Journal</h4>
+      <div class="journal-list">
+        ${journal.map((item) => renderJournalEntry(item, item.index, profile)).join("") || `<p>No analyzed journal entries yet.</p>`}
+      </div>
+      <h4>Saved media</h4>
       <div class="summary-grid">
         ${captures.map((item) => `
           <div class="summary-tile">
@@ -1519,6 +1787,28 @@
         `).join("") || `<p>No captured moments yet.</p>`}
       </div>
       <p class="map-caption">Media is stored on this device with a size limit. Delete old captures if storage gets tight.</p>
+    `;
+  }
+
+  function renderJournalEntry(item, index, profile) {
+    const analysis = item.analysis || {};
+    const summary = analysis.summary || analysis.description || item.analysisError || "Analysis is not available yet.";
+    const tags = Array.isArray(analysis.tags) ? analysis.tags : [];
+    return `
+      <article class="choice-card journal-entry">
+        ${item.type?.startsWith("image/") ? `<img class="summary-photo" src="${item.dataUrl}" alt="${escapeHtml(item.label)}">` : ""}
+        <div>
+          <strong>${escapeHtml(item.label || "Trip photo")}</strong>
+          <p>${escapeHtml(summary)}</p>
+          <p><strong>Nearest:</strong> ${escapeHtml(item.nearest || "Unknown until GPS is enabled")}</p>
+          <p><strong>GPS:</strong> ${item.gps ? `${item.gps.lat.toFixed(5)}, ${item.gps.lon.toFixed(5)}` : "Not saved"}</p>
+          ${tags.length ? `<div class="tag-list">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+          <div class="action-row">
+            <button type="button" data-delete-capture="${index}">Delete</button>
+            ${profile.id === "momdad" ? `<button type="button" data-approve="${escapeHtml(item.label || "Photo Journal item")}">Approve into story</button>` : ""}
+          </div>
+        </div>
+      </article>
     `;
   }
 
@@ -1537,7 +1827,7 @@
     const profile = currentProfile();
     byId("profileView").style.setProperty("--profile-accent", profile.accent || "#1f78a4");
     byId("profileTitle").textContent = profile.id === "jules" ? "Captain Jules" : profile.id === "momdad" ? "Mom/Dad logistics" : `${profile.name}'s dashboard`;
-    byId("profileView").innerHTML = renderSubpage(profile);
+    byId("profileView").innerHTML = `<div class="top-badge-row">${renderBadgeShelf(profile.id)}</div>${renderSubpage(profile)}`;
     byId("activeTraveler").textContent = `${profile.name}'s view`;
     if (activePage === "weather" && navigator.onLine && !Object.keys(state.weather || {}).length) {
       setTimeout(refreshWeatherCards, 0);
@@ -1553,6 +1843,22 @@
     }
     if (target.id === "activeTraveler") {
       byId("splash")?.classList.remove("is-hidden");
+      return;
+    }
+    if (target.id === "mainMenuButton") {
+      event.preventDefault();
+      toggleMainMenu(true);
+      return;
+    }
+    if (target.dataset.closeMenu !== undefined) {
+      event.preventDefault();
+      toggleMainMenu(false);
+      return;
+    }
+    if (target.dataset.menuNav) {
+      event.preventDefault();
+      toggleMainMenu(false);
+      navTo(target.dataset.menuNav);
       return;
     }
     if (target.dataset.profileChoice) {
@@ -1611,7 +1917,7 @@
     }
     if (target.dataset.capture) {
       event.preventDefault();
-      startCapture(target.dataset.capture);
+      startCapture(target.dataset.capture, target.dataset.analyzePhoto !== undefined);
       return;
     }
     if (target.dataset.deleteCapture) {
@@ -1675,14 +1981,16 @@
     renderTripStatus();
     renderProfile();
     renderRouteMapPanel();
+    renderExploreMapPanel();
     renderRouteQuest();
     renderBottomNav();
+    renderMainMenu();
   }
 
   renderDaySelect();
   renderSplashProfiles();
   if (state.hasChosenProfile) byId("splash").classList.add("is-hidden");
-  if (!location.hash) location.hash = `/${activeProfile}/home`;
+  if (!location.hash) location.hash = `/${activeProfile}/today`;
   wireEvents();
   wireCaptureInput();
   registerServiceWorker();

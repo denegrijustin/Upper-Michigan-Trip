@@ -31,10 +31,21 @@
           <p class="topbar-meta" id="topbarMeta">Choose a traveler to begin</p>
         </div>
         <div class="top-actions">
+          <button id="mainMenuButton" class="icon-menu-button" type="button" aria-expanded="false" aria-controls="mainMenu">Menu</button>
           <span id="onlineStatus" class="status-pill">Checking</span>
           <button id="activeTraveler" class="traveler-chip" type="button">Choose traveler</button>
         </div>
       </header>
+
+      <aside id="mainMenu" class="main-menu" hidden aria-label="Trip menu">
+        <div class="main-menu-card">
+          <div class="section-head compact-head">
+            <strong>Trip menu</strong>
+            <button type="button" data-close-menu>Close</button>
+          </div>
+          <div id="mainMenuLinks" class="menu-link-grid"></div>
+        </div>
+      </aside>
 
       <main>
         <section class="today-summary-card" aria-labelledby="heroTitle">
@@ -79,7 +90,6 @@
               <p class="eyebrow">Personal views</p>
               <h2 id="profileTitle">Today's experience</h2>
             </div>
-            <select id="daySelect" aria-label="Choose trip day"></select>
           </div>
           <div id="profileView" class="profile-view"></div>
         </section>

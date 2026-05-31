@@ -592,12 +592,6 @@ dd {
   margin-bottom: 12px;
 }
 
-#daySelect {
-  min-height: 42px;
-  padding: 0 12px;
-  max-width: 340px;
-}
-
 .profile-tabs {
   display: none;
   overflow-x: auto;

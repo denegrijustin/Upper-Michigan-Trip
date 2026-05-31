@@ -720,3 +720,42 @@ window.TRIP_DATA.displayDate = function displayDate(date) {
 window.TRIP_DATA.days.forEach((day) => {
   day.displayDate = window.TRIP_DATA.displayDate(day.date);
 });
+
+const attractionCoordinates = {
+  "Columbia / Rocheport Missouri River stretch": { lat: 38.9517, lon: -92.3341, routeSegment: "Olathe to St. Louis" },
+  "Gateway Arch": { lat: 38.6247, lon: -90.1848, routeSegment: "St. Louis / Mississippi River" },
+  "Big Things Small Town": { lat: 39.2992, lon: -87.9920, routeSegment: "I-70 eastern Illinois" },
+  "Indianapolis Motor Speedway Museum": { lat: 39.7950, lon: -86.2340, routeSegment: "Indianapolis" },
+  "Notre Dame": { lat: 41.7056, lon: -86.2353, routeSegment: "South Bend dinner goal" },
+  "Studebaker National Museum": { lat: 41.6753, lon: -86.2500, routeSegment: "South Bend dinner goal" },
+  "Indiana Dunes National Park": { lat: 41.6533, lon: -87.0524, routeSegment: "Lake Michigan" },
+  "Mackinac Bridge / Straits of Mackinac": { lat: 45.8174, lon: -84.7278, routeSegment: "Northern Michigan" },
+  "Plaunt Transportation Ferry": { lat: 45.6469, lon: -84.4745, routeSegment: "Cheboygan ferry" }
+};
+
+window.TRIP_DATA.route.routePlaces.forEach((place) => {
+  const match = attractionCoordinates[place.name];
+  if (!match) return;
+  place.lat = match.lat;
+  place.lon = match.lon;
+  place.routeSegment = match.routeSegment;
+  place.sourceUrl = place.learnMore;
+  place.imageUrl = typeof place.image === "string" ? place.image : place.image?.url;
+});
+
+window.TRIP_DATA.attractions = window.TRIP_DATA.route.routePlaces.map((place) => ({
+  id: place.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+  title: place.name,
+  name: place.name,
+  place: place.place,
+  lat: place.lat,
+  lon: place.lon,
+  imageUrl: place.imageUrl,
+  sourceUrl: place.sourceUrl || place.learnMore,
+  sourceLabel: place.sourceLabel || "Learn More",
+  summary: place.why,
+  why: place.why,
+  routeSegment: place.routeSegment || "Route",
+  milesFromStart: place.milesFromStart,
+  profiles: place.profiles
+})).filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lon));
