@@ -80,8 +80,5 @@
   window.addEventListener("hashchange", schedulePolish);
   window.addEventListener("online", schedulePolish);
   window.addEventListener("offline", schedulePolish);
-
-  const observer = new MutationObserver(schedulePolish);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
   schedulePolish();
 })();

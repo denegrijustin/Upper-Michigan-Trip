@@ -745,7 +745,8 @@
   function renderRouteMapPanel() {
     const container = byId("routeMapPanel");
     if (!container) return;
-    byId("mapMode").textContent = state.lastPosition ? "Open map with live GPS active" : "Open map; tap Start GPS to show your location";
+    const mapMode = byId("mapMode");
+    if (mapMode) mapMode.textContent = state.lastPosition ? "Open map with live GPS active" : "Open map; tap Start GPS to show your location";
     if (!window.maplibregl) {
       container.innerHTML = `
         <div class="map-fallback">
@@ -855,7 +856,9 @@
     location.hash = `/${profileId}/home`;
     byId("splash").classList.add("is-hidden");
     render();
-    if (!state.lastPosition && state.gpsStatus !== "Active") useLocation();
+    if (!state.lastPosition && state.gpsStatus !== "Active") {
+      setAction("Traveler selected. Tap Start GPS when you are ready to allow location tracking.");
+    }
   }
 
   function navTo(page) {
@@ -929,8 +932,10 @@
   }
 
   function renderRouteQuest() {
+    const container = byId("routeQuest");
+    if (!container) return;
     const profile = currentProfile();
-    byId("routeQuest").innerHTML = `
+    container.innerHTML = `
       <div class="route-actions">
         <a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open phone driving route</a>
         <a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a>
@@ -1454,13 +1459,20 @@
   }
 
   function wireEvents() {
-    byId("activeTraveler").addEventListener("click", () => byId("splash").classList.remove("is-hidden"));
-    byId("useLocation").addEventListener("click", useLocation);
-    byId("stopLocation").addEventListener("click", stopLocation);
-    byId("startTrip").addEventListener("click", () => setPhase("outbound"));
-    byId("markArrived").addEventListener("click", () => setPhase("island"));
-    byId("startReturn").addEventListener("click", () => setPhase("return"));
-    byId("completeTrip").addEventListener("click", () => setPhase("complete"));
+    const on = (id, eventName, handler) => {
+      const element = byId(id);
+      if (element) element.addEventListener(eventName, handler);
+    };
+    on("activeTraveler", "click", () => {
+      const splash = byId("splash");
+      if (splash) splash.classList.remove("is-hidden");
+    });
+    on("useLocation", "click", useLocation);
+    on("stopLocation", "click", stopLocation);
+    on("startTrip", "click", () => setPhase("outbound"));
+    on("markArrived", "click", () => setPhase("island"));
+    on("startReturn", "click", () => setPhase("return"));
+    on("completeTrip", "click", () => setPhase("complete"));
     document.querySelectorAll("[data-need]").forEach((button) => {
       button.addEventListener("click", () => {
         state.needNow = button.dataset.need;
