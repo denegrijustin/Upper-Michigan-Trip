@@ -218,6 +218,7 @@ body.splash-open .topbar {
 .static-route-map {
   display: grid;
   grid-template-rows: minmax(300px, 1fr) auto;
+  position: relative;
   background:
     radial-gradient(circle at 80% 8%, rgba(242, 193, 78, 0.35), transparent 16%),
     linear-gradient(145deg, #dcecea 0%, #f7f1df 100%);
@@ -262,6 +263,71 @@ body.splash-open .topbar {
   fill: #f2c14e;
   stroke: #163f33;
   stroke-width: 4;
+}
+
+.static-attraction.is-saved circle {
+  fill: #a9d18e;
+}
+
+.static-attraction.is-visited circle {
+  fill: #bd5a36;
+}
+
+.map-pin-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.interactive-map-pin {
+  position: absolute;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #fffdf7;
+  border-radius: 999px;
+  background: #1f78a4;
+  color: #fffdf7;
+  box-shadow: 0 8px 18px rgba(20, 32, 26, 0.22);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.interactive-map-pin span {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.interactive-map-pin.category-national-park { background: #2f7d5f; }
+.interactive-map-pin.category-historic-site { background: #7c5d3a; }
+.interactive-map-pin.category-museum { background: #174a7c; }
+.interactive-map-pin.category-lighthouse { background: #205f86; }
+.interactive-map-pin.category-waterfall { background: #1f78a4; }
+.interactive-map-pin.category-food-stop { background: #bd5a36; }
+.interactive-map-pin.category-oddity { background: #8c5bb0; }
+.interactive-map-pin.category-photo-stop { background: #54605a; }
+.interactive-map-pin.category-ferry { background: #163f33; }
+
+.map-marker.is-attraction.category-national-park { background: #2f7d5f; }
+.map-marker.is-attraction.category-historic-site { background: #7c5d3a; }
+.map-marker.is-attraction.category-museum { background: #174a7c; }
+.map-marker.is-attraction.category-lighthouse { background: #205f86; }
+.map-marker.is-attraction.category-waterfall { background: #1f78a4; }
+.map-marker.is-attraction.category-food-stop { background: #bd5a36; }
+.map-marker.is-attraction.category-oddity { background: #8c5bb0; }
+.map-marker.is-attraction.category-photo-stop { background: #54605a; }
+.map-marker.is-attraction.category-ferry { background: #163f33; }
+
+.interactive-map-pin.is-saved {
+  outline: 3px solid #f2c14e;
+}
+
+.interactive-map-pin.is-visited {
+  box-shadow: 0 0 0 4px rgba(189, 90, 54, 0.24), 0 8px 18px rgba(20, 32, 26, 0.22);
 }
 
 .static-gps {
@@ -316,7 +382,8 @@ body.splash-open .topbar {
 }
 
 .attraction-preview-card,
-.photo-analysis-card {
+.photo-analysis-card,
+.stop-detail-card {
   display: grid;
   grid-template-columns: 132px minmax(0, 1fr);
   gap: 12px;
@@ -328,7 +395,8 @@ body.splash-open .topbar {
 }
 
 .attraction-preview-card img,
-.photo-analysis-card > img {
+.photo-analysis-card > img,
+.stop-detail-card img {
   width: 100%;
   height: 100%;
   min-height: 116px;
@@ -337,9 +405,14 @@ body.splash-open .topbar {
 }
 
 .attraction-preview-card h3,
-.photo-analysis-card h3 {
+.photo-analysis-card h3,
+.stop-detail-card h3 {
   margin: 0;
   font-size: 1.08rem;
+}
+
+.stop-detail-drawer {
+  padding-bottom: 4px;
 }
 
 .bottom-drawer {
@@ -471,6 +544,38 @@ body.splash-open .topbar {
   grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 8px;
   margin-top: 10px;
+}
+
+.attraction-history {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.attraction-history section {
+  border: 1px solid rgba(20, 32, 26, 0.11);
+  border-radius: 12px;
+  background: #fffdf7;
+  padding: 10px;
+}
+
+.attraction-history h4 {
+  margin: 0 0 8px;
+}
+
+.attraction-history button {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  text-align: left;
+  margin-top: 6px;
+}
+
+.attraction-history span {
+  color: #536159;
+  font-size: 0.78rem;
+  font-weight: 750;
 }
 
 .trip-stats span {
@@ -723,14 +828,16 @@ body.splash-open .topbar {
   .place-preview,
   .journal-entry,
   .attraction-preview-card,
-  .photo-analysis-card {
+  .photo-analysis-card,
+  .stop-detail-card {
     grid-template-columns: 1fr;
   }
 
   .place-preview img,
   .journal-entry .summary-photo,
   .attraction-preview-card img,
-  .photo-analysis-card > img {
+  .photo-analysis-card > img,
+  .stop-detail-card img {
     height: 170px;
   }
 
@@ -746,6 +853,10 @@ body.splash-open .topbar {
   }
 
   .drawer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attraction-history {
     grid-template-columns: 1fr;
   }
 

@@ -50,6 +50,7 @@
       captures: [],
       journal: [],
       draftPhotos: [],
+      visitedStops: {},
       pendingAnalyze: false,
       badges: {},
       weather: {},
@@ -82,6 +83,7 @@
     state.captures ||= [];
     state.journal ||= [];
     state.draftPhotos ||= [];
+    state.visitedStops ||= {};
     [state.captures, state.journal, state.draftPhotos].forEach((list) => {
       list.forEach((item) => {
         item.id ||= makeId("photo");
@@ -156,8 +158,95 @@
 
   function allAttractions() {
     return (data.attractions || data.route.routePlaces || [])
-      .map((item) => ({ ...item, title: item.title || item.name, sourceUrl: item.sourceUrl || item.learnMore }))
+      .map((item) => enrichStop({ ...item, title: item.title || item.name, sourceUrl: item.sourceUrl || item.learnMore }))
       .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lon));
+  }
+
+  function enrichStop(item) {
+    const title = item.title || item.name || "";
+    const category = item.category || stopCategory(item);
+    return {
+      ...item,
+      category,
+      icon: stopIcon(category),
+      tier: item.tier || stopTier(item),
+      estimatedStopTime: item.estimatedStopTime || stopTime(item),
+      distanceOffRoute: item.distanceOffRoute || offRouteEstimate(item),
+      latitude: item.lat,
+      longitude: item.lon
+    };
+  }
+
+  function stopCategory(item) {
+    const text = `${item.title || item.name} ${item.summary || item.why || ""}`.toLowerCase();
+    if (text.includes("ferry") || text.includes("plaunt")) return "Ferry";
+    if (text.includes("national park") || text.includes("dunes")) return "National Park";
+    if (text.includes("museum") || text.includes("studebaker")) return "Museum";
+    if (text.includes("arch") || text.includes("bridge") || text.includes("historic") || text.includes("history")) return "Historic Site";
+    if (text.includes("lighthouse")) return "Lighthouse";
+    if (text.includes("food") || text.includes("dinner")) return "Food Stop";
+    if (text.includes("big things") || text.includes("odd")) return "Oddity";
+    return "Photo Stop";
+  }
+
+  function stopIcon(category) {
+    return {
+      "National Park": "△",
+      "Historic Site": "▥",
+      "Museum": "▦",
+      "Lighthouse": "◌",
+      "Waterfall": "≈",
+      "Food Stop": "⌘",
+      "Oddity": "✦",
+      "Photo Stop": "◉",
+      "Ferry": "▰"
+    }[category] || "•";
+  }
+
+  function stopTier(item) {
+    const name = item.title || item.name || "";
+    if (/South Bend|Notre Dame|Plaunt|Gateway Arch|Bois Blanc/i.test(name)) return "Core";
+    if (/Studebaker|Speedway|Mackinac|Dunes|Big Things/i.test(name)) return "Worth a stop";
+    return "Good reset";
+  }
+
+  function stopTime(item) {
+    const category = item.category || stopCategory(item);
+    if (category === "Ferry") return "45-75 min";
+    if (category === "National Park") return "45-90 min";
+    if (category === "Museum") return "45-90 min";
+    if (category === "Food Stop") return "45-60 min";
+    return "15-30 min";
+  }
+
+  function offRouteEstimate(item) {
+    const name = item.title || item.name || "";
+    if (/Gateway Arch|Notre Dame|Studebaker|Plaunt|Columbia|Rocheport/i.test(name)) return "near route";
+    if (/Big Things|Speedway|Dunes|Mackinac/i.test(name)) return "short detour";
+    return "route context";
+  }
+
+  function appleMapsUrl(stop) {
+    return `https://maps.apple.com/?daddr=${stop.lat},${stop.lon}&dirflg=d`;
+  }
+
+  function stopDistanceLabel(stop) {
+    if (state.lastPosition) return `${haversineMiles(state.lastPosition, stop).toFixed(1)} mi away`;
+    if (stop.milesFromStart) return `mile ${stop.milesFromStart}`;
+    return stop.routeSegment || "route stop";
+  }
+
+  function stopKey(stop) {
+    return stop.id || (stop.title || stop.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+
+  function isStopSaved(stop) {
+    const name = stop.title || stop.name;
+    return Object.values(state.shortlist || {}).some((item) => item.name === name);
+  }
+
+  function isStopVisited(stop) {
+    return Boolean(state.visitedStops?.[stopKey(stop)]);
   }
 
   function attractionForName(name) {
@@ -612,8 +701,30 @@
     };
     awardBadge("trip-shortlist-starter");
     saveState();
+    renderHomeMapPanel();
+    renderBottomDrawer();
     if (["rewards", "memories"].includes(activePage)) renderProfile();
     setAction(`Saved to Trip Shortlist: ${item.name || item}.`);
+  }
+
+  function markStopVisited(name) {
+    const stop = attractionForName(name);
+    if (!stop) return;
+    state.visitedStops[stopKey(stop)] = {
+      name: stop.title || stop.name,
+      category: stop.category,
+      sourceUrl: sourceLinkForPlace(stop),
+      visitedAt: new Date().toISOString(),
+      profile: activeProfile,
+      lat: stop.lat,
+      lon: stop.lon
+    };
+    awardByTrigger("activity", { title: stop.title || stop.name });
+    saveState();
+    renderHomeMapPanel();
+    renderBottomDrawer();
+    if (["memories", "rewards"].includes(activePage)) renderProfile();
+    setAction(`Marked visited: ${stop.title || stop.name}.`);
   }
 
   function removeShortlist(key) {
@@ -1026,33 +1137,43 @@
             const pct = clamp((item.milesFromStart || 0) / data.route.totalOutboundMiles, 0, 1);
             const x = 78 + pct * 768;
             const y = 450 - pct * 368 + (Math.round(pct * 10) % 2 ? -42 : 42);
-            return `<g class="static-attraction" data-title="${escapeHtml(item.title)}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x + 12}" y="${y + 4}">${escapeHtml(item.title)}</text></g>`;
+            return `<g class="static-attraction ${isStopSaved(item) ? "is-saved" : ""} ${isStopVisited(item) ? "is-visited" : ""}" data-title="${escapeHtml(item.title)}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x + 12}" y="${y + 4}">${escapeHtml(item.title)}</text></g>`;
           }).join("")}
           ${state.lastPosition ? `<circle class="static-gps" cx="${78 + progressForPhase() / 100 * 768}" cy="${450 - progressForPhase() / 100 * 368}" r="15"><title>Current GPS location</title></circle>` : ""}
         </svg>
+        <div class="map-pin-layer">
+          ${attractions.map((item) => {
+            const pct = clamp((item.milesFromStart || 0) / data.route.totalOutboundMiles, 0, 1);
+            const left = 7.8 + pct * 76.8;
+            const top = 80 - pct * 66 + (Math.round(pct * 10) % 2 ? -7 : 7);
+            return `<button type="button" class="interactive-map-pin category-${item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-")} ${isStopSaved(item) ? "is-saved" : ""} ${isStopVisited(item) ? "is-visited" : ""}" style="left:${left}%;top:${top}%;" data-preview-stop="${escapeHtml(item.title)}" aria-label="${escapeHtml(item.title)} ${item.category}"><span>${item.icon}</span></button>`;
+          }).join("")}
+        </div>
         <div class="static-map-pins">
-          ${attractions.map((item) => `<button type="button" data-detail="${escapeHtml(item.title)}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.routeSegment || item.place)}</span></button>`).join("")}
+          ${attractions.map((item) => `<button type="button" data-preview-stop="${escapeHtml(item.title)}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.category)} · ${escapeHtml(item.tier)} · ${escapeHtml(stopDistanceLabel(item))}</span></button>`).join("")}
         </div>
       </div>
     `;
   }
 
   function showAttractionPreview(item) {
+    item = enrichStop(item);
     const profile = currentProfile();
     const previewTargets = [byId("homeAttractionPreview"), byId("exploreDetail")].filter(Boolean);
     const markup = `
       <article class="attraction-preview-card">
         <img src="${routeVisualForPlace(item)}" alt="${escapeHtml(item.title || item.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(item)}';">
         <div>
-          <p class="eyebrow">${escapeHtml(item.routeSegment || item.place || "Route discovery")}</p>
+          <p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.tier)} · ${escapeHtml(stopDistanceLabel(item))}</p>
           <h3>${escapeHtml(item.title || item.name)}</h3>
           <p>${escapeHtml(item.summary || item.why || "")}</p>
+          <p><strong>Off route:</strong> ${escapeHtml(item.distanceOffRoute)} · <strong>Stop time:</strong> ${escapeHtml(item.estimatedStopTime)}</p>
           <p>${escapeHtml(item.profiles?.[profile.id] || item.profiles?.momdad || "")}</p>
           <div class="compact-actions">
             <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
-            <button type="button" data-shortlist="${escapeHtml(item.title || item.name)}" data-category="Place" data-url="${sourceLinkForPlace(item)}">Save</button>
-            <a class="external-link" href="https://maps.apple.com/?daddr=${encodeURIComponent(item.place || item.title || item.name)}" target="_blank" rel="noopener">Navigate</a>
-            <button type="button" data-open-detail="${escapeHtml(item.title || item.name)}">Full details</button>
+            <button type="button" data-route-stop="${escapeHtml(item.title || item.name)}">Route</button>
+            <button type="button" data-shortlist="${escapeHtml(item.title || item.name)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
+            <button type="button" data-stop-detail="${escapeHtml(item.title || item.name)}">Details</button>
           </div>
         </div>
       </article>
@@ -1061,6 +1182,37 @@
       target.hidden = false;
       target.innerHTML = markup;
     });
+  }
+
+  function showStopDetailDrawer(item) {
+    item = enrichStop(item);
+    const drawer = byId("bottomDrawer");
+    if (!drawer) return;
+    const profile = currentProfile();
+    drawer.innerHTML = `
+      <details open class="stop-detail-drawer">
+        <summary>
+          <span><strong>${escapeHtml(item.title || item.name)}</strong><small>${escapeHtml(item.category)} · ${escapeHtml(item.tier)} · ${escapeHtml(stopDistanceLabel(item))}</small></span>
+          <b>${isStopVisited(item) ? "Visited" : isStopSaved(item) ? "Saved" : "Stop"}</b>
+        </summary>
+        <article class="stop-detail-card">
+          <img src="${routeVisualForPlace(item)}" alt="${escapeHtml(item.title || item.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImageForPlace(item)}';">
+          <div>
+            <p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.estimatedStopTime)} · ${escapeHtml(item.distanceOffRoute)}</p>
+            <h3>${escapeHtml(item.title || item.name)}</h3>
+            <p>${escapeHtml(item.summary || item.why || "")}</p>
+            <p><strong>Why it matters:</strong> ${escapeHtml(item.why || item.summary || "")}</p>
+            <p><strong>${escapeHtml(profile.name)} view:</strong> ${escapeHtml(item.profiles?.[profile.id] || item.profiles?.momdad || "")}</p>
+            <div class="compact-actions">
+              <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+              <button type="button" data-route-stop="${escapeHtml(item.title || item.name)}">Route</button>
+              <button type="button" data-shortlist="${escapeHtml(item.title || item.name)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
+              <button type="button" data-visited-stop="${escapeHtml(item.title || item.name)}">${isStopVisited(item) ? "Visited" : "Mark Visited"}</button>
+            </div>
+          </div>
+        </article>
+      </details>
+    `;
   }
 
   function renderBottomDrawer() {
@@ -1103,6 +1255,12 @@
         </div>
       </details>
     `;
+  }
+
+  function openAppleRoute(name) {
+    const stop = attractionForName(name);
+    if (!stop) return;
+    window.open(appleMapsUrl(stop), "_blank");
   }
 
   function loadMapLibre() {
@@ -1308,7 +1466,7 @@
       exploreMap.on("click", "unclustered-attraction", (event) => {
         const title = event.features[0].properties.title;
         const item = allAttractions().find((entry) => entry.title === title);
-        if (item) showAttractionDetail(item);
+        if (item) showAttractionPreview(item);
       });
       attractions.forEach((item) => addExploreAttractionMarker(item));
       if (state.lastPosition) addExploreGpsMarker();
@@ -1327,10 +1485,12 @@
   function addExploreAttractionMarker(item) {
     const marker = document.createElement("button");
     marker.type = "button";
-    marker.className = "map-marker is-attraction";
+    marker.className = `map-marker is-attraction category-${item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-")} ${isStopSaved(item) ? "is-saved" : ""} ${isStopVisited(item) ? "is-visited" : ""}`;
     marker.title = item.title;
-    marker.textContent = "•";
-    marker.addEventListener("click", () => showAttractionDetail(item));
+    marker.textContent = item.icon;
+    marker.addEventListener("mouseenter", () => showAttractionPreview(item));
+    marker.addEventListener("focus", () => showAttractionPreview(item));
+    marker.addEventListener("click", () => showStopDetailDrawer(item));
     new maplibregl.Marker({ element: marker }).setLngLat([item.lon, item.lat]).setPopup(new maplibregl.Popup().setText(item.title)).addTo(exploreMap);
   }
 
@@ -1344,7 +1504,8 @@
 
   function showAttractionDetail(item) {
     const profile = currentProfile();
-    byId("exploreDetail").innerHTML = placeCard(item, profile);
+    const target = byId("exploreDetail");
+    if (target) target.innerHTML = placeCard(item, profile);
   }
 
   function renderDaySelect() {
@@ -1794,6 +1955,7 @@
           <strong>Trip Summary</strong>
           <p>Saved photos, attraction history, badges, notes, and route stats become the family travel scrapbook.</p>
           ${renderTripStats(profile)}
+          ${renderAttractionHistory(profile)}
           <div class="action-row"><button type="button" data-nav="lens">Take Photo</button><button type="button" data-nav="nearby">Nearby attractions</button></div>
         </div>
         ${renderPhotosPage(profile)}
@@ -1811,10 +1973,28 @@
         <span><strong>${data.route.totalOutboundMiles.toLocaleString()}</strong><small>route miles</small></span>
         <span><strong>6</strong><small>states</small></span>
         <span><strong>${savedPlaces.length}</strong><small>saved</small></span>
+        <span><strong>${Object.keys(state.visitedStops || {}).length}</strong><small>visited</small></span>
         <span><strong>${state.journal.length}</strong><small>photos</small></span>
         <span><strong>${badgeCount}</strong><small>badges</small></span>
         <span><strong>${parks}</strong><small>parks</small></span>
         <span><strong>${historical}</strong><small>history stops</small></span>
+      </div>
+    `;
+  }
+
+  function renderAttractionHistory(profile) {
+    const saved = Object.values(state.shortlist || {}).filter((item) => profile.id === "momdad" || item.profile === profile.id);
+    const visited = Object.values(state.visitedStops || {}).filter((item) => profile.id === "momdad" || item.profile === profile.id);
+    return `
+      <div class="attraction-history">
+        <section>
+          <h4>Visited</h4>
+          ${visited.map((item) => `<button type="button" data-preview-stop="${escapeHtml(item.name)}"><strong>${escapeHtml(item.name)}</strong><span>${new Date(item.visitedAt).toLocaleDateString()}</span></button>`).join("") || `<p>No visited stops yet.</p>`}
+        </section>
+        <section>
+          <h4>Saved</h4>
+          ${saved.map((item) => `<button type="button" data-preview-stop="${escapeHtml(item.name)}"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.category || "Saved stop")}</span></button>`).join("") || `<p>No saved stops yet.</p>`}
+        </section>
       </div>
     `;
   }
@@ -2242,6 +2422,28 @@
       navTo(target.dataset.menuNav);
       return;
     }
+    if (target.dataset.previewStop) {
+      event.preventDefault();
+      const item = attractionForName(target.dataset.previewStop);
+      if (item) showAttractionPreview(item);
+      return;
+    }
+    if (target.dataset.stopDetail) {
+      event.preventDefault();
+      const item = attractionForName(target.dataset.stopDetail);
+      if (item) showStopDetailDrawer(item);
+      return;
+    }
+    if (target.dataset.routeStop) {
+      event.preventDefault();
+      openAppleRoute(target.dataset.routeStop);
+      return;
+    }
+    if (target.dataset.visitedStop) {
+      event.preventDefault();
+      markStopVisited(target.dataset.visitedStop);
+      return;
+    }
     if (target.dataset.profileChoice) {
       event.preventDefault();
       chooseProfile(target.dataset.profileChoice);
@@ -2392,6 +2594,18 @@
     window.addEventListener("online", renderTripStatus);
     window.addEventListener("offline", renderTripStatus);
     document.addEventListener("click", handleAppTap);
+    document.addEventListener("mouseover", (event) => {
+      const target = event.target.closest("[data-preview-stop]");
+      if (!target || event.pointerType === "touch") return;
+      const item = attractionForName(target.dataset.previewStop);
+      if (item) showAttractionPreview(item);
+    });
+    document.addEventListener("focusin", (event) => {
+      const target = event.target.closest("[data-preview-stop]");
+      if (!target) return;
+      const item = attractionForName(target.dataset.previewStop);
+      if (item) showAttractionPreview(item);
+    });
     document.addEventListener("input", (event) => {
       const target = event.target;
       if (target.dataset?.draftNote) updateDraftNoteById(target.dataset.draftNote, target.value);
