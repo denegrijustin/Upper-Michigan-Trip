@@ -1287,6 +1287,7 @@
           <p>${attractions.length} uploaded trip stops are ready. Clusters expand as you zoom in.</p>
         </div>
       </div>
+      ${renderUploadedStopsPanel(attractions)}
       <div id="clusterDrawer" class="cluster-drawer" hidden></div>
     `;
     if (!window.maplibregl) {
@@ -1316,7 +1317,12 @@
       attributionControl: true
     });
     homeMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    homeMap.on("error", () => {
+      const panel = byId("uploadedStopsPanel");
+      if (panel) panel.classList.add("is-map-fallback");
+    });
     homeMap.on("load", () => {
+      window.setTimeout(() => homeMap?.resize?.(), 80);
       homeMap.addSource("home-attractions", {
         type: "geojson",
         data: attractionFeatureCollection(),
@@ -1425,6 +1431,44 @@
       const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
       homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
     });
+  }
+
+  function renderUploadedStopsPanel(attractions) {
+    const groups = attractions.reduce((acc, item) => {
+      const key = categoryGroup(item.category);
+      acc[key] ||= 0;
+      acc[key] += 1;
+      return acc;
+    }, {});
+    return `
+      <aside id="uploadedStopsPanel" class="uploaded-stops-panel" aria-label="Uploaded trip stops">
+        <div class="uploaded-stops-head">
+          <div>
+            <p class="eyebrow">Uploaded stops</p>
+            <strong>${attractions.length} locations loaded</strong>
+          </div>
+          <button type="button" data-toggle-uploaded-stops>Hide</button>
+        </div>
+        <div class="uploaded-category-row">
+          ${Object.entries(groups).map(([group, total]) => `<span>${escapeHtml(group)} <b>${total}</b></span>`).join("")}
+        </div>
+        <div class="uploaded-stop-list">
+          ${attractions.map((item) => `
+            <article class="uploaded-stop-card">
+              <button type="button" data-stop-detail="${escapeHtml(item.title)}">
+                <strong>${escapeHtml(item.title)}</strong>
+                <small>${escapeHtml(item.category)} · ${escapeHtml(item.routeSegment || "Route")}</small>
+              </button>
+              <p>${escapeHtml(item.summary || item.why || "")}</p>
+              <div class="compact-actions">
+                <button type="button" data-route-stop="${escapeHtml(item.title)}">Route</button>
+                <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </aside>
+    `;
   }
 
   function updateHomeGpsLayer() {
@@ -2802,6 +2846,14 @@
     if (target.matches("[data-close-cluster]")) {
       const drawer = byId("clusterDrawer");
       if (drawer) drawer.hidden = true;
+      return;
+    }
+    if (target.dataset.toggleUploadedStops !== undefined) {
+      event.preventDefault();
+      const panel = byId("uploadedStopsPanel");
+      if (!panel) return;
+      panel.classList.toggle("is-collapsed");
+      target.textContent = panel.classList.contains("is-collapsed") ? "Stops" : "Hide";
       return;
     }
     if (target.id === "activeTraveler") {
