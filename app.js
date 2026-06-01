@@ -1320,8 +1320,8 @@
         type: "geojson",
         data: attractionFeatureCollection(),
         cluster: true,
-        clusterMaxZoom: 11,
-        clusterRadius: 60
+        clusterMaxZoom: 8,
+        clusterRadius: 36
       });
       homeMap.addLayer({
         id: "home-clusters",
@@ -1330,7 +1330,7 @@
         filter: ["has", "point_count"],
         paint: {
           "circle-color": ["step", ["get", "point_count"], "#1f78a4", 10, "#2f7d5f", 25, "#bd5a36"],
-          "circle-radius": ["step", ["get", "point_count"], 22, 10, 30, 25, 39],
+          "circle-radius": ["step", ["get", "point_count"], 18, 10, 24, 25, 31],
           "circle-stroke-width": 4,
           "circle-stroke-color": "#fffdf7",
           "circle-opacity": 0.94
@@ -1369,7 +1369,7 @@
         type: "symbol",
         source: "home-attractions",
         filter: ["!", ["has", "point_count"]],
-        minzoom: 9,
+        minzoom: 7.25,
         layout: { "text-field": ["get", "title"], "text-offset": [0, 1.3], "text-size": 11, "text-anchor": "top" },
         paint: { "text-color": "#17211b", "text-halo-color": "#fffdf7", "text-halo-width": 1.5 }
       });
@@ -1409,7 +1409,10 @@
       homeMap.on("mouseleave", "home-clusters", () => { homeMap.getCanvas().style.cursor = ""; });
       homeMap.on("click", "home-unclustered-point", (event) => {
         const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
-        if (item) showAttractionPreview(item);
+        if (item) {
+          showAttractionPreview(item);
+          showStopDetailDrawer(item);
+        }
       });
       homeMap.on("mousemove", "home-unclustered-point", (event) => {
         const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
@@ -1419,7 +1422,7 @@
       homeMap.on("mouseleave", "home-unclustered-point", () => { homeMap.getCanvas().style.cursor = ""; });
       const first = attractions[0];
       const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
-      homeMap.fitBounds(bounds, { padding: { top: 72, bottom: 96, left: 28, right: 28 }, maxZoom: 6.6, duration: 0 });
+      homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
     });
   }
 
@@ -1462,8 +1465,29 @@
     const source = homeMap.getSource("home-attractions");
     const clusterId = feature.properties.cluster_id;
     const count = feature.properties.point_count || 0;
+    drawer.hidden = false;
+    drawer.innerHTML = `
+      <div class="cluster-drawer-card">
+        <p class="eyebrow">Map cluster</p>
+        <h3>Opening ${count} trip stops...</h3>
+      </div>
+    `;
     const renderLeaves = (leaves) => {
       leaves ||= [];
+      if (!leaves.length) {
+        const [lon, lat] = feature.geometry.coordinates;
+        leaves = allAttractions()
+          .map((item) => ({
+            properties: {
+              title: item.title,
+              category: item.category,
+              segment: item.routeSegment,
+              distance: haversineMiles({ lat, lon }, item)
+            }
+          }))
+          .sort((a, b) => a.properties.distance - b.properties.distance)
+          .slice(0, Math.min(count || 12, 12));
+      }
       const groups = leaves.reduce((acc, leaf) => {
         const category = leaf.properties.category || "Trip Stop";
         acc[category] = (acc[category] || 0) + 1;
@@ -1478,7 +1502,7 @@
           <div class="cluster-chip-row">${Object.entries(groups).slice(0, 8).map(([category, total]) => `<span>${escapeHtml(category)} <b>${total}</b></span>`).join("")}</div>
           <div class="cluster-stop-list">
             ${leaves.slice(0, 8).map((leaf) => `
-              <button type="button" data-preview-stop="${escapeHtml(leaf.properties.title)}">
+              <button type="button" data-stop-detail="${escapeHtml(leaf.properties.title)}">
                 <strong>${escapeHtml(leaf.properties.title)}</strong>
                 <small>${escapeHtml(leaf.properties.category)} · ${escapeHtml(leaf.properties.segment || "Route")}</small>
               </button>
@@ -1492,6 +1516,9 @@
       renderLeaves(leaves);
     });
     if (leavesResult?.then) leavesResult.then(renderLeaves).catch(() => {});
+    window.setTimeout(() => {
+      if (!drawer.hidden && !drawer.querySelector(".cluster-stop-list button")) renderLeaves([]);
+    }, 250);
   }
 
   function showAttractionPreview(item) {
@@ -1526,6 +1553,8 @@
     item = enrichStop(item);
     const drawer = byId("bottomDrawer");
     if (!drawer) return;
+    const cluster = byId("clusterDrawer");
+    if (cluster) cluster.hidden = true;
     const profile = currentProfile();
     drawer.innerHTML = `
       <details open class="stop-detail-drawer">
