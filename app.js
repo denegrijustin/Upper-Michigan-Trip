@@ -7,6 +7,7 @@
   let watchId = null;
   let lastGpsRender = 0;
   let routeMap = null;
+  let homeMap = null;
   let exploreMap = null;
   let mapLibreLoading = null;
 
@@ -21,9 +22,8 @@
   const pages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos", "sources", "settings"];
   const parentPages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources", "settings"];
   const mainMenuItems = [
-    ["route", "Route", "Live route map and travel stops"],
+    ["route", "Route Map", "Live clustered route map and travel stops"],
     ["explore", "Attractions", "All route attractions on a cluster map"],
-    ["nearby", "Nearby", "Closest route-relevant places"],
     ["lens", "Real Life Lens", "Analyze a photo and save the story"],
     ["memories", "Trip Summary", "Saved photos, stats, and timeline"],
     ["photos", "Photos", "Captured media"],
@@ -157,23 +157,52 @@
   }
 
   function allAttractions() {
-    return (data.attractions || data.route.routePlaces || [])
-      .map((item) => enrichStop({ ...item, title: item.title || item.name, sourceUrl: item.sourceUrl || item.learnMore }))
+    const csvStops = Array.isArray(window.TRIP_STOPS) ? window.TRIP_STOPS : [];
+    const source = csvStops.length ? csvStops : (data.attractions || data.route.routePlaces || []);
+    return source
+      .map((item) => enrichStop({
+        ...item,
+        title: item.title || item.name,
+        name: item.name || item.title,
+        sourceUrl: item.sourceUrl || item.officialWebsiteUrl || item.learnMoreUrl || item.learnMore,
+        learnMore: item.learnMore || item.learnMoreUrl || item.officialWebsiteUrl,
+        summary: item.summary || item.shortSummary,
+        why: item.why || item.whyItMatters
+      }))
       .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lon));
   }
 
   function enrichStop(item) {
     const title = item.title || item.name || "";
     const category = item.category || stopCategory(item);
+    const lat = Number(item.lat ?? item.latitude);
+    const lon = Number(item.lon ?? item.lng ?? item.longitude);
+    const minutes = Number(item.estimatedStopMinutes ?? item.estimated_stop_minutes);
+    const estimatedStopTime = item.estimatedStopTime || (Number.isFinite(minutes) ? `${minutes} min` : stopTime({ ...item, category }));
+    const profileNotes = item.profiles || item.notes || {};
     return {
       ...item,
+      title,
+      name: item.name || title,
+      lat,
+      lon,
       category,
       icon: stopIcon(category),
       tier: item.tier || stopTier(item),
-      estimatedStopTime: item.estimatedStopTime || stopTime(item),
+      estimatedStopTime,
       distanceOffRoute: item.distanceOffRoute || offRouteEstimate(item),
-      latitude: item.lat,
-      longitude: item.lon
+      latitude: lat,
+      longitude: lon,
+      summary: item.summary || item.shortSummary || "",
+      why: item.why || item.whyItMatters || item.summary || item.shortSummary || "",
+      profiles: {
+        momdad: profileNotes.momdad || item.whyItMatters || item.why || item.summary || "",
+        elsie: profileNotes.elsie || profileNotes.elsie14 || "",
+        katrina: profileNotes.katrina || profileNotes.katrina11 || "",
+        emma: profileNotes.emma || profileNotes.emma10 || "",
+        eliette: profileNotes.eliette || profileNotes.eliette10 || "",
+        jules: profileNotes.jules || profileNotes.jules5 || ""
+      }
     };
   }
 
@@ -520,14 +549,19 @@
   function sourceLinkForPlace(place) {
     if (place.source?.url) return place.source.url;
     if (place.sourceUrl) return place.sourceUrl;
+    if (place.officialWebsiteUrl) return place.officialWebsiteUrl;
+    if (place.learnMoreUrl) return place.learnMoreUrl;
+    if (place.official_website) return place.official_website;
+    if (place.learn_more) return place.learn_more;
     if (place.learnMore) return place.learnMore;
     const links = data.sourceLinks;
-    if (place.name.includes("Gateway")) return links.gatewayArch.url;
-    if (place.name.includes("Notre")) return links.notreDame.url;
-    if (place.name.includes("Studebaker")) return links.studebaker.url;
-    if (place.name.includes("Dunes")) return links.indianaDunes.url;
-    if (place.name.includes("Mackinac")) return links.mackinacBridge.url;
-    if (place.name.includes("Plaunt")) return links.ferry.url;
+    const name = place.name || place.title || "";
+    if (name.includes("Gateway")) return links.gatewayArch.url;
+    if (name.includes("Notre")) return links.notreDame.url;
+    if (name.includes("Studebaker")) return links.studebaker.url;
+    if (name.includes("Dunes")) return links.indianaDunes.url;
+    if (name.includes("Mackinac")) return links.mackinacBridge.url;
+    if (name.includes("Plaunt")) return links.ferry.url;
     return links.boisBlanc.url;
   }
 
@@ -554,14 +588,15 @@
   function routeVisualForPlace(place) {
     const imageUrl = place.image?.url || place.imageUrl || (typeof place.image === "string" ? place.image : "");
     if (imageUrl) return imageUrl;
-    const title = place.name.replace(" / ", "\n").replace(" National Historical Park", "").replace(" Transportation", "");
+    const name = place.name || place.title || "Trip stop";
+    const title = name.replace(" / ", "\n").replace(" National Historical Park", "").replace(" Transportation", "");
     const subtitle = place.place || "Trip stop";
-    const kind = place.name.includes("Notre") ? "campus" :
-      place.name.includes("Studebaker") ? "vehicles" :
-      place.name.includes("Dunes") ? "dunes" :
-      place.name.includes("Mackinac") ? "bridge" :
-      place.name.includes("Plaunt") ? "ferry" :
-      place.name.includes("Gateway") ? "arch" : "history";
+    const kind = name.includes("Notre") ? "campus" :
+      name.includes("Studebaker") ? "vehicles" :
+      name.includes("Dunes") ? "dunes" :
+      name.includes("Mackinac") ? "bridge" :
+      name.includes("Plaunt") ? "ferry" :
+      name.includes("Gateway") ? "arch" : "history";
     const palette = {
       campus: ["#174a7c", "#f6d483", "M 190 330 L 300 210 L 410 330 Z M 245 330 V 250 H 355 V 330"],
       vehicles: ["#284f3b", "#e9b44c", "M 160 315 H 440 L 405 250 H 235 Z M 210 330 a 28 28 0 1 0 1 0 M 390 330 a 28 28 0 1 0 1 0"],
@@ -645,20 +680,141 @@
     `;
   }
 
+  const adventureBadges = [
+    ["mitten-state", "Mitten State", "Trace the trip from the palm to the tip of Michigan.", "state|michigan|welcome|visitor center", 3, "#f2c14e", "mitten"],
+    ["great-lakes", "Great Lakes", "Spot stories connected to Michigan, Huron, or the Straits.", "lake|shore|harbor|maritime|straits", 3, "#1f78a4", "waves"],
+    ["mackinac-bridge", "Mackinac Bridge", "Find the bridge and Straits stories that connect the peninsulas.", "mackinac bridge|straits of mackinac|bridge", 1, "#244d66", "bridge"],
+    ["lighthouse-explorer", "Lighthouse Explorer", "Save or visit lighthouse stops along the water.", "lighthouse|light station", 2, "#205f86", "lighthouse"],
+    ["ferry-rider", "Ferry Rider", "Track the ferry pieces of the island arrival.", "ferry|plaunt|boat|dock", 1, "#163f33", "ferry"],
+    ["sand-dune-explorer", "Sand Dune Explorer", "Catch a dunes stop or shoreline sand story.", "dune|sand", 1, "#d6a84f", "dune"],
+    ["waterfall-hunter", "Waterfall Hunter", "Find a falls or rushing-water stop.", "waterfall|falls|river", 1, "#2b8da8", "falls"],
+    ["white-pine", "White Pine", "Notice Michigan forest and nature stops.", "pine|forest|nature|woods|trail", 2, "#2f7d5f", "pine"],
+    ["cider-donuts", "Cider & Donuts", "Save a Michigan treat, market, or farm stop.", "cider|donut|farm|market|orchard", 1, "#bd5a36", "donut"],
+    ["fudge-finder", "Fudge Finder", "Find a fudge or sweets stop near the island route.", "fudge|candy|sweet|ice cream", 1, "#7c4f3a", "fudge"],
+    ["food-stop", "Food Stop", "Save real food stops on the route.", "food|restaurant|diner|cafe|market|grill", 2, "#c65c35", "food"],
+    ["museum-explorer", "Museum Explorer", "Open, save, or visit museum stops.", "museum|library|hall of fame", 3, "#174a7c", "museum"],
+    ["roadside-oddity", "Roadside Oddity", "Find something weird, giant, tiny, or unexpected.", "oddity|big things|world's largest|quirky|unusual", 1, "#8c5bb0", "spark"],
+    ["state-capitol", "State Capitol", "Connect the route to a capitol or government story.", "capitol|statehouse|government", 1, "#5b4aa0", "capitol"],
+    ["sports-fan", "Sports Fan", "Find a sports, stadium, racing, or hall-of-fame stop.", "sports|baseball|football|basketball|speedway|stadium|hall of fame", 2, "#cb7a2d", "ball"],
+    ["island-explorer", "Island Explorer", "Save or visit Bois Blanc island discoveries.", "bois blanc|island|pointe aux pins", 3, "#2f7d5f", "island"],
+    ["dark-sky-observer", "Dark Sky Observer", "Use the sky and stargazing layer during the trip.", "dark sky|stars|observatory|night sky|astronomy", 1, "#26385f", "stars"],
+    ["nature-explorer", "Nature Explorer", "Collect parks, preserves, trails, and outdoor stops.", "park|nature|trail|preserve|wildlife|garden", 4, "#4d8b52", "leaf"],
+    ["historic-fort", "Historic Fort", "Find forts, old buildings, and historic sites.", "fort|historic|history|heritage", 2, "#7c5d3a", "fort"],
+    ["photo-memory", "Photo Memory", "Capture a trip photo and save it to the journal.", "photo|camera|scenic|view|lookout", 1, "#1f78a4", "camera"]
+  ].map(([id, title, description, match, required, color, icon]) => ({ id, title, description, match, required, color, icon }));
+
+  function relatedStopsForAdventureBadge(badge, limit = 12) {
+    const pattern = new RegExp(badge.match, "i");
+    return allAttractions().filter((item) => pattern.test(`${item.title} ${item.category} ${item.routeSegment} ${item.summary} ${item.why}`)).slice(0, limit);
+  }
+
+  function adventureBadgeProgress(badge) {
+    const related = relatedStopsForAdventureBadge(badge, 999);
+    const relatedKeys = new Set(related.map(stopKey));
+    const saved = Object.values(state.shortlist || {}).filter((item) => related.some((stop) => stop.title === item.name || stop.name === item.name)).length;
+    const visited = Object.keys(state.visitedStops || {}).filter((key) => relatedKeys.has(key)).length;
+    const photoCount = badge.id === "photo-memory" ? (state.journal || []).length + (state.captures || []).length : 0;
+    const count = Math.max(saved, visited, photoCount);
+    const value = clamp(count, 0, badge.required);
+    return { value, total: badge.required, pct: Math.round((value / badge.required) * 100), earned: value >= badge.required, related };
+  }
+
+  function badgeDoodleSvg(badge, progress) {
+    const color = badge.color || "#1f78a4";
+    const fill = progress.earned ? color : "#fffdf7";
+    const ink = progress.earned ? "#fffdf7" : color;
+    const shape = {
+      mitten: "M30 58 C20 47 18 28 31 18 C42 9 52 18 52 31 L52 14 C52 8 62 8 63 15 L67 48 C68 62 42 70 30 58 Z",
+      waves: "M13 43 C24 32 36 54 47 43 S70 54 81 43 M13 58 C24 47 36 69 47 58 S70 69 81 58",
+      bridge: "M11 61 H85 M20 61 V31 M76 61 V31 M20 34 C36 48 60 48 76 34",
+      lighthouse: "M35 76 H61 L55 20 H41 Z M38 20 H58 L54 10 H42 Z M33 76 H63",
+      ferry: "M17 51 H79 L70 68 H26 Z M30 37 H62 V51 H30 Z",
+      dune: "M12 63 C28 38 47 67 62 46 C70 36 78 35 86 39 V72 H12 Z",
+      falls: "M24 19 H73 V39 C65 43 62 49 62 62 C52 52 43 50 35 63 C34 48 30 40 24 36 Z",
+      pine: "M48 12 L25 43 H38 L20 64 H42 V78 H54 V64 H76 L58 43 H71 Z",
+      donut: "M48 20 A28 28 0 1 1 47 20 M48 37 A11 11 0 1 0 49 37",
+      fudge: "M21 46 L33 28 H75 L64 68 H24 Z",
+      food: "M34 18 V72 M27 18 V35 M41 18 V35 M63 18 C76 28 72 46 62 49 V72",
+      museum: "M16 32 L48 13 L80 32 Z M23 37 H73 M28 37 V72 M43 37 V72 M58 37 V72 M19 72 H77",
+      spark: "M48 11 L55 37 L82 42 L58 56 L63 83 L48 61 L31 83 L37 56 L14 42 L41 37 Z",
+      capitol: "M21 75 H75 M27 70 V42 H69 V70 M34 42 C37 25 59 25 62 42 M39 24 H57 M48 14 V24",
+      ball: "M48 17 A31 31 0 1 1 47 17 M22 48 C35 40 61 40 74 48 M48 17 C38 31 38 65 48 79 M48 17 C58 31 58 65 48 79",
+      island: "M15 62 C30 45 47 56 58 42 C69 30 80 43 85 62 Z M34 42 C37 27 51 24 60 18 M49 38 C52 30 54 22 53 13",
+      stars: "M28 30 L33 43 L47 47 L34 53 L29 66 L23 53 L10 48 L24 43 Z M66 16 L70 27 L82 31 L71 37 L67 48 L61 37 L50 32 L62 27 Z",
+      leaf: "M20 61 C22 28 53 18 78 18 C78 46 60 72 28 72 M28 72 C42 54 54 45 78 18",
+      fort: "M19 75 V28 H31 V18 H43 V28 H55 V18 H67 V28 H79 V75 Z M39 75 V54 H59 V75",
+      camera: "M20 34 H35 L40 25 H58 L63 34 H78 V72 H20 Z M49 43 A12 12 0 1 1 48 43"
+    }[badge.icon] || "M18 48 A30 30 0 1 1 17 48";
+    return `
+      <svg class="badge-doodle-svg" viewBox="0 0 96 96" aria-hidden="true">
+        <rect x="8" y="8" width="80" height="80" rx="22" fill="${fill}" stroke="${color}" stroke-width="4" stroke-dasharray="7 4"/>
+        <path d="${shape}" fill="none" stroke="${ink}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+  }
+
   function renderTopBadgePreview() {
     const container = byId("topBadgePreview");
     if (!container) return;
-    const profile = currentProfile();
+    const badges = adventureBadges.map((badge) => ({ ...badge, progress: adventureBadgeProgress(badge) }));
     container.innerHTML = `
-      <div class="section-head compact-head">
-        <div>
-          <p class="eyebrow">Badges</p>
-          <strong>${profile.name}'s earned and available badges</strong>
-        </div>
-        <button type="button" data-nav-global="rewards">View all</button>
+      <div class="adventure-badge-tray" aria-label="Trip badges">
+        ${badges.map((badge) => `
+          <button type="button" class="adventure-badge ${badge.progress.earned ? "is-earned" : "is-progress"}" data-adventure-badge="${badge.id}" aria-label="${escapeHtml(badge.title)} badge, ${badge.progress.value} of ${badge.progress.total}">
+            ${badgeDoodleSvg(badge, badge.progress)}
+            <span>${escapeHtml(badge.title)}</span>
+            <small>${badge.progress.value}/${badge.progress.total}</small>
+            <i style="width:${badge.progress.pct}%"></i>
+          </button>
+        `).join("")}
       </div>
-      ${renderBadgeShelf(profile.id)}
     `;
+  }
+
+  function showAdventureBadgeDetail(badgeId) {
+    const badge = adventureBadges.find((item) => item.id === badgeId);
+    if (!badge) return;
+    const progress = adventureBadgeProgress(badge);
+    document.getElementById("badgeDetailOverlay")?.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "badgeDetailOverlay";
+    overlay.className = "app-modal";
+    overlay.innerHTML = `
+      <div class="app-modal-card badge-detail-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(badge.title)}">
+        <button type="button" class="modal-close" data-close-modal>Close</button>
+        <div class="badge-detail-head">
+          ${badgeDoodleSvg(badge, progress)}
+          <div>
+            <p class="eyebrow">${progress.earned ? "Earned" : "Badge progress"}</p>
+            <h3>${escapeHtml(badge.title)}</h3>
+            <p>${escapeHtml(badge.description)}</p>
+          </div>
+        </div>
+        <div class="badge-progress-line"><span style="width:${progress.pct}%"></span></div>
+        <p><strong>How to earn:</strong> Save or visit ${progress.total} related ${progress.total === 1 ? "stop" : "stops"}. Current progress: ${progress.value}/${progress.total}.</p>
+        <div class="badge-related-list">
+          ${progress.related.slice(0, 5).map((item) => `
+            <article>
+              <strong>${escapeHtml(item.title)}</strong>
+              <small>${escapeHtml(item.category)} · ${escapeHtml(item.routeSegment || "Route")}</small>
+              <div class="compact-actions">
+                <button type="button" data-stop-detail="${escapeHtml(item.title)}">View</button>
+                <button type="button" data-route-stop="${escapeHtml(item.title)}">Route</button>
+                <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+              </div>
+            </article>
+          `).join("") || "<p>No matching route stops yet.</p>"}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  function adventureBadgeHoverText(badgeId) {
+    const badge = adventureBadges.find((item) => item.id === badgeId);
+    if (!badge) return "";
+    const progress = adventureBadgeProgress(badge);
+    return `${badge.title}: ${progress.value}/${progress.total}. ${badge.description}`;
   }
 
   function showBadgeDetail(badgeId) {
@@ -701,7 +857,7 @@
     };
     awardBadge("trip-shortlist-starter");
     saveState();
-    renderHomeMapPanel();
+    updateHomeGpsLayer();
     renderBottomDrawer();
     if (["rewards", "memories"].includes(activePage)) renderProfile();
     setAction(`Saved to Trip Shortlist: ${item.name || item}.`);
@@ -1012,6 +1168,7 @@
     state.destinationStatus = `${Math.round(percentToDestination)}% to ${destination.label}`;
     if (state.phase === "outbound") state.progress = percentToDestination;
     if (state.phase === "return") state.returnProgress = percentToDestination;
+    renderHomeMapPanel();
     renderRouteMapPanel();
     renderExploreMapPanel();
     offerNearbyBadges(point);
@@ -1121,39 +1278,220 @@
   function renderHomeMapPanel() {
     const container = byId("homeRouteMapPanel");
     if (!container) return;
-    const points = data.route.mapStops || [];
     const attractions = allAttractions();
     container.innerHTML = `
-      <div class="static-route-map">
-        <svg viewBox="0 0 1000 560" role="img" aria-label="Route from Olathe to Bois Blanc Island">
-          <path class="static-route-shadow" d="M 78 450 C 210 430 270 465 370 420 S 500 360 570 305 S 620 230 678 180 S 760 126 846 82" />
-          <path class="static-route-line" d="M 78 450 C 210 430 270 465 370 420 S 500 360 570 305 S 620 230 678 180 S 760 126 846 82" />
-          ${points.map((stop, index) => {
-            const x = 78 + (index / Math.max(1, points.length - 1)) * 768;
-            const y = 450 - (index / Math.max(1, points.length - 1)) * 368 + (index % 2 ? 24 : -10);
-            return `<g><circle class="static-stop ${stop.type}" cx="${x}" cy="${y}" r="13"/><text x="${x + 18}" y="${y + 5}">${escapeHtml(stop.label)}</text></g>`;
-          }).join("")}
-          ${attractions.map((item) => {
-            const pct = clamp((item.milesFromStart || 0) / data.route.totalOutboundMiles, 0, 1);
-            const x = 78 + pct * 768;
-            const y = 450 - pct * 368 + (Math.round(pct * 10) % 2 ? -42 : 42);
-            return `<g class="static-attraction ${isStopSaved(item) ? "is-saved" : ""} ${isStopVisited(item) ? "is-visited" : ""}" data-title="${escapeHtml(item.title)}"><circle cx="${x}" cy="${y}" r="9"/><text x="${x + 12}" y="${y + 4}">${escapeHtml(item.title)}</text></g>`;
-          }).join("")}
-          ${state.lastPosition ? `<circle class="static-gps" cx="${78 + progressForPhase() / 100 * 768}" cy="${450 - progressForPhase() / 100 * 368}" r="15"><title>Current GPS location</title></circle>` : ""}
-        </svg>
-        <div class="map-pin-layer">
-          ${attractions.map((item) => {
-            const pct = clamp((item.milesFromStart || 0) / data.route.totalOutboundMiles, 0, 1);
-            const left = 7.8 + pct * 76.8;
-            const top = 80 - pct * 66 + (Math.round(pct * 10) % 2 ? -7 : 7);
-            return `<button type="button" class="interactive-map-pin category-${item.category.toLowerCase().replace(/[^a-z0-9]+/g, "-")} ${isStopSaved(item) ? "is-saved" : ""} ${isStopVisited(item) ? "is-visited" : ""}" style="left:${left}%;top:${top}%;" data-preview-stop="${escapeHtml(item.title)}" aria-label="${escapeHtml(item.title)} ${item.category}"><span>${item.icon}</span></button>`;
-          }).join("")}
-        </div>
-        <div class="static-map-pins">
-          ${attractions.map((item) => `<button type="button" data-preview-stop="${escapeHtml(item.title)}"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.category)} · ${escapeHtml(item.tier)} · ${escapeHtml(stopDistanceLabel(item))}</span></button>`).join("")}
+      <div id="homeClusterMap" class="home-cluster-map maplibre-canvas" role="application" aria-label="Clustered route map with ${attractions.length} stops">
+        <div class="map-fallback">
+          <strong>Loading clustered route map</strong>
+          <p>${attractions.length} route stops are ready. Clusters expand as you zoom in.</p>
         </div>
       </div>
+      <div id="clusterDrawer" class="cluster-drawer" hidden></div>
     `;
+    if (!window.maplibregl) {
+      loadMapLibre();
+      return;
+    }
+    drawHomeClusterMap();
+  }
+
+  function drawHomeClusterMap() {
+    const canvas = byId("homeClusterMap");
+    if (!canvas || !window.maplibregl) return;
+    const attractions = allAttractions();
+    if (!attractions.length) {
+      canvas.innerHTML = `<div class="map-fallback"><strong>No route stops loaded</strong><p>Upload the CSV-generated trip-stops.js file to show clustered stops.</p></div>`;
+      return;
+    }
+    if (homeMap) {
+      homeMap.remove();
+      homeMap = null;
+    }
+    homeMap = new maplibregl.Map({
+      container: canvas,
+      style: data.mapLinks.styleUrl,
+      center: [-89.7, 41.8],
+      zoom: 4.35,
+      attributionControl: true
+    });
+    homeMap.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    homeMap.on("load", () => {
+      homeMap.addSource("home-attractions", {
+        type: "geojson",
+        data: attractionFeatureCollection(),
+        cluster: true,
+        clusterMaxZoom: 11,
+        clusterRadius: 60
+      });
+      homeMap.addLayer({
+        id: "home-clusters",
+        type: "circle",
+        source: "home-attractions",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": ["step", ["get", "point_count"], "#1f78a4", 10, "#2f7d5f", 25, "#bd5a36"],
+          "circle-radius": ["step", ["get", "point_count"], 22, 10, 30, 25, 39],
+          "circle-stroke-width": 4,
+          "circle-stroke-color": "#fffdf7",
+          "circle-opacity": 0.94
+        }
+      });
+      homeMap.addLayer({
+        id: "home-cluster-count",
+        type: "symbol",
+        source: "home-attractions",
+        filter: ["has", "point_count"],
+        layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 14 },
+        paint: { "text-color": "#fffdf7" }
+      });
+      homeMap.addLayer({
+        id: "home-unclustered-point",
+        type: "circle",
+        source: "home-attractions",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": ["match", ["get", "categoryGroup"],
+            "nature", "#2f7d5f",
+            "history", "#7c5d3a",
+            "museum", "#174a7c",
+            "food", "#bd5a36",
+            "ferry", "#163f33",
+            "water", "#1f78a4",
+            "#f2c14e"
+          ],
+          "circle-radius": 8,
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#fffdf7"
+        }
+      });
+      homeMap.addLayer({
+        id: "home-unclustered-label",
+        type: "symbol",
+        source: "home-attractions",
+        filter: ["!", ["has", "point_count"]],
+        minzoom: 9,
+        layout: { "text-field": ["get", "title"], "text-offset": [0, 1.3], "text-size": 11, "text-anchor": "top" },
+        paint: { "text-color": "#17211b", "text-halo-color": "#fffdf7", "text-halo-width": 1.5 }
+      });
+      homeMap.addLayer({
+        id: "home-unclustered-icon",
+        type: "symbol",
+        source: "home-attractions",
+        filter: ["!", ["has", "point_count"]],
+        layout: { "text-field": ["get", "icon"], "text-size": 13, "text-allow-overlap": true },
+        paint: { "text-color": "#fffdf7" }
+      });
+      if (state.lastPosition) {
+        homeMap.addSource("current-location", {
+          type: "geojson",
+          data: { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [state.lastPosition.lon, state.lastPosition.lat] } }
+        });
+        homeMap.addLayer({
+          id: "current-location-dot",
+          type: "circle",
+          source: "current-location",
+          paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+        });
+      }
+      homeMap.on("click", "home-clusters", (event) => {
+        const features = homeMap.queryRenderedFeatures(event.point, { layers: ["home-clusters"] });
+        const feature = features[0];
+        if (!feature) return;
+        const source = homeMap.getSource("home-attractions");
+        showClusterDrawer(feature);
+        const expansion = source.getClusterExpansionZoom(feature.properties.cluster_id, (error, zoom) => {
+          if (error) return;
+          homeMap.easeTo({ center: feature.geometry.coordinates, zoom });
+        });
+        if (expansion?.then) expansion.then((zoom) => homeMap.easeTo({ center: feature.geometry.coordinates, zoom })).catch(() => {});
+      });
+      homeMap.on("mouseenter", "home-clusters", () => { homeMap.getCanvas().style.cursor = "pointer"; });
+      homeMap.on("mouseleave", "home-clusters", () => { homeMap.getCanvas().style.cursor = ""; });
+      homeMap.on("click", "home-unclustered-point", (event) => {
+        const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
+        if (item) showAttractionPreview(item);
+      });
+      homeMap.on("mousemove", "home-unclustered-point", (event) => {
+        const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
+        if (item) showAttractionPreview(item);
+      });
+      homeMap.on("mouseenter", "home-unclustered-point", () => { homeMap.getCanvas().style.cursor = "pointer"; });
+      homeMap.on("mouseleave", "home-unclustered-point", () => { homeMap.getCanvas().style.cursor = ""; });
+      const first = attractions[0];
+      const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
+      homeMap.fitBounds(bounds, { padding: { top: 72, bottom: 96, left: 28, right: 28 }, maxZoom: 6.6, duration: 0 });
+    });
+  }
+
+  function updateHomeGpsLayer() {
+    if (!homeMap || !state.lastPosition) return;
+    const dataPoint = { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [state.lastPosition.lon, state.lastPosition.lat] } };
+    const source = homeMap.getSource?.("current-location");
+    if (source) {
+      source.setData(dataPoint);
+      return;
+    }
+    if (!homeMap.isStyleLoaded?.()) return;
+    homeMap.addSource("current-location", { type: "geojson", data: dataPoint });
+    homeMap.addLayer({
+      id: "current-location-dot",
+      type: "circle",
+      source: "current-location",
+      paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+    });
+  }
+
+  function categoryGroup(category = "") {
+    const text = category.toLowerCase();
+    if (/park|nature|trail|preserve|garden|dune|forest|waterfall|falls/.test(text)) return "nature";
+    if (/historic|history|fort|capitol|heritage/.test(text)) return "history";
+    if (/museum|library|hall/.test(text)) return "museum";
+    if (/food|restaurant|cafe|market|cider|fudge|donut/.test(text)) return "food";
+    if (/ferry|boat|dock/.test(text)) return "ferry";
+    if (/lake|lighthouse|shore|harbor|river/.test(text)) return "water";
+    return "discovery";
+  }
+
+  function attractionForIdOrTitle(id, title) {
+    return allAttractions().find((item) => item.id === id || item.title === title || item.name === title);
+  }
+
+  function showClusterDrawer(feature) {
+    const drawer = byId("clusterDrawer");
+    if (!drawer || !homeMap) return;
+    const source = homeMap.getSource("home-attractions");
+    const clusterId = feature.properties.cluster_id;
+    const count = feature.properties.point_count || 0;
+    const renderLeaves = (leaves) => {
+      leaves ||= [];
+      const groups = leaves.reduce((acc, leaf) => {
+        const category = leaf.properties.category || "Trip Stop";
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {});
+      drawer.hidden = false;
+      drawer.innerHTML = `
+        <div class="cluster-drawer-card">
+          <button type="button" class="modal-close" data-close-cluster>Close</button>
+          <p class="eyebrow">Map cluster</p>
+          <h3>${count} nearby trip stops</h3>
+          <div class="cluster-chip-row">${Object.entries(groups).slice(0, 8).map(([category, total]) => `<span>${escapeHtml(category)} <b>${total}</b></span>`).join("")}</div>
+          <div class="cluster-stop-list">
+            ${leaves.slice(0, 8).map((leaf) => `
+              <button type="button" data-preview-stop="${escapeHtml(leaf.properties.title)}">
+                <strong>${escapeHtml(leaf.properties.title)}</strong>
+                <small>${escapeHtml(leaf.properties.category)} · ${escapeHtml(leaf.properties.segment || "Route")}</small>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    };
+    const leavesResult = source.getClusterLeaves(clusterId, Math.min(count, 100), 0, (error, leaves) => {
+      if (error) return;
+      renderLeaves(leaves);
+    });
+    if (leavesResult?.then) leavesResult.then(renderLeaves).catch(() => {});
   }
 
   function showAttractionPreview(item) {
@@ -1218,6 +1556,10 @@
   function renderBottomDrawer() {
     const drawer = byId("bottomDrawer");
     if (!drawer) return;
+    if (activePage === "route") {
+      drawer.innerHTML = "";
+      return;
+    }
     const profile = currentProfile();
     const nearest = nearestAttractions(state.lastPosition, 4);
     const weather = weatherLocationsForContext().map((location) => state.weather[location.id]).find(Boolean);
@@ -1281,6 +1623,7 @@
       document.head.appendChild(script);
     }).then(() => {
       mapLibreLoading = null;
+      renderHomeMapPanel();
       renderRouteMapPanel();
       renderExploreMapPanel();
     }).catch(() => {
@@ -1396,7 +1739,17 @@
       type: "FeatureCollection",
       features: allAttractions().map((item) => ({
         type: "Feature",
-        properties: { id: item.id, title: item.title, place: item.place, segment: item.routeSegment },
+        properties: {
+          id: item.id,
+          title: item.title,
+          category: item.category,
+          categoryGroup: categoryGroup(item.category),
+          place: item.place || item.routeSegment,
+          segment: item.routeSegment,
+          tier: item.tier,
+          stopTime: item.estimatedStopTime,
+          icon: item.icon
+        },
         geometry: { type: "Point", coordinates: [item.lon, item.lat] }
       }))
     };
@@ -1533,7 +1886,7 @@
     if (profileIds.includes(parts[0])) activeProfile = parts[0];
     const profile = currentProfile();
     const validPages = profile.id === "momdad" ? parentPages : pages;
-    const aliases = { home: "today", activities: "learn", stars: "learn", ferry: "learn", badges: "rewards", saved: "rewards", photos: "memories" };
+    const aliases = { home: "today", activities: "learn", stars: "learn", ferry: "learn", badges: "rewards", saved: "rewards" };
     const requestedPage = aliases[parts[1]] || parts[1];
     activePage = validPages.includes(requestedPage) ? requestedPage : "today";
   }
@@ -2376,7 +2729,7 @@
     return `
       <div class="source-grid">
         <div class="choice-card"><strong>Location</strong><p>GPS status: ${state.gpsStatus}. ${state.trackingStatus || ""}</p><button type="button" data-start-gps="true">Start GPS</button></div>
-        <div class="choice-card"><strong>Offline cache</strong><p>The app shell and trip data are cached for road use. Cache version: v22.</p></div>
+        <div class="choice-card"><strong>Offline cache</strong><p>The app shell and trip data are cached for road use. Cache version: v24.</p></div>
         <div class="choice-card"><strong>Photo storage</strong><p>${state.storageWarning || "Photos are stored on this device for the trip summary."}</p></div>
         <div class="choice-card"><strong>Sources</strong><p>Official links and data status are available in Trip Info.</p><button type="button" data-nav="sources">Trip Info</button></div>
       </div>
@@ -2400,6 +2753,11 @@
     if (!target) return;
     if (target.matches("[data-close-modal]")) {
       document.getElementById("badgeDetailOverlay")?.remove();
+      return;
+    }
+    if (target.matches("[data-close-cluster]")) {
+      const drawer = byId("clusterDrawer");
+      if (drawer) drawer.hidden = true;
       return;
     }
     if (target.id === "activeTraveler") {
@@ -2477,6 +2835,11 @@
     if (target.dataset.badge) {
       event.preventDefault();
       showBadgeDetail(target.dataset.badge);
+      return;
+    }
+    if (target.dataset.adventureBadge) {
+      event.preventDefault();
+      showAdventureBadgeDetail(target.dataset.adventureBadge);
       return;
     }
     if (target.dataset.shortlist) {
@@ -2600,6 +2963,11 @@
       const item = attractionForName(target.dataset.previewStop);
       if (item) showAttractionPreview(item);
     });
+    document.addEventListener("mouseover", (event) => {
+      const target = event.target.closest("[data-adventure-badge]");
+      if (!target) return;
+      target.title = adventureBadgeHoverText(target.dataset.adventureBadge);
+    });
     document.addEventListener("focusin", (event) => {
       const target = event.target.closest("[data-preview-stop]");
       if (!target) return;
@@ -2619,15 +2987,20 @@
 
   function render() {
     parseHash();
+    document.body.dataset.page = activePage;
     if (!state.hasChosenProfile) byId("splash").classList.remove("is-hidden");
     renderCountdowns();
     renderTripStatus();
     renderTopBadgePreview();
     renderHomeMapPanel();
     renderBottomDrawer();
-    renderProfile();
-    renderRouteMapPanel();
-    renderExploreMapPanel();
+    if (activePage === "route") {
+      byId("activeTraveler").textContent = `${currentProfile().name}'s view`;
+    } else {
+      renderProfile();
+      renderRouteMapPanel();
+      renderExploreMapPanel();
+    }
     renderRouteQuest();
     renderBottomNav();
     renderMainMenu();
