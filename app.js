@@ -7095,6 +7095,7 @@
           <p>${attractions.length} uploaded trip stops are ready. Clusters expand as you zoom in.</p>
         </div>
       </div>
+      <div id="homeDomMarkerLayer" class="home-dom-marker-layer" aria-label="Visible stop markers"></div>
       ${renderUploadedStopsPanel(attractions)}
       <div id="clusterDrawer" class="cluster-drawer" hidden></div>
     `;
@@ -7237,10 +7238,73 @@
       homeMap.on("mouseleave", "home-unclustered-point", () => { homeMap.getCanvas().style.cursor = ""; });
       homeMap.on("moveend", refreshUploadedStopsPanel);
       homeMap.on("zoomend", refreshUploadedStopsPanel);
+      homeMap.on("move", renderHomeDomMarkers);
+      homeMap.on("zoom", renderHomeDomMarkers);
+      homeMap.on("resize", renderHomeDomMarkers);
       const first = attractions[0];
       const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
       homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
       refreshUploadedStopsPanel();
+      window.setTimeout(renderHomeDomMarkers, 120);
+    });
+  }
+
+  function renderHomeDomMarkers() {
+    const layer = byId("homeDomMarkerLayer");
+    if (!layer || !homeMap?.project) return;
+    const bounds = homeMap.getBounds?.();
+    const zoom = homeMap.getZoom?.() || 5;
+    const stops = allAttractions().filter((item) => {
+      try {
+        return bounds ? bounds.contains([item.lon, item.lat]) : true;
+      } catch {
+        return true;
+      }
+    });
+    const width = layer.clientWidth || window.innerWidth;
+    const height = layer.clientHeight || window.innerHeight;
+    const clusterSize = zoom < 6 ? 86 : zoom < 7.5 ? 64 : zoom < 9 ? 46 : 0;
+    const buckets = new Map();
+    stops.forEach((item) => {
+      const point = homeMap.project([item.lon, item.lat]);
+      if (point.x < -60 || point.y < -60 || point.x > width + 60 || point.y > height + 60) return;
+      const key = clusterSize ? `${Math.floor(point.x / clusterSize)}:${Math.floor(point.y / clusterSize)}` : stopKey(item);
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push({ ...item, screenX: point.x, screenY: point.y });
+    });
+    layer.innerHTML = "";
+    Array.from(buckets.values()).forEach((items) => {
+      const x = items.reduce((sum, item) => sum + item.screenX, 0) / items.length;
+      const y = items.reduce((sum, item) => sum + item.screenY, 0) / items.length;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.style.left = `${x}px`;
+      button.style.top = `${y}px`;
+      if (items.length > 1) {
+        button.className = "dom-map-cluster";
+        button.textContent = String(items.length);
+        button.setAttribute("aria-label", `${items.length} stops in this area`);
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          showManualClusterDrawer(items);
+          const avg = items.reduce((acc, item) => ({ lat: acc.lat + item.lat / items.length, lon: acc.lon + item.lon / items.length }), { lat: 0, lon: 0 });
+          homeMap.easeTo({ center: [avg.lon, avg.lat], zoom: Math.min(10, zoom + 1.8) });
+        });
+      } else {
+        const item = items[0];
+        button.className = `dom-map-pin category-${categoryGroup(item.category)}`;
+        button.innerHTML = `<span>${escapeHtml(item.icon || "•")}</span>`;
+        button.title = `${item.title} - ${item.category}`;
+        button.setAttribute("aria-label", `${item.title}, ${item.category}`);
+        button.addEventListener("mouseenter", () => showAttractionPreview(item));
+        button.addEventListener("focus", () => showAttractionPreview(item));
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          showAttractionPreview(item);
+          showStopDetailDrawer(item);
+        });
+      }
+      layer.appendChild(button);
     });
   }
 
@@ -7442,6 +7506,40 @@
     window.setTimeout(() => {
       if (!drawer.hidden && !drawer.querySelector(".cluster-stop-card")) renderLeaves([]);
     }, 250);
+  }
+
+  function showManualClusterDrawer(items) {
+    const drawer = byId("clusterDrawer");
+    if (!drawer) return;
+    const normalized = items.map((item) => enrichStop(item));
+    const groups = normalized.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + 1;
+      return acc;
+    }, {});
+    drawer.hidden = false;
+    drawer.innerHTML = `
+      <div class="cluster-drawer-card">
+        <button type="button" class="modal-close" data-close-cluster>Close</button>
+        <p class="eyebrow">Visible map cluster</p>
+        <h3>${normalized.length} uploaded trip stops here</h3>
+        <p class="cluster-help">These are the stops grouped in this part of the map. Zoom in to separate them.</p>
+        <div class="cluster-chip-row">${Object.entries(groups).slice(0, 8).map(([category, total]) => `<span>${escapeHtml(category)} <b>${total}</b></span>`).join("")}</div>
+        <div class="cluster-stop-grid">
+          ${normalized.slice(0, 12).map((item) => `
+            <article class="cluster-stop-card">
+              <strong>${escapeHtml(item.title)}</strong>
+              <small>${escapeHtml(item.category)} · ${escapeHtml(item.routeSegment || "Route")}</small>
+              <p>${escapeHtml(item.profiles?.[activeProfile] || item.summary || item.why || "")}</p>
+              <div class="compact-actions">
+                <button type="button" data-stop-detail="${escapeHtml(item.title)}">Details</button>
+                <button type="button" data-route-stop="${escapeHtml(item.title)}">Route</button>
+                <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    `;
   }
 
   function showAttractionPreview(item) {

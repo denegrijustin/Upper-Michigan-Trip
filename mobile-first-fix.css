@@ -1093,6 +1093,63 @@ body[data-page="explore"] .map-stage {
   height: 100svh;
 }
 
+body[data-page="route"] .route-map-home,
+body[data-page="explore"] .route-map-home {
+  position: relative;
+}
+
+.home-dom-marker-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.home-dom-marker-layer button {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.dom-map-cluster {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 4px solid #fffdf7;
+  border-radius: 999px;
+  background: #1f78a4;
+  color: #fffdf7;
+  font-weight: 950;
+  box-shadow: 0 10px 24px rgba(20, 32, 26, 0.28);
+}
+
+.dom-map-pin {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 3px solid #fffdf7;
+  border-radius: 999px;
+  background: #f2c14e;
+  color: #14201a;
+  font-size: 0.78rem;
+  font-weight: 950;
+  box-shadow: 0 8px 20px rgba(20, 32, 26, 0.25);
+}
+
+.dom-map-pin.category-nature { background: #2f7d5f; color: #fffdf7; }
+.dom-map-pin.category-history { background: #7c5d3a; color: #fffdf7; }
+.dom-map-pin.category-museum { background: #174a7c; color: #fffdf7; }
+.dom-map-pin.category-food { background: #bd5a36; color: #fffdf7; }
+.dom-map-pin.category-ferry { background: #163f33; color: #fffdf7; }
+.dom-map-pin.category-water { background: #1f78a4; color: #fffdf7; }
+.dom-map-pin.category-discovery { background: #f2c14e; color: #14201a; }
+
 body[data-page="route"] .map-first-shell,
 body[data-page="explore"] .map-first-shell {
   width: 100vw;
