@@ -1244,13 +1244,23 @@ body[data-page="explore"] .map-preview-card {
 
 .uploaded-stops-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
 
 .uploaded-stops-head strong {
+  display: block;
   color: #14201a;
+}
+
+.uploaded-stops-head small {
+  display: block;
+  color: #536159;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-top: 2px;
 }
 
 .uploaded-category-row {
@@ -1281,6 +1291,7 @@ body[data-page="explore"] .map-preview-card {
 .uploaded-stop-card {
   display: grid;
   gap: 5px;
+  align-content: start;
   border: 1px solid rgba(20, 32, 26, 0.12);
   border-radius: 12px;
   background: #fffdf7;
