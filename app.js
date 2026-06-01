@@ -22,8 +22,7 @@
   const pages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "weather", "stars", "ferry", "activities", "badges", "saved", "photos", "sources", "settings"];
   const parentPages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources", "settings"];
   const mainMenuItems = [
-    ["route", "Route Map", "Live clustered route map and travel stops"],
-    ["explore", "Attractions", "All route attractions on a cluster map"],
+    ["explore", "Explore Map", "All uploaded trip stops on one clustered map"],
     ["lens", "Real Life Lens", "Analyze a photo and save the story"],
     ["memories", "Trip Summary", "Saved photos, stats, and timeline"],
     ["photos", "Photos", "Captured media"],
@@ -1262,7 +1261,7 @@
     if (!window.maplibregl) {
       container.innerHTML = `
         <div class="map-fallback">
-          <strong>Loading route map</strong>
+          <strong>Loading map</strong>
           <p>The full map loads only when this page is open so the rest of the app stays fast. Phone-map buttons still work immediately.</p>
           <div class="route-steps"><span>Olathe</span><span>South Bend</span><span>Cheboygan ferry</span><span>Bois Blanc Island</span></div>
           <div class="action-row"><a class="external-link" href="${activeRouteUrl()}" target="_blank" rel="noopener">Open driving route</a><a class="external-link" href="${data.mapLinks.returnUrl}" target="_blank" rel="noopener">Open return route</a></div>
@@ -1271,7 +1270,7 @@
       loadMapLibre();
       return;
     }
-    container.innerHTML = `<div id="mapLibreCanvas" class="maplibre-canvas" role="img" aria-label="Open route map"></div>`;
+    container.innerHTML = `<div id="mapLibreCanvas" class="maplibre-canvas" role="img" aria-label="Open trip map"></div>`;
     drawRouteMap();
   }
 
@@ -1279,11 +1278,13 @@
     const container = byId("homeRouteMapPanel");
     if (!container) return;
     const attractions = allAttractions();
+    const count = byId("mapStopCount");
+    if (count) count.textContent = `${attractions.length} stops`;
     container.innerHTML = `
-      <div id="homeClusterMap" class="home-cluster-map maplibre-canvas" role="application" aria-label="Clustered route map with ${attractions.length} stops">
+      <div id="homeClusterMap" class="home-cluster-map maplibre-canvas" role="application" aria-label="Explore map with ${attractions.length} uploaded trip stops">
         <div class="map-fallback">
-          <strong>Loading clustered route map</strong>
-          <p>${attractions.length} route stops are ready. Clusters expand as you zoom in.</p>
+          <strong>Loading explore map</strong>
+          <p>${attractions.length} uploaded trip stops are ready. Clusters expand as you zoom in.</p>
         </div>
       </div>
       <div id="clusterDrawer" class="cluster-drawer" hidden></div>
@@ -1320,8 +1321,8 @@
         type: "geojson",
         data: attractionFeatureCollection(),
         cluster: true,
-        clusterMaxZoom: 8,
-        clusterRadius: 36
+        clusterMaxZoom: 7,
+        clusterRadius: 30
       });
       homeMap.addLayer({
         id: "home-clusters",
@@ -1479,6 +1480,7 @@
         leaves = allAttractions()
           .map((item) => ({
             properties: {
+              id: item.id,
               title: item.title,
               category: item.category,
               segment: item.routeSegment,
@@ -1497,16 +1499,25 @@
       drawer.innerHTML = `
         <div class="cluster-drawer-card">
           <button type="button" class="modal-close" data-close-cluster>Close</button>
-          <p class="eyebrow">Map cluster</p>
-          <h3>${count} nearby trip stops</h3>
+          <p class="eyebrow">Explore cluster</p>
+          <h3>${count} uploaded trip stops here</h3>
+          <p class="cluster-help">Showing ${Math.min(leaves.length, 8)} nearby stops. Zoom in to split the cluster, or open any stop below.</p>
           <div class="cluster-chip-row">${Object.entries(groups).slice(0, 8).map(([category, total]) => `<span>${escapeHtml(category)} <b>${total}</b></span>`).join("")}</div>
-          <div class="cluster-stop-list">
-            ${leaves.slice(0, 8).map((leaf) => `
-              <button type="button" data-stop-detail="${escapeHtml(leaf.properties.title)}">
+          <div class="cluster-stop-grid">
+            ${leaves.slice(0, 8).map((leaf) => {
+              const item = attractionForIdOrTitle(leaf.properties.id, leaf.properties.title) || leaf.properties;
+              return `
+              <article class="cluster-stop-card">
                 <strong>${escapeHtml(leaf.properties.title)}</strong>
                 <small>${escapeHtml(leaf.properties.category)} · ${escapeHtml(leaf.properties.segment || "Route")}</small>
-              </button>
-            `).join("")}
+                <p>${escapeHtml(item.summary || item.shortSummary || item.why || item.whyItMatters || "")}</p>
+                <div class="compact-actions">
+                  <button type="button" data-stop-detail="${escapeHtml(leaf.properties.title)}">Details</button>
+                  <button type="button" data-route-stop="${escapeHtml(leaf.properties.title)}">Route</button>
+                  <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+                </div>
+              </article>
+            `; }).join("")}
           </div>
         </div>
       `;
@@ -1517,7 +1528,7 @@
     });
     if (leavesResult?.then) leavesResult.then(renderLeaves).catch(() => {});
     window.setTimeout(() => {
-      if (!drawer.hidden && !drawer.querySelector(".cluster-stop-list button")) renderLeaves([]);
+      if (!drawer.hidden && !drawer.querySelector(".cluster-stop-card")) renderLeaves([]);
     }, 250);
   }
 
@@ -1585,7 +1596,7 @@
   function renderBottomDrawer() {
     const drawer = byId("bottomDrawer");
     if (!drawer) return;
-    if (activePage === "route") {
+    if (isHomeMapPage()) {
       drawer.innerHTML = "";
       return;
     }
@@ -1652,7 +1663,7 @@
       document.head.appendChild(script);
     }).then(() => {
       mapLibreLoading = null;
-      renderHomeMapPanel();
+      if (isHomeMapPage()) renderHomeMapPanel();
       renderRouteMapPanel();
       renderExploreMapPanel();
     }).catch(() => {
@@ -1894,6 +1905,10 @@
     return selectedDay();
   }
 
+  function isHomeMapPage() {
+    return activePage === "explore" || activePage === "route";
+  }
+
   function renderSplashProfiles() {
     const container = byId("splashProfiles");
     container.innerHTML = "";
@@ -1915,7 +1930,7 @@
     if (profileIds.includes(parts[0])) activeProfile = parts[0];
     const profile = currentProfile();
     const validPages = profile.id === "momdad" ? parentPages : pages;
-    const aliases = { home: "today", activities: "learn", stars: "learn", ferry: "learn", badges: "rewards", saved: "rewards" };
+    const aliases = { home: "explore", route: "explore", activities: "learn", stars: "learn", ferry: "learn", badges: "rewards", saved: "rewards" };
     const requestedPage = aliases[parts[1]] || parts[1];
     activePage = validPages.includes(requestedPage) ? requestedPage : "today";
   }
@@ -1925,7 +1940,7 @@
     state.profile = profileId;
     state.hasChosenProfile = true;
     saveState();
-    location.hash = `/${profileId}/route`;
+    location.hash = `/${profileId}/explore`;
     byId("splash").classList.add("is-hidden");
     render();
     if (!state.lastPosition && state.gpsStatus !== "Active") {
@@ -2046,7 +2061,7 @@
   function profileHomeTiles(profile) {
     const childTiles = [
       ["today", "Today", "What to look for right now."],
-      ["route", "Route", "Road, stops, and source-linked places."],
+      ["explore", "Explore Map", "Stops, sources, and nearby discoveries."],
       ["weather", "Weather", "Open-Meteo plan guidance."],
       ["stars", "Stars", "STARZ directions and sky checks."],
       ["ferry", "Ferry / Boats", "Water crossing context."],
@@ -2056,7 +2071,7 @@
       ["photos", "Photos", "Captured trip story."]
     ];
     const parentTiles = [
-      ["route", "Route & GPS", "Road-accurate links and GPS detail."],
+      ["explore", "Explore Map", "Uploaded stops, GPS, and family discovery detail."],
       ["weather", "Weather & Road Risk", "Open-Meteo, ferry wind, backup plans."],
       ["ferry", "Ferry Plan", "Official Plaunt links and reminders."],
       ["stops", "Stops & Supplies", "Clean stops, gas, food, last mainland prep."],
@@ -3020,12 +3035,27 @@
     if (!state.hasChosenProfile) byId("splash").classList.remove("is-hidden");
     renderCountdowns();
     renderTripStatus();
-    renderTopBadgePreview();
-    renderHomeMapPanel();
-    renderBottomDrawer();
-    if (activePage === "route") {
+    if (isHomeMapPage()) {
+      renderTopBadgePreview();
+      renderHomeMapPanel();
+      renderBottomDrawer();
       byId("activeTraveler").textContent = `${currentProfile().name}'s view`;
     } else {
+      if (homeMap) {
+        homeMap.remove();
+        homeMap = null;
+      }
+      const homePanel = byId("homeRouteMapPanel");
+      if (homePanel) homePanel.innerHTML = "";
+      const preview = byId("homeAttractionPreview");
+      if (preview) {
+        preview.hidden = true;
+        preview.innerHTML = "";
+      }
+      const drawer = byId("bottomDrawer");
+      if (drawer) drawer.innerHTML = "";
+      const badgePreview = byId("topBadgePreview");
+      if (badgePreview) badgePreview.innerHTML = "";
       renderProfile();
       renderRouteMapPanel();
       renderExploreMapPanel();
@@ -3038,7 +3068,7 @@
   renderDaySelect();
   renderSplashProfiles();
   if (state.hasChosenProfile) byId("splash").classList.add("is-hidden");
-  if (!location.hash) location.hash = `/${activeProfile}/route`;
+  if (!location.hash) location.hash = `/${activeProfile}/explore`;
   wireEvents();
   wireCaptureInput();
   registerServiceWorker();
