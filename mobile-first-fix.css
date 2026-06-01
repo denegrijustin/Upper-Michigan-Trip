@@ -1469,13 +1469,21 @@ body[data-page="explore"] .topbar {
     left: 10px;
     right: 10px;
     grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 46px;
+    padding: 6px 8px;
+    border-radius: 16px;
     margin-bottom: 0;
-    gap: 8px;
+    gap: 6px;
   }
 
   body[data-page="route"] .topbar-meta,
 body[data-page="explore"] .topbar-meta {
     display: none;
+  }
+
+  body[data-page="route"] .topbar h1,
+  body[data-page="explore"] .topbar h1 {
+    font-size: 1rem;
   }
 
   body[data-page="route"] #onlineStatus,
@@ -1485,6 +1493,9 @@ body[data-page="explore"] .topbar-meta {
 
   body[data-page="route"] .top-actions,
 body[data-page="explore"] .top-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
     gap: 6px;
   }
 
@@ -1492,41 +1503,112 @@ body[data-page="explore"] .top-actions {
 body[data-page="explore"] .top-actions button,
   body[data-page="route"] .status-pill,
 body[data-page="explore"] .status-pill {
-    min-height: 34px;
+    min-height: 32px;
     padding-inline: 9px;
+    border-radius: 999px;
     font-size: 0.78rem;
   }
 
   body[data-page="route"] .traveler-chip,
   body[data-page="explore"] .traveler-chip {
-    max-width: 116px;
+    max-width: 118px;
   }
 
   .map-stage-head {
-    inset: 82px 10px auto;
-    padding: 8px;
+    inset: 62px 10px auto auto;
+    width: auto;
+    max-width: calc(100vw - 20px);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 999px;
   }
 
+  .map-stage-head .eyebrow,
   .map-stage-head h2 {
-    font-size: 1rem;
+    display: none;
+  }
+
+  .map-stage-actions {
+    gap: 6px;
   }
 
   .map-stage-actions button {
-    min-height: 34px;
-    padding-inline: 9px;
+    min-height: 32px;
+    padding-inline: 10px;
+  }
+
+  .map-stop-count {
+    min-height: 32px;
+    padding-inline: 10px;
+    font-size: 0.78rem;
   }
 
   .uploaded-stops-panel {
     top: auto;
-    left: 10px;
-    right: 10px;
-    bottom: calc(90px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    bottom: calc(66px + env(safe-area-inset-bottom));
     width: auto;
-    max-height: 36svh;
+    max-height: 28svh;
+    padding: 10px;
+    border-radius: 18px;
   }
 
   .uploaded-stops-panel:not(.is-collapsed) {
-    grid-template-rows: auto auto minmax(120px, 1fr);
+    grid-template-rows: auto minmax(92px, 1fr);
+  }
+
+  .uploaded-stops-panel.is-mobile-peek {
+    max-height: 104px;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .uploaded-stops-panel.is-mobile-peek .uploaded-category-row {
+    display: none;
+  }
+
+  .uploaded-stops-panel.is-mobile-peek .uploaded-stop-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(216px, 78vw);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .uploaded-stops-panel.is-mobile-peek .uploaded-stop-card:nth-child(n + 4) {
+    display: none;
+  }
+
+  .uploaded-stops-panel.is-mobile-peek .uploaded-stop-card p {
+    display: none;
+  }
+
+  .uploaded-stops-panel.is-mobile-peek .uploaded-stop-card {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
+  .uploaded-stops-panel.is-mobile-peek .uploaded-stop-card .compact-actions {
+    display: none;
+  }
+
+  .uploaded-stops-head {
+    align-items: center;
+  }
+
+  .uploaded-stops-head .eyebrow {
+    display: none;
+  }
+
+  .uploaded-stops-head strong {
+    font-size: 1rem;
+  }
+
+  .uploaded-stops-head small {
+    font-size: 0.7rem;
   }
 
   .home-cluster-map,
@@ -1539,7 +1621,7 @@ body[data-page="explore"] .map-stage {
   }
 
   .map-preview-card {
-    bottom: calc(90px + env(safe-area-inset-bottom));
+    bottom: calc(66px + env(safe-area-inset-bottom));
   }
 
   .attraction-preview-card {
@@ -1553,7 +1635,51 @@ body[data-page="explore"] .map-stage {
   .cluster-drawer {
     left: 10px;
     right: 10px;
-    bottom: calc(90px + env(safe-area-inset-bottom));
+    bottom: calc(66px + env(safe-area-inset-bottom));
+  }
+
+  body[data-page="route"] .top-badge-preview,
+  body[data-page="explore"] .top-badge-preview {
+    left: 10px;
+    right: 10px;
+    bottom: max(6px, env(safe-area-inset-bottom));
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .adventure-badge-tray {
+    grid-auto-columns: 54px;
+    max-height: 50px;
+    gap: 5px;
+  }
+
+  .adventure-badge {
+    height: 44px;
+    min-height: 44px;
+    grid-template-columns: 24px minmax(0, 1fr);
+    padding: 3px;
+    border-radius: 10px;
+  }
+
+  .adventure-badge .badge-doodle-svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .adventure-badge span {
+    font-size: 0.58rem;
+  }
+
+  .adventure-badge small {
+    font-size: 0.58rem;
+  }
+
+  .dom-map-cluster {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    border-width: 4px;
+    font-size: 0.95rem;
   }
 
   .cluster-stop-grid {

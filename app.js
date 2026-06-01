@@ -7371,7 +7371,7 @@
     }, {});
     const profile = currentProfile();
     return `
-      <aside id="uploadedStopsPanel" class="uploaded-stops-panel ${collapsed ? "is-collapsed" : ""}" aria-label="Uploaded trip stops">
+      <aside id="uploadedStopsPanel" class="uploaded-stops-panel ${collapsed ? "is-collapsed" : "is-mobile-peek"}" aria-label="Uploaded trip stops">
         <div class="uploaded-stops-head">
           <div>
             <p class="eyebrow">Top attractions in view</p>
@@ -8819,6 +8819,7 @@
       const panel = byId("uploadedStopsPanel");
       if (!panel) return;
       panel.classList.toggle("is-collapsed");
+      panel.classList.remove("is-mobile-peek");
       target.textContent = panel.classList.contains("is-collapsed") ? "Stops" : "Hide";
       return;
     }
