@@ -9549,10 +9549,11 @@
               source: "elsie-day2-preview",
               paint: {
                 "line-color": "#8b6fc9",
-                "line-width": isDay2Now ? 5 : 3,
-                "line-opacity": isDay2Now ? 0.75 : 0.32
+                "line-width": isDay2Now ? 6 : 4,
+                "line-opacity": isDay2Now ? 0.9 : 0.6,
+                "line-dasharray": isDay2Now ? [1, 0] : [2, 1.4]
               }
-            }, "elsie-active-route-line");
+            });
             getActiveRoute({ origin: day2Origin, destination: day2Destination, waypoints: day2Waypoints })
               .then((route) => {
                 if (route.coordinates?.length > 1) {
