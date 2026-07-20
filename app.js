@@ -6687,6 +6687,7 @@
 
   function visibleAdventureBadges() {
     if (!isMapProfile()) return adventureBadges;
+    if (activeProfile === "momdad") return adventureBadges;
     if (activeProfile === "katrina") {
       const katrinaSet = {
         "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3],
@@ -7438,6 +7439,7 @@
     const isEmma = activeProfile === "emma";
     const isEliette = activeProfile === "eliette";
     if (isElsieIslandMode()) {
+      if (activeProfile === "momdad") return ["ISLAND OVERVIEW", "Every profile's island plans in one view"];
       if (isKatrina) return ["EXPLORE BOIS BLANC", "History, hidden facts, and island mysteries"];
       if (isEmma) return ["EXPLORE BOIS BLANC", "How island life works: ferry, store, beach, and games"];
       if (isEliette) return ["EXPLORE BOIS BLANC", "Tiny treasures, shiny rocks, and hidden details"];
@@ -7446,6 +7448,7 @@
     }
     if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
     if (state.phase === "pretrip") {
+      if (activeProfile === "momdad") return ["FAMILY OVERVIEW", "All routes, all stops, full planning context"];
       const name = isKatrina ? "KATRINA'S" : isEmma ? "EMMA'S" : isEliette ? "ELIETTE'S" : activeProfile === "jules" ? "CAPTAIN JULES'" : "ELSIE'S";
       return [`${name} ROUTE`, "Merrillville first, Indiana Dunes next, then the ferry"];
     }
@@ -7455,6 +7458,7 @@
       : isEmma ? "Real life, sports, and why-people-go-here energy"
       : isEliette ? "Cool facts, hidden details, and the occasional gross truth"
       : activeProfile === "jules" ? "🏁 🏎️ 🦸 ⚾ 🐾"
+      : activeProfile === "momdad" ? "The whole family's map in one overview"
       : "Live route context without the clutter";
     return [`${target.label.toUpperCase()} IS NEXT`, subtitle];
   }
@@ -7546,7 +7550,7 @@
 
   /* ===================== ELSIE MAP EXPERIENCE ===================== */
 
-  const MAP_PROFILES = ["elsie", "katrina", "emma", "eliette", "jules"];
+  const MAP_PROFILES = ["elsie", "katrina", "emma", "eliette", "jules", "momdad"];
   function isMapProfile(p = activeProfile) {
     return MAP_PROFILES.includes(p);
   }
@@ -7712,11 +7716,39 @@
     }
   }
 
+  const MOMDAD_ICON_TYPES = ["wave", "lighthouse", "compass", "sunburst", "landmark", "pine"];
+
+  function getMomdadIconType(stop) {
+    if (!stop) return "";
+    const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""}`.toLowerCase();
+    if (/lighthouse|light station/.test(text)) return "lighthouse";
+    if (/lake|river|falls|ferry|ship|locks|beach|shoreline|island|dune|harbor|marina|water/.test(text)) return "wave";
+    if (/forest|pine|park|trail|preserve|nature|wildlife|garden/.test(text)) return "pine";
+    if (/scenic|overlook|vista|bridge|drive|sunset/.test(text)) return "sunburst";
+    if (/museum|historic|history|memorial|capitol|fort|monument|heritage|home|site/.test(text)) return "landmark";
+    return "compass";
+  }
+
+  function momdadIconSvg(type) {
+    const NAVY = "#123a5c", GOLD = "#d9a441", CREAM = "#f5efdf", TEAL = "#2e7f7a";
+    const base = (inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="${CREAM}"/><circle cx="32" cy="32" r="27" fill="${NAVY}" stroke="${GOLD}" stroke-width="3"/><circle cx="32" cy="32" r="23.5" fill="none" stroke="${GOLD}" stroke-width="1.2"/>${inner}</svg>`;
+    switch (type) {
+      case "wave": return base(`<path d="M14 36q4.5-6 9 0t9 0 9 0 9 0" fill="none" stroke="${TEAL}" stroke-width="3.4" stroke-linecap="round"/><path d="M14 42q4.5-6 9 0t9 0 9 0 9 0" fill="none" stroke="${GOLD}" stroke-width="2.6" stroke-linecap="round"/><path d="M22 22l3 3 3-3 3 3 3-3 3 3 3-3" fill="none" stroke="${CREAM}" stroke-width="2" stroke-linecap="round"/>`);
+      case "lighthouse": return base(`<path d="M28 24h8l2 22H26z" fill="${CREAM}" stroke="${GOLD}" stroke-width="2"/><path d="M27 30h10M26.5 36h11M26 42h12" stroke="${NAVY}" stroke-width="2.4"/><rect x="27.5" y="17" width="9" height="7" rx="1.5" fill="${GOLD}"/><path d="M24 20l-7-3M40 20l7-3" stroke="${GOLD}" stroke-width="2" stroke-linecap="round"/><path d="M22 48h20" stroke="${GOLD}" stroke-width="2.6" stroke-linecap="round"/>`);
+      case "compass": return base(`<circle cx="32" cy="32" r="14" fill="none" stroke="${GOLD}" stroke-width="2.2"/><path d="M32 18v4M32 42v4M18 32h4M42 32h4" stroke="${GOLD}" stroke-width="2"/><path d="M32 22l4 10-4 10-4-10z" fill="${CREAM}" stroke="${GOLD}" stroke-width="1.4"/><path d="M32 22l4 10h-8z" fill="${TEAL}"/>`);
+      case "sunburst": return base(`<circle cx="32" cy="38" r="8" fill="${GOLD}" stroke="${CREAM}" stroke-width="1.6"/><path d="M32 24v-7M22 27l-4-5M42 27l4-5M17 36h-5M52 36h-5M25 21l-2-4M39 21l2-4" stroke="${GOLD}" stroke-width="2.6" stroke-linecap="round"/><path d="M14 47h36" stroke="${TEAL}" stroke-width="3" stroke-linecap="round"/>`);
+      case "landmark": return base(`<path d="M18 26l14-8 14 8z" fill="${GOLD}" stroke="${CREAM}" stroke-width="1.4"/><path d="M22 28v14M29 28v14M36 28v14M43 28v14" stroke="${CREAM}" stroke-width="3"/><path d="M18 44h28M20 48h24" stroke="${GOLD}" stroke-width="2.6" stroke-linecap="round"/>`);
+      case "pine": return base(`<path d="M32 15l8 11h-5l7 9h-6l7 10H21l7-10h-6l7-9h-5z" fill="${TEAL}" stroke="${GOLD}" stroke-width="1.8" stroke-linejoin="round"/><path d="M32 45v6" stroke="${GOLD}" stroke-width="3" stroke-linecap="round"/>`);
+      default: return base(`<circle cx="32" cy="32" r="8" fill="${GOLD}"/>`);
+    }
+  }
+
   function mapIconType(stop, profile = activeProfile) {
     if (profile === "katrina") return getKatrinaIconType(stop);
     if (profile === "emma") return getEmmaIconType(stop);
     if (profile === "eliette") return getElietteIconType(stop);
     if (profile === "jules") return getJulesIconType(stop);
+    if (profile === "momdad") return getMomdadIconType(stop);
     return getElsieIconType(stop);
   }
 
@@ -7725,6 +7757,7 @@
     if (profile === "emma") return emmaIconSvg(type);
     if (profile === "eliette") return elietteIconSvg(type);
     if (profile === "jules") return julesIconSvg(type);
+    if (profile === "momdad") return momdadIconSvg(type);
     return elsieIconSvg(type);
   }
 
@@ -7733,6 +7766,7 @@
     if (profile === "emma") return EMMA_ICON_TYPES;
     if (profile === "eliette") return ELIETTE_ICON_TYPES;
     if (profile === "jules") return JULES_ICON_TYPES;
+    if (profile === "momdad") return MOMDAD_ICON_TYPES;
     return ELSIE_ICON_TYPES;
   }
 
@@ -8147,6 +8181,11 @@
         ${content.hiddenFact ? `<p class="elsie-popup-angle"><strong>Hidden fact:</strong> ${escapeHtml(content.hiddenFact)}</p>` : ""}
         <p class="elsie-popup-angle"><strong>Historical fiction:</strong> ${escapeHtml(content.historicalFiction)}</p>
         <p class="elsie-popup-angle"><strong>${escapeHtml(content.quiz)}</strong></p>`;
+    } else if (profile === "momdad") {
+      bodyHtml = `
+        <p>${escapeHtml(item.summary || "")}</p>
+        ${item.why ? `<p class="elsie-popup-angle"><strong>Why it matters:</strong> ${escapeHtml(item.why)}</p>` : ""}
+        ${item.profiles?.momdad && item.profiles.momdad !== item.why ? `<p class="elsie-popup-angle">${escapeHtml(item.profiles.momdad)}</p>` : ""}`;
     } else {
       bodyHtml = `
         <p>${escapeHtml(item.summary || item.why || "")}</p>
@@ -8563,6 +8602,69 @@
       return;
     }
   });
+
+  /* ---------- Mom & Dad family overlay (all kids' stop sets, deco style) ---------- */
+
+  function momdadDecoOverlayIconSvg(origin) {
+    const NAVY = "#123a5c", GOLD = "#d9a441", CREAM = "#f5efdf", TEAL = "#2e7f7a";
+    const frame = (inner, accent) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><path d="M32 4l6 6h8v8l6 6-6 6v8l4 4-4 4v8h-8l-6 6-6-6h-8v-8l-4-4 4-4v-8l-6-6 6-6v-8h8z" fill="${NAVY}" stroke="${accent}" stroke-width="2.5"/><circle cx="32" cy="32" r="19" fill="none" stroke="${accent}" stroke-width="1.2"/>${inner}</svg>`;
+    switch (origin) {
+      case "elsie": return frame(`<path d="M32 20c-6 0-9.5 5-9.5 10.5V42l3.2-2.4 3.1 2.4 3.2-2.4 3.1 2.4 3.2-2.4 3.2 2.4V30.5C41.5 25 38 20 32 20z" fill="${CREAM}" stroke="${GOLD}" stroke-width="1.8"/><circle cx="28.5" cy="30" r="1.7" fill="${NAVY}"/><circle cx="35.5" cy="30" r="1.7" fill="${NAVY}"/>`, "#8f7bd9");
+      case "katrina": return frame(`<path d="M32 24c-3-2.2-7-2.6-9.5-1.5V41c2.5-1.1 6.5-.7 9.5 1.5 3-2.2 7-2.6 9.5-1.5V22.5C39 21.4 35 21.8 32 24z" fill="${CREAM}" stroke="${GOLD}" stroke-width="1.8"/><path d="M32 24v18.5" stroke="${GOLD}" stroke-width="1.4"/>`, "${GOLD}".replace("${GOLD}", "#d9a441"));
+      case "emma": return frame(`<path d="M26 20h9l-4.5 9H36L27 44l3-11h-6z" fill="${GOLD}" stroke="${CREAM}" stroke-width="1.4" stroke-linejoin="round"/>`, "#c97fa8");
+      case "jules": return frame(`<circle cx="32" cy="32" r="9" fill="none" stroke="${GOLD}" stroke-width="4.5"/><path d="M44 26l4-2M45 32h5M44 38l4 2" stroke="${TEAL}" stroke-width="2.2" stroke-linecap="round"/>`, "#5aa4d9");
+      default: return frame(`<circle cx="32" cy="32" r="7" fill="${GOLD}"/>`, "#d9a441");
+    }
+  }
+
+  function registerMomdadOverlayIcons(map) {
+    const jobs = ["elsie", "katrina", "emma", "jules"].map((origin) => new Promise((resolve) => {
+      const name = `momdad-deco-${origin}`;
+      if (!map || (map.hasImage && map.hasImage(name))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(momdadDecoOverlayIconSvg(origin))}`;
+    }));
+    return Promise.all(jobs);
+  }
+
+  function addFamilyOverlayLayer(map) {
+    if (!map || activeProfile !== "momdad" || map.getLayer("family-overlay")) return;
+    const features = [];
+    hauntedStops().forEach((stop) => features.push({ type: "Feature", properties: { origin: "elsie", id: stop.id, decoIcon: "momdad-deco-elsie" }, geometry: { type: "Point", coordinates: [stop.lon, stop.lat] } }));
+    katrinaQuestStops().forEach((stop) => features.push({ type: "Feature", properties: { origin: "katrina", id: stop.id, decoIcon: "momdad-deco-katrina" }, geometry: { type: "Point", coordinates: [stop.lon, stop.lat] } }));
+    emmaRouteStops().forEach((stop) => features.push({ type: "Feature", properties: { origin: "emma", id: stop.id, decoIcon: "momdad-deco-emma" }, geometry: { type: "Point", coordinates: [stop.lon, stop.lat] } }));
+    julesRouteStops().forEach((stop) => features.push({ type: "Feature", properties: { origin: "jules", id: stop.id, decoIcon: "momdad-deco-jules" }, geometry: { type: "Point", coordinates: [stop.lon, stop.lat] } }));
+    if (!features.length) return;
+    if (!map.getSource("family-overlay-stops")) {
+      map.addSource("family-overlay-stops", { type: "geojson", data: { type: "FeatureCollection", features } });
+    }
+    map.addLayer({
+      id: "family-overlay",
+      type: "symbol",
+      source: "family-overlay-stops",
+      layout: {
+        "icon-image": ["get", "decoIcon"],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.32, 6, 0.46, 9, 0.58, 12, 0.68],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "family-overlay", (event) => {
+      const { origin, id } = event.features[0].properties;
+      const coords = event.features[0].geometry.coordinates;
+      if (origin === "elsie") { const stop = hauntedStops().find((s) => s.id === id); if (stop) openElsieHauntedPopup(map, stop, coords); }
+      if (origin === "katrina") { const stop = katrinaQuestStops().find((s) => s.id === id); if (stop) openKatrinaQuestPopup(map, stop, coords); }
+      if (origin === "emma") { const stop = emmaRouteStops().find((s) => s.id === id); if (stop) openEmmaRoutePopup(map, stop, coords); }
+      if (origin === "jules") { const stop = julesRouteStops().find((s) => s.id === id); if (stop) openJulesPopup(map, stop, coords); }
+    });
+    map.on("mouseenter", "family-overlay", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "family-overlay", () => { map.getCanvas().style.cursor = ""; });
+  }
 
   /* ---------- Emma sports / fashion / storm layer ---------- */
 
@@ -9383,6 +9485,7 @@
           if (activeProfile === "emma") registerEmmaThemeIcons(homeMap).then(() => addEmmaRouteLayer(homeMap));
           if (activeProfile === "katrina") registerKatrinaHauntIcons(homeMap).then(() => addKatrinaQuestLayer(homeMap));
           if (activeProfile === "jules") addJulesRouteLayer(homeMap);
+          if (activeProfile === "momdad") registerMomdadOverlayIcons(homeMap).then(() => addFamilyOverlayLayer(homeMap));
         });
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
