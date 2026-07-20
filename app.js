@@ -7892,6 +7892,88 @@
       .addTo(map);
   }
 
+  /* ---------- Elsie haunted route layer ---------- */
+
+  function hauntedStops() {
+    return Array.isArray(window.HAUNTED_STOPS) ? window.HAUNTED_STOPS : [];
+  }
+
+  function elsieGhostIconSvg() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="#241a3d" stroke="#141414" stroke-width="4"/><path d="M32 13c-9 0-14 7.5-14 15.5V45l4.6-3.4 4.7 3.4 4.7-3.4 4.7 3.4 4.7-3.4L46 45V28.5C46 20.5 41 13 32 13z" fill="#f2ebff" stroke="#141414" stroke-width="3"/><path d="M25 28.5q1.8-2.6 3.6 0" stroke="#141414" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="38.5" cy="28" r="2.8" fill="#141414"/><circle cx="39.4" cy="27.1" r="1" fill="#fff"/><path d="M29 35q3 2.4 6 0" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="21" cy="18" r="1.5" fill="#b79ef2"/><circle cx="46" cy="16" r="1.2" fill="#b79ef2"/><path d="M47 40l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z" fill="#b79ef2"/></svg>`;
+  }
+
+  function registerElsieGhostIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-ghost"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-ghost")) map.addImage("elsie-ghost", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(elsieGhostIconSvg())}`;
+    });
+  }
+
+  function addElsieHauntedLayer(map) {
+    if (!map || activeProfile !== "elsie" || map.getLayer("elsie-haunted")) return;
+    const stops = hauntedStops();
+    if (!stops.length) return;
+    if (!map.getSource("elsie-haunted-stops")) {
+      map.addSource("elsie-haunted-stops", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: stops.map((stop) => ({
+            type: "Feature",
+            properties: { id: stop.id },
+            geometry: { type: "Point", coordinates: [stop.lon, stop.lat] }
+          }))
+        }
+      });
+    }
+    map.addLayer({
+      id: "elsie-haunted",
+      type: "symbol",
+      source: "elsie-haunted-stops",
+      layout: {
+        "icon-image": "elsie-ghost",
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "elsie-haunted", (event) => {
+      const stop = hauntedStops().find((item) => item.id === event.features[0].properties.id);
+      if (stop) openElsieHauntedPopup(map, stop, event.features[0].geometry.coordinates);
+    });
+    map.on("mouseenter", "elsie-haunted", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "elsie-haunted", () => { map.getCanvas().style.cursor = ""; });
+  }
+
+  function openElsieHauntedPopup(map, stop, coordinates) {
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    const detour = stop.detourMiles ? `${stop.detourMiles} mi detour` : "";
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 18, className: "elsie-marker-popup elsie-haunted-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>👻 Haunted Route</small>
+          <strong>${escapeHtml(stop.title)}</strong>
+          <p class="elsie-sheet-meta">${escapeHtml(stop.city)}, ${escapeHtml(stop.state)} · ${escapeHtml(stop.siteType)}${detour ? ` · ${escapeHtml(detour)}` : ""}</p>
+          <p>${escapeHtml(stop.phenomenon)}</p>
+          <p class="elsie-popup-angle"><strong>Evidence:</strong> ${escapeHtml(stop.evidence)}</p>
+          <p class="elsie-popup-angle"><strong>Best visit:</strong> ${escapeHtml(stop.visit)}</p>
+          ${stop.access ? `<p class="elsie-popup-angle">⚠️ ${escapeHtml(stop.access)}</p>` : ""}
+          <div class="elsie-popup-links">
+            <a class="external-link" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener">Navigate</a>
+            ${stop.official ? `<a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a>` : ""}
+            ${stop.folklore && stop.folklore !== stop.official ? `<a class="external-link" href="${escapeHtml(stop.folklore)}" target="_blank" rel="noopener">The story</a>` : ""}
+          </div>
+        </div>`)
+      .addTo(map);
+  }
+
   /* ---------- Weather radar (RainViewer) ---------- */
 
   const elsieWeatherRadar = { host: "https://tilecache.rainviewer.com", frames: [], lastFetch: 0, frameIndex: 0, animTimer: null };
@@ -8597,6 +8679,7 @@
         }
         syncBreadcrumbLayers(homeMap);
         registerElsieIcons(homeMap).then(() => addElsieIconLayer(homeMap));
+        if (activeProfile === "elsie") registerElsieGhostIcon(homeMap).then(() => addElsieHauntedLayer(homeMap));
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
         if (!islandMode) refreshActiveRoute();

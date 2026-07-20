@@ -2172,3 +2172,10 @@ body.elsie-map-active #bottomDrawer { display: none; }
   font-size: 0.76rem;
   font-weight: 600;
 }
+
+/* Haunted route popup accent */
+.maplibregl-popup.elsie-haunted-popup .maplibregl-popup-content {
+  background: #f5f0ff;
+  border-color: #241a3d;
+}
+.elsie-haunted-popup .elsie-popup-card small { color: #5b3fa0; }
