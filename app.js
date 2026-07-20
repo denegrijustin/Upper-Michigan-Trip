@@ -7591,6 +7591,7 @@
         type: "raster",
         tiles: [radarTileUrl(frame)],
         tileSize: 256,
+        maxzoom: 9,
         attribution: "Radar © RainViewer"
       });
       map.addLayer({
