@@ -7414,18 +7414,35 @@
     return Promise.all(jobs).then(() => { elsieIconsRegistered = true; });
   }
 
+  function elsieStopsFeatureCollection() {
+    return {
+      type: "FeatureCollection",
+      features: allAttractions().map((item) => ({
+        type: "Feature",
+        properties: {
+          id: item.id,
+          title: item.title,
+          elsieIcon: `elsie-${getElsieIconType(item) || "mystery"}`
+        },
+        geometry: { type: "Point", coordinates: [item.lon, item.lat] }
+      }))
+    };
+  }
+
   function addElsieIconLayer(map) {
     if (!map || map.getLayer("elsie-artwork")) return;
-    if (!map.getSource("home-attractions")) return;
+    if (!map.getSource("elsie-stops")) {
+      map.addSource("elsie-stops", { type: "geojson", data: elsieStopsFeatureCollection() });
+    }
     map.addLayer({
       id: "elsie-artwork",
       type: "symbol",
-      source: "home-attractions",
-      filter: ["all", ["!", ["has", "point_count"]], ["!=", ["get", "elsieIcon"], ""]],
+      source: "elsie-stops",
       layout: {
         "icon-image": ["get", "elsieIcon"],
         "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
-        "icon-allow-overlap": true
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
       }
     });
     map.on("click", "elsie-artwork", (event) => {
