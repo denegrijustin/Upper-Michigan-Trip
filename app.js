@@ -5864,6 +5864,7 @@
       completedStops: {},
       gpsAutoOn: true,
       julesMarkerStyle: "sonic",
+      mapTheme: "light",
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5910,6 +5911,7 @@
     state.completedStops ||= {};
     if (typeof state.gpsAutoOn !== "boolean") state.gpsAutoOn = true;
     if (state.julesMarkerStyle !== "sonic" && state.julesMarkerStyle !== "f1") state.julesMarkerStyle = "sonic";
+    if (state.mapTheme !== "light" && state.mapTheme !== "dark") state.mapTheme = "light";
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -7554,6 +7556,10 @@
   /* ===================== ELSIE MAP EXPERIENCE ===================== */
 
   const MAP_PROFILES = ["elsie", "katrina", "emma", "eliette", "jules", "momdad"];
+  const MAP_STYLE_URLS = { light: "https://tiles.openfreemap.org/styles/liberty", dark: "https://tiles.openfreemap.org/styles/dark" };
+  function activeMapStyleUrl() {
+    return MAP_STYLE_URLS[state.mapTheme] || MAP_STYLE_URLS.light;
+  }
   function isMapProfile(p = activeProfile) {
     return MAP_PROFILES.includes(p);
   }
@@ -9394,6 +9400,7 @@
           <button type="button" class="elsie-map-fab ${state.radarEnabled ? "is-on" : ""}" data-elsie-sheet="radar" aria-haspopup="dialog" aria-label="Weather radar controls">🌦</button>
           <button type="button" class="elsie-map-fab" data-elsie-sheet="breadcrumb" aria-haspopup="dialog" aria-label="Sasquatch trail controls">👣</button>
           <button type="button" class="elsie-map-fab elsie-gps-fab" data-gps-locate aria-label="Find my location">📍</button>
+          <button type="button" class="elsie-map-fab elsie-theme-fab" data-map-theme-toggle aria-label="Switch map to ${state.mapTheme === "dark" ? "light" : "dark"} mode">${state.mapTheme === "dark" ? "☀️" : "🌙"}</button>
         </div>
         ${renderElsieRadarMarkup()}
         <div id="elsieSheetScrim" class="elsie-sheet-scrim" hidden></div>
@@ -9432,7 +9439,7 @@
     }
     homeMap = new maplibregl.Map({
       container: canvas,
-      style: data.mapLinks.styleUrl,
+      style: activeMapStyleUrl(),
       center: [-89.7, 41.8],
       zoom: 4.35,
       attributionControl: true
@@ -10179,7 +10186,7 @@
     }
     routeMap = new maplibregl.Map({
       container: canvas,
-      style: data.mapLinks.styleUrl,
+      style: activeMapStyleUrl(),
       center: mapPoint(plan.origin),
       zoom: 5
     });
@@ -10296,7 +10303,7 @@
     }
     exploreMap = new maplibregl.Map({
       container: canvas,
-      style: data.mapLinks.styleUrl,
+      style: activeMapStyleUrl(),
       center: [-90.1848, 39.8],
       zoom: 4.5
     });
@@ -11496,6 +11503,14 @@
     if (target.dataset.startGps !== undefined) {
       event.preventDefault();
       useLocation();
+    }
+    if (target.dataset.mapThemeToggle !== undefined) {
+      event.preventDefault();
+      state.mapTheme = state.mapTheme === "dark" ? "light" : "dark";
+      saveState();
+      if (homeMap) { homeMap.remove(); homeMap = null; }
+      renderHomeMapPanel();
+      return;
     }
     if (target.dataset.julesMarkerToggle !== undefined) {
       event.preventDefault();
