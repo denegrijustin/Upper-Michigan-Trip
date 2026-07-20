@@ -7965,6 +7965,8 @@
 
   function openElsieHauntedPopup(map, stop, coordinates) {
     if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    const preview = byId("homeAttractionPreview");
+    if (preview) { preview.hidden = true; preview.innerHTML = ""; }
     const detour = stop.detourMiles ? `${stop.detourMiles} mi detour` : "";
     elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 18, className: "elsie-marker-popup elsie-haunted-popup" })
       .setLngLat(coordinates)
@@ -9105,6 +9107,11 @@
   function showAttractionPreview(item) {
     item = enrichStop(item);
     if (isMapProfile()) {
+      const haunted = hauntedMatchForStop(item);
+      if (haunted && homeMap) {
+        openElsieHauntedPopup(homeMap, haunted, [item.lon, item.lat]);
+        return;
+      }
       const preview = byId("homeAttractionPreview") || byId("exploreDetail");
       if (!preview) return;
       preview.hidden = false;
