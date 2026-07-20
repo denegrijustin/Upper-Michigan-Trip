@@ -5862,8 +5862,8 @@
       tripLeg: "day1",
       includeIndianaDunes: true,
       completedStops: {},
-      profileStopRatings: { elsie: {}, katrina: {} },
-      profileCollections: { elsie: {}, katrina: {} },
+      profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
+      profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
       badges: {},
       weather: {},
@@ -5906,12 +5906,12 @@
     state.draftPhotos ||= [];
     state.visitedStops ||= {};
     state.completedStops ||= {};
-    state.profileStopRatings ||= { elsie: {}, katrina: {} };
-    state.profileStopRatings.elsie ||= {};
-    state.profileStopRatings.katrina ||= {};
-    state.profileCollections ||= { elsie: {}, katrina: {} };
-    state.profileCollections.elsie ||= {};
-    state.profileCollections.katrina ||= {};
+    state.profileStopRatings ||= {};
+    state.profileCollections ||= {};
+    MAP_PROFILES.forEach((p) => {
+      state.profileStopRatings[p] ||= {};
+      state.profileCollections[p] ||= {};
+    });
     delete state.routeResults;
     if (typeof state.includeIndianaDunes !== "boolean") state.includeIndianaDunes = true;
     [state.captures, state.journal, state.draftPhotos].forEach((list) => {
@@ -6707,6 +6707,28 @@
         return { ...badge, title, description, required };
       });
     }
+    if (activeProfile === "emma") {
+      const emmaSet = {
+        "great-lakes": ["Lake Effect", "Explore 3 Great Lakes locations.", 3],
+        "sand-dune-explorer": ["Dunes Discovered", "Visit Indiana Dunes.", 1],
+        "island-explorer": ["Island Arrival", "Reach Bois Blanc Island.", 1],
+        "mitten-state": ["Route Reader", "Trace the trip from the palm to the tip of Michigan.", 3],
+        "lighthouse-explorer": ["Lighthouse Files", "Visit or save 3 lighthouse locations.", 2],
+        "museum-explorer": ["Try-It Tracker", "Open, save, or visit hands-on stops.", 3],
+        "state-capitol": ["Capitol Story", "Connect the route to a capitol or government story.", 1],
+        "mackinac-bridge": ["Bridge Crossing", "Find the bridge and Straits stories that connect the peninsulas.", 1],
+        "photo-memory": ["Snapshot Hunter", "Capture a trip photo and save it to the journal.", 1],
+        "roadside-oddity": ["Real-Life Finds", "Find 3 stops that show how people actually live here.", 3],
+        "waterfall-hunter": ["Falls Finder", "Find a falls or rushing-water stop.", 1],
+        "nature-explorer": ["Wild Places", "Collect parks, preserves, trails, and wildlife stops.", 4],
+        "dark-sky-observer": ["Night Signal", "Use the sky and stargazing layer during the trip.", 1],
+        "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3]
+      };
+      return adventureBadges.filter((badge) => emmaSet[badge.id]).map((badge) => {
+        const [title, description, required] = emmaSet[badge.id];
+        return { ...badge, title, description, required };
+      });
+    }
     const mature = {
       "roadside-oddity": ["Oddity Collector", "Find 3 genuinely unusual stops.", 3],
       "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3],
@@ -7331,10 +7353,23 @@
   function elsieHeaderCopy() {
     const target = getActiveTripTarget();
     const isKatrina = activeProfile === "katrina";
-    if (isElsieIslandMode()) return isKatrina ? ["EXPLORE BOIS BLANC", "History, hidden facts, and island mysteries"] : ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
+    const isEmma = activeProfile === "emma";
+    if (isElsieIslandMode()) {
+      if (isKatrina) return ["EXPLORE BOIS BLANC", "History, hidden facts, and island mysteries"];
+      if (isEmma) return ["EXPLORE BOIS BLANC", "How island life works: ferry, store, beach, and games"];
+      return ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
+    }
     if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
-    if (state.phase === "pretrip") return isKatrina ? ["KATRINA'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"] : ["ELSIE'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"];
-    return [`${target.label.toUpperCase()} IS NEXT`, target === data.route.destinationTargets.indianaDunes ? "Dunes, wetlands, forest, then north to the ferry" : (isKatrina ? "Smart facts and quiz-the-car energy along the way" : "Live route context without the clutter")];
+    if (state.phase === "pretrip") {
+      const name = isKatrina ? "KATRINA'S" : isEmma ? "EMMA'S" : "ELSIE'S";
+      return [`${name} ROUTE`, "Merrillville first, Indiana Dunes next, then the ferry"];
+    }
+    const subtitle = target === data.route.destinationTargets.indianaDunes
+      ? "Dunes, wetlands, forest, then north to the ferry"
+      : isKatrina ? "Smart facts and quiz-the-car energy along the way"
+      : isEmma ? "Real life, sports, and why-people-go-here energy"
+      : "Live route context without the clutter";
+    return [`${target.label.toUpperCase()} IS NEXT`, subtitle];
   }
 
   function elsieRouteTrackerMarkup() {
@@ -7421,7 +7456,7 @@
 
   /* ===================== ELSIE MAP EXPERIENCE ===================== */
 
-  const MAP_PROFILES = ["elsie", "katrina"];
+  const MAP_PROFILES = ["elsie", "katrina", "emma"];
   function isMapProfile(p = activeProfile) {
     return MAP_PROFILES.includes(p);
   }
@@ -7468,6 +7503,24 @@
     return "cactus";
   }
 
+  const EMMA_ICON_OVERRIDES = {
+    // "stop-id": "volleyball"
+  };
+
+  const EMMA_ICON_TYPES = ["flower", "volleyball", "cat", "icecream", "nails"];
+
+  function getEmmaIconType(stop) {
+    if (!stop) return "";
+    const override = EMMA_ICON_OVERRIDES[stop.id] || EMMA_ICON_OVERRIDES[stop.title];
+    if (override) return override;
+    const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""} ${stop.why || ""} ${stop.profiles?.emma || ""}`.toLowerCase();
+    if (/sport|stadium|field|ballpark|arena|team|gym|college|school|race/.test(text)) return "volleyball";
+    if (/food|restaurant|cafe|diner|ice cream|fudge|donut|market|orchard|candy|bakery/.test(text)) return "icecream";
+    if (/wildlife|zoo|animal|farm|habitat|refuge|aquarium|bird/.test(text)) return "cat";
+    if (/park|garden|nature|trail|preserve|dune|forest|flower|meadow|shoreline|falls|scenic/.test(text)) return "flower";
+    return "nails";
+  }
+
   function elsieIconSvg(type) {
     const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
     switch (type) {
@@ -7496,16 +7549,34 @@
     }
   }
 
+  function emmaIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    switch (type) {
+      case "flower": return base("#fbe3ef", `<circle cx="32" cy="22" r="6" fill="#ff9fc6" stroke="#141414" stroke-width="2.5"/><circle cx="41" cy="29" r="6" fill="#ff9fc6" stroke="#141414" stroke-width="2.5"/><circle cx="38" cy="40" r="6" fill="#ff9fc6" stroke="#141414" stroke-width="2.5"/><circle cx="26" cy="40" r="6" fill="#ff9fc6" stroke="#141414" stroke-width="2.5"/><circle cx="23" cy="29" r="6" fill="#ff9fc6" stroke="#141414" stroke-width="2.5"/><circle cx="32" cy="32" r="5.5" fill="#ffe25c" stroke="#141414" stroke-width="2.5"/>`);
+      case "volleyball": return base("#dbeafe", `<circle cx="32" cy="32" r="14" fill="#fffdf7" stroke="#141414" stroke-width="3"/><path d="M18 32q14-6 28 0M25 20q2 14-4 22M39 20q-2 14 4 22" stroke="#141414" stroke-width="2.2" fill="none"/><path d="M22 24q10 3 20 0" stroke="#4f7fd9" stroke-width="2.4" fill="none"/>`);
+      case "cat": return base("#f6e3c9", `<path d="M22 25l4 7M42 25l-4 7" stroke="#141414" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="36" r="11" fill="#fbeedd" stroke="#141414" stroke-width="3"/><circle cx="27" cy="34" r="1.8" fill="#141414"/><circle cx="37" cy="34" r="1.8" fill="#141414"/><path d="M32 37l-1.6 1.8h3.2z" fill="#ff9fc6"/><path d="M18 36h7M18 40h7M39 36h7M39 40h7" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/>`);
+      case "icecream": return base("#fff1d6", `<path d="M25 32h14l-7 18z" fill="#e8b06a" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M26 32h12M27 37h10M29 42h6" stroke="#141414" stroke-width="1.4"/><circle cx="27" cy="26" r="6.5" fill="#ff9fc6" stroke="#141414" stroke-width="2.5"/><circle cx="37" cy="26" r="6.5" fill="#fef3ff" stroke="#141414" stroke-width="2.5"/><circle cx="32" cy="20" r="6" fill="#a8e0c2" stroke="#141414" stroke-width="2.5"/><circle cx="32" cy="14.5" r="2" fill="#e0517a" stroke="#141414" stroke-width="1.5"/>`);
+      case "nails": return base("#f3e0f7", `<path d="M22 44V30a3 3 0 0 1 6 0v14M28 44V26a3 3 0 0 1 6 0v18M34 44V28a3 3 0 0 1 6 0v16" fill="#fbeedd" stroke="#141414" stroke-width="2.5" stroke-linejoin="round"/><path d="M23 30a2 2 0 0 1 4 0v2h-4zM29 26a2 2 0 0 1 4 0v2h-4zM35 28a2 2 0 0 1 4 0v2h-4z" fill="#c65cd9" stroke="#141414" stroke-width="1.6"/><path d="M20 48h24" stroke="#141414" stroke-width="3" stroke-linecap="round"/><path d="M46 18l1.5 3.5L51 23l-3.5 1.5L46 28l-1.5-3.5L41 23l3.5-1.5z" fill="#ffe25c" stroke="#141414" stroke-width="1.6"/>`);
+      default: return base("#4f7fd9", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
+    }
+  }
+
   function mapIconType(stop, profile = activeProfile) {
-    return profile === "katrina" ? getKatrinaIconType(stop) : getElsieIconType(stop);
+    if (profile === "katrina") return getKatrinaIconType(stop);
+    if (profile === "emma") return getEmmaIconType(stop);
+    return getElsieIconType(stop);
   }
 
   function mapIconSvg(type, profile = activeProfile) {
-    return profile === "katrina" ? katrinaIconSvg(type) : elsieIconSvg(type);
+    if (profile === "katrina") return katrinaIconSvg(type);
+    if (profile === "emma") return emmaIconSvg(type);
+    return elsieIconSvg(type);
   }
 
   function mapIconTypes(profile = activeProfile) {
-    return profile === "katrina" ? KATRINA_ICON_TYPES : ELSIE_ICON_TYPES;
+    if (profile === "katrina") return KATRINA_ICON_TYPES;
+    if (profile === "emma") return EMMA_ICON_TYPES;
+    return ELSIE_ICON_TYPES;
   }
 
   let elsieIconsRegistered = false;
@@ -7611,6 +7682,45 @@
     return { whyAngle, hiddenFact, historicalFiction, quiz };
   }
 
+  const EMMA_ICON_LABELS = {
+    "flower": "Pretty Flowers",
+    "volleyball": "Sports Spot",
+    "cat": "Cats & Critters",
+    "icecream": "Sweet Stop",
+    "nails": "Everyday Life"
+  };
+
+  function emmaPopupContent(item) {
+    const seed = item.id || item.title || "stop";
+    const category = (item.category || "").toLowerCase();
+    const angle = item.profiles?.emma || "";
+    const whyGo = angle || item.summary || "People come here because it shows how life really works in this part of the country.";
+    const sportsBank = [
+      "Ask around: local girls here likely play volleyball, softball, soccer, and basketball — look for a school gym or a field on the way in.",
+      "Look for courts, fields, or a school — volleyball and soccer are big in towns like this.",
+      "Spot the nearest field or gym: that's where the local girls' teams play."
+    ];
+    const sports = /sport|stadium|field|arena|ballpark/.test(category + " " + (item.title || "").toLowerCase())
+      ? "This IS the sports spot — check which teams play here and whether girls' leagues use it too."
+      : sportsBank[stableIndex(`${seed}-sports`, sportsBank.length)];
+    const funFact = item.why || item.summary || "";
+    const discoveryBank = [
+      "How was it discovered? Usually the same way: someone traveling through needed a stop, told everyone, and it stuck.",
+      "Places like this usually got found by travelers, traders, or locals who knew the land — ask what came first, the road or the town.",
+      "Discovery story: look for a founding date on a sign or plaque — then figure out who would have been here first."
+    ];
+    const discovery = discoveryBank[stableIndex(`${seed}-disc`, discoveryBank.length)];
+    const momDad = item.why || item.profiles?.momdad || "Mom and Dad will like the story behind it — and that it's a real reason to get out of the car.";
+    const jokeBank = [
+      `Why did the family stop at ${item.title}? Because the car said it was "wheely" worth it.`,
+      `${item.title} called — it said you're going to have an ice day. Wait, wrong stop.`,
+      `Knock knock. Who's there? ${(item.title || "This stop").split(" ")[0]}. That's it, that's the whole joke — now go look at it.`,
+      `What did the GPS say about ${item.title}? "I've been re-routing everyone here for years."`
+    ];
+    const joke = jokeBank[stableIndex(`${seed}-joke`, jokeBank.length)];
+    return { whyGo, sports, funFact, discovery, momDad, joke };
+  }
+
   function openElsieMarkerPopup(map, rawItem, coordinates) {
     const item = enrichStop(rawItem);
     const profile = activeProfile;
@@ -7618,9 +7728,21 @@
     const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
     if (elsieMarkerPopup) elsieMarkerPopup.remove();
     const isKatrina = profile === "katrina";
-    const label = isKatrina ? (KATRINA_ICON_LABELS[iconType] || "Worth the Detour") : (ELSIE_ICON_LABELS[iconType] || "Worth the Detour");
+    const isEmma = profile === "emma";
+    const label = isKatrina ? (KATRINA_ICON_LABELS[iconType] || "Worth the Detour")
+      : isEmma ? (EMMA_ICON_LABELS[iconType] || "Worth the Detour")
+      : (ELSIE_ICON_LABELS[iconType] || "Worth the Detour");
     let bodyHtml;
-    if (isKatrina) {
+    if (isEmma) {
+      const content = emmaPopupContent(item);
+      bodyHtml = `
+        <p><strong>Why do people go here?</strong> ${escapeHtml(content.whyGo)}</p>
+        <p class="elsie-popup-angle"><strong>Sports check:</strong> ${escapeHtml(content.sports)}</p>
+        ${content.funFact ? `<p class="elsie-popup-angle"><strong>Fun fact:</strong> ${escapeHtml(content.funFact)}</p>` : ""}
+        <p class="elsie-popup-angle"><strong>How it got found:</strong> ${escapeHtml(content.discovery)}</p>
+        <p class="elsie-popup-angle"><strong>Mom &amp; Dad would say:</strong> ${escapeHtml(content.momDad)}</p>
+        <p class="elsie-popup-angle">😄 ${escapeHtml(content.joke)}</p>`;
+    } else if (isKatrina) {
       const content = katrinaPopupContent(item);
       bodyHtml = `
         <p>${escapeHtml(item.summary || item.why || "")}</p>
@@ -8825,8 +8947,8 @@
       const rating = state.profileStopRatings[profile.id][key] || "";
       const collections = state.profileCollections[profile.id][key] || [];
       const collectionChoices = ["Weird", "Historic", "Animal", "Best Story", "Would Visit"];
-      const angleLabel = profile.id === "katrina" ? "Katrina's angle" : "Elsie's angle";
-      const angleText = profile.id === "katrina" ? katrinaPopupContent(item).whyAngle : item.profiles?.elsie;
+      const angleLabel = profile.id === "katrina" ? "Katrina's angle" : profile.id === "emma" ? "Emma's angle" : "Elsie's angle";
+      const angleText = profile.id === "katrina" ? katrinaPopupContent(item).whyAngle : profile.id === "emma" ? emmaPopupContent(item).whyGo : item.profiles?.elsie;
       drawer.innerHTML = `
         <section class="stop-detail-drawer elsie-detail-drawer" role="dialog" aria-modal="false" aria-labelledby="elsieStopTitle">
           <div class="elsie-drawer-head"><div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.tier)}</p><h3 id="elsieStopTitle">${escapeHtml(item.title)}</h3></div><button type="button" data-close-stop-drawer aria-label="Close attraction details">Close</button></div>
