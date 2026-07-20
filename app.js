@@ -8236,11 +8236,12 @@
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
             const stops = data.route.coordinates;
-            const day2Points = [
-              { lat: stops.merrillville.lat, lon: stops.merrillville.lon },
-              ...(state.includeIndianaDunes && !state.completedStops["indiana-dunes"] ? [{ lat: stops.indianaDunes.lat, lon: stops.indianaDunes.lon }] : []),
-              { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon }
-            ];
+            const day2Waypoints = state.includeIndianaDunes && !state.completedStops["indiana-dunes"]
+              ? [{ lat: stops.indianaDunes.lat, lon: stops.indianaDunes.lon }]
+              : [];
+            const day2Origin = { lat: stops.merrillville.lat, lon: stops.merrillville.lon };
+            const day2Destination = { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon };
+            const day2Points = [day2Origin, ...day2Waypoints, day2Destination];
             const isDay2Now = currentTripLegId() === "day2";
             homeMap.addSource("elsie-day2-preview", {
               type: "geojson",
@@ -8256,6 +8257,15 @@
                 "line-opacity": isDay2Now ? 0.75 : 0.32
               }
             }, "elsie-active-route-line");
+            getActiveRoute({ origin: day2Origin, destination: day2Destination, waypoints: day2Waypoints })
+              .then((route) => {
+                if (route.coordinates?.length > 1) {
+                  homeMap?.getSource?.("elsie-day2-preview")?.setData({
+                    type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: route.coordinates }
+                  });
+                }
+              })
+              .catch(() => {});
           }
         } catch { /* non-critical preview layer */ }
         try {
