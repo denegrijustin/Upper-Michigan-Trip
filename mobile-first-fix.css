@@ -1912,12 +1912,12 @@ body.elsie-map-active #bottomDrawer { display: none; }
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 6px);
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 52px);
   z-index: 22;
   display: flex;
   gap: 10px;
   pointer-events: none;
-  max-height: 48px;
+  max-height: 40px;
 }
 .elsie-chip {
   pointer-events: auto;
@@ -1929,6 +1929,61 @@ body.elsie-map-active #bottomDrawer { display: none; }
   font-weight: 600;
   box-shadow: 0 3px 0 rgba(20, 20, 20, 0.35);
   cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Minimal live badge tracker: thin icon strip fixed at the very bottom */
+.elsie-badge-tracker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+  border: none;
+  border-top: 2px solid #141414;
+  background: rgba(255, 253, 247, 0.94);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+  overflow: hidden;
+}
+.elsie-badge-tracker-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+}
+.elsie-badge-tracker-icons::-webkit-scrollbar { display: none; }
+.elsie-mini-badge {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  opacity: 0.4;
+  filter: grayscale(65%);
+}
+.elsie-mini-badge.is-earned {
+  opacity: 1;
+  filter: none;
+}
+.elsie-mini-badge-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+}
+.elsie-badge-tracker-count {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding-left: 6px;
+  border-left: 2px solid #141414;
   white-space: nowrap;
 }
 
