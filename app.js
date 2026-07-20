@@ -9204,9 +9204,6 @@
     const elsie = isMapProfile();
     const [elsieTitle, elsieSubtitle] = elsieHeaderCopy();
     document.body.classList.toggle("elsie-map-active", elsie);
-    if (elsie && state.gpsAutoOn && watchId === null && navigator.geolocation) {
-      window.setTimeout(() => { if (state.gpsAutoOn && watchId === null) useLocation(); }, 400);
-    }
     container.innerHTML = elsie ? `
       <div class="elsie-map-shell">
         <div id="homeClusterMap" class="home-cluster-map maplibre-canvas elsie-map-canvas" role="application" aria-label="${currentProfile().name}'s route map with ${attractions.length} trip stops">
@@ -9221,7 +9218,7 @@
         <div class="elsie-float-right">
           <button type="button" class="elsie-map-fab ${state.radarEnabled ? "is-on" : ""}" data-elsie-sheet="radar" aria-haspopup="dialog" aria-label="Weather radar controls">🌦</button>
           <button type="button" class="elsie-map-fab" data-elsie-sheet="breadcrumb" aria-haspopup="dialog" aria-label="Sasquatch trail controls">👣</button>
-          <button type="button" class="elsie-map-fab elsie-gps-fab ${state.gpsAutoOn ? "is-on" : ""}" data-gps-auto-toggle aria-pressed="${state.gpsAutoOn}" aria-label="GPS tracking ${state.gpsAutoOn ? "on" : "off"}">📍</button>
+          <button type="button" class="elsie-map-fab elsie-gps-fab" data-gps-locate aria-label="Find my location">📍</button>
         </div>
         ${renderElsieRadarMarkup()}
         <div id="elsieSheetScrim" class="elsie-sheet-scrim" hidden></div>
@@ -11323,13 +11320,24 @@
       event.preventDefault();
       useLocation();
     }
-    if (target.dataset.gpsAutoToggle !== undefined) {
+    if (target.dataset.gpsLocate !== undefined) {
       event.preventDefault();
-      state.gpsAutoOn = !state.gpsAutoOn;
-      saveState();
-      if (state.gpsAutoOn) useLocation();
-      else stopLocation();
-      renderHomeMapPanel();
+      stopLocation();
+      if (!navigator.geolocation) return;
+      const fab = target.closest(".elsie-gps-fab");
+      if (fab) fab.textContent = "⏳";
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          lastGpsRender = 0;
+          updatePosition(position);
+          if (fab) fab.textContent = "📍";
+        },
+        () => {
+          state.gpsStatus = "Unavailable";
+          if (fab) fab.textContent = "📍";
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
+      );
     }
   }
 
