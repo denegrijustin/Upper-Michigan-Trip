@@ -7855,6 +7855,8 @@
     if (haunted) return openElsieHauntedPopup(map, haunted, coordinates);
     const emmaThemed = emmaMatchForStop(item);
     if (emmaThemed) return openEmmaRoutePopup(map, emmaThemed, coordinates);
+    const quest = katrinaQuestMatchForStop(item);
+    if (quest) return openKatrinaQuestPopup(map, quest, coordinates);
     const profile = activeProfile;
     const iconType = mapIconType(item, profile);
     const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
@@ -7995,6 +7997,114 @@
             <a class="external-link" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener">Navigate</a>
             ${stop.official ? `<a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a>` : ""}
             ${stop.folklore && stop.folklore !== stop.official ? `<a class="external-link" href="${escapeHtml(stop.folklore)}" target="_blank" rel="noopener">The story</a>` : ""}
+          </div>
+        </div>`)
+      .addTo(map);
+  }
+
+  /* ---------- Katrina story quest layer (book / ghost / fashion) ---------- */
+
+  function katrinaQuestStops() {
+    return Array.isArray(window.KATRINA_STOPS) ? window.KATRINA_STOPS : [];
+  }
+
+  function katrinaQuestMatchForStop(item) {
+    if (activeProfile !== "katrina" || !item) return null;
+    const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const title = norm(item.title || item.name);
+    return katrinaQuestStops().find((stop) =>
+      norm(stop.title) === title ||
+      (Number.isFinite(item.lat) && haversineMiles({ lat: item.lat, lon: item.lon }, { lat: stop.lat, lon: stop.lon }) < 0.35)
+    ) || null;
+  }
+
+  function katrinaHauntIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    switch (type) {
+      case "book": return base("#8a5a2b", `<path d="M32 20c-4-3-9-3.5-13-2v26c4-1.5 9-1 13 2 4-3 9-3.5 13-2V18c-4-1.5-9-1-13 2z" fill="#f2e3c2" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M32 20v26" stroke="#141414" stroke-width="2.4"/><path d="M23 25h6M23 30h6M35 25h6M35 30h6M35 35h6" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/><circle cx="47" cy="16" r="1.6" fill="#ffe25c"/>`);
+      case "fashion": return base("#3d2c52", `<path d="M32 15a3 3 0 1 1 3 3c-1.6 0-3 1.2-3 3" fill="none" stroke="#d9c069" stroke-width="2.6" stroke-linecap="round"/><path d="M32 21L16 30h32z" fill="none" stroke="#d9c069" stroke-width="2.6" stroke-linejoin="round"/><path d="M24 30h16l3 16H21z" fill="#c9b3ef" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M26 36h12M25 41h14" stroke="#141414" stroke-width="1.5"/><path d="M47 42l1.3 3 3 1.3-3 1.3-1.3 3-1.3-3-3-1.3 3-1.3z" fill="#ffe25c" stroke="#141414" stroke-width="1.3"/>`);
+      case "ghost": return base("#4b3a6e", `<path d="M32 14c-8.5 0-13 7-13 14.5V45l4.4-3.2 4.3 3.2 4.3-3.2 4.3 3.2 4.3-3.2L45 45V28.5C45 21 40.5 14 32 14z" fill="#efe9ff" stroke="#141414" stroke-width="3"/><circle cx="27" cy="29" r="2.4" fill="#141414"/><circle cx="37" cy="29" r="2.4" fill="#141414"/><circle cx="27.8" cy="28.2" r="0.8" fill="#fff"/><circle cx="37.8" cy="28.2" r="0.8" fill="#fff"/><path d="M28 35q4 3 8 0" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M20 16l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z" fill="#ffd9f0"/>`);
+      default: return base("#a35d2d", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
+    }
+  }
+
+  function registerKatrinaHauntIcons(map) {
+    const jobs = ["book", "ghost", "fashion"].map((type) => new Promise((resolve) => {
+      const name = `katrina-haunt-${type}`;
+      if (!map || (map.hasImage && map.hasImage(name))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(katrinaHauntIconSvg(type))}`;
+    }));
+    return Promise.all(jobs);
+  }
+
+  function addKatrinaQuestLayer(map) {
+    if (!map || activeProfile !== "katrina" || map.getLayer("katrina-quest")) return;
+    const stops = katrinaQuestStops();
+    if (!stops.length) return;
+    if (!map.getSource("katrina-quest-stops")) {
+      map.addSource("katrina-quest-stops", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: stops.map((stop) => ({
+            type: "Feature",
+            properties: { id: stop.id, questIcon: `katrina-haunt-${stop.icon}` },
+            geometry: { type: "Point", coordinates: [stop.lon, stop.lat] }
+          }))
+        }
+      });
+    }
+    map.addLayer({
+      id: "katrina-quest",
+      type: "symbol",
+      source: "katrina-quest-stops",
+      layout: {
+        "icon-image": ["get", "questIcon"],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "katrina-quest", (event) => {
+      const stop = katrinaQuestStops().find((item) => item.id === event.features[0].properties.id);
+      if (stop) openKatrinaQuestPopup(map, stop, event.features[0].geometry.coordinates);
+    });
+    map.on("mouseenter", "katrina-quest", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "katrina-quest", () => { map.getCanvas().style.cursor = ""; });
+  }
+
+  const KATRINA_QUEST_LABELS = { "book": "Books & Story Places", "ghost": "Mystery & Unusual History", "fashion": "Creative & Crossover" };
+
+  function openKatrinaQuestPopup(map, stop, coordinates) {
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    const preview = byId("homeAttractionPreview");
+    if (preview) { preview.hidden = true; preview.innerHTML = ""; }
+    const detour = stop.detourMiles ? `${stop.detourMiles} mi detour` : "";
+    const time = stop.stopMinutes ? `~${stop.stopMinutes} min` : "";
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "280px", offset: 18, className: "elsie-marker-popup katrina-quest-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>${escapeHtml(KATRINA_QUEST_LABELS[stop.icon] || stop.interest)}</small>
+          <strong>${escapeHtml(stop.title)}</strong>
+          <p class="elsie-sheet-meta">${escapeHtml(stop.city)}, ${escapeHtml(stop.state)}${detour ? ` · ${escapeHtml(detour)}` : ""}${time ? ` · ${escapeHtml(time)}` : ""}</p>
+          <p><strong>The story:</strong> ${escapeHtml(stop.storyConnection)}</p>
+          ${stop.suggestedBook ? `<p class="elsie-popup-angle">📚 <strong>Suggested book:</strong> ${escapeHtml(stop.suggestedBook)}</p>` : ""}
+          <p>${escapeHtml(stop.experience)}</p>
+          <p class="elsie-popup-angle"><strong>Why it fits you:</strong> ${escapeHtml(stop.why)}</p>
+          <p class="elsie-popup-angle"><strong>Story quest:</strong> ${escapeHtml(stop.quest)}</p>
+          ${stop.sisterCrossover ? `<p class="elsie-popup-angle"><strong>Sister crossover:</strong> ${escapeHtml(stop.sisterCrossover)}</p>` : ""}
+          ${stop.access ? `<p class="elsie-popup-angle">⚠️ ${escapeHtml(stop.access)}</p>` : ""}
+          <div class="elsie-popup-links">
+            <a class="external-link" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener">Navigate</a>
+            ${stop.official ? `<a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a>` : ""}
+            ${stop.learnMore && stop.learnMore !== stop.official ? `<a class="external-link" href="${escapeHtml(stop.learnMore)}" target="_blank" rel="noopener">Learn more</a>` : ""}
           </div>
         </div>`)
       .addTo(map);
@@ -8815,6 +8925,7 @@
           addElsieIconLayer(homeMap);
           if (activeProfile === "elsie") registerElsieGhostIcon(homeMap).then(() => addElsieHauntedLayer(homeMap));
           if (activeProfile === "emma") registerEmmaThemeIcons(homeMap).then(() => addEmmaRouteLayer(homeMap));
+          if (activeProfile === "katrina") registerKatrinaHauntIcons(homeMap).then(() => addKatrinaQuestLayer(homeMap));
         });
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
@@ -9234,6 +9345,11 @@
       const emmaThemed = emmaMatchForStop(item);
       if (emmaThemed && homeMap) {
         openEmmaRoutePopup(homeMap, emmaThemed, [item.lon, item.lat]);
+        return;
+      }
+      const quest = katrinaQuestMatchForStop(item);
+      if (quest && homeMap) {
+        openKatrinaQuestPopup(homeMap, quest, [item.lon, item.lat]);
         return;
       }
       const preview = byId("homeAttractionPreview") || byId("exploreDetail");

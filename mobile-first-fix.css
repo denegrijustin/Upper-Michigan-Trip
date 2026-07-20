@@ -2186,3 +2186,10 @@ body.elsie-map-active #bottomDrawer { display: none; }
   border-color: #7a2e5a;
 }
 .emma-route-popup .elsie-popup-card small { color: #b04a86; }
+
+/* Katrina story-quest popup accent */
+.maplibregl-popup.katrina-quest-popup .maplibregl-popup-content {
+  background: #fbf5ec;
+  border-color: #5a3b1e;
+}
+.katrina-quest-popup .elsie-popup-card small { color: #a35d2d; }
