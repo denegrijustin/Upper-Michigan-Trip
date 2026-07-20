@@ -7844,6 +7844,8 @@
     const item = enrichStop(rawItem);
     const haunted = hauntedMatchForStop(item);
     if (haunted) return openElsieHauntedPopup(map, haunted, coordinates);
+    const emmaThemed = emmaMatchForStop(item);
+    if (emmaThemed) return openEmmaRoutePopup(map, emmaThemed, coordinates);
     const profile = activeProfile;
     const iconType = mapIconType(item, profile);
     const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
@@ -7984,6 +7986,113 @@
             <a class="external-link" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener">Navigate</a>
             ${stop.official ? `<a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a>` : ""}
             ${stop.folklore && stop.folklore !== stop.official ? `<a class="external-link" href="${escapeHtml(stop.folklore)}" target="_blank" rel="noopener">The story</a>` : ""}
+          </div>
+        </div>`)
+      .addTo(map);
+  }
+
+  /* ---------- Emma sports / fashion / storm layer ---------- */
+
+  function emmaRouteStops() {
+    return Array.isArray(window.EMMA_STOPS) ? window.EMMA_STOPS : [];
+  }
+
+  function emmaMatchForStop(item) {
+    if (activeProfile !== "emma" || !item) return null;
+    const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const title = norm(item.title || item.name);
+    return emmaRouteStops().find((stop) =>
+      norm(stop.title) === title ||
+      (Number.isFinite(item.lat) && haversineMiles({ lat: item.lat, lon: item.lon }, { lat: stop.lat, lon: stop.lon }) < 0.35)
+    ) || null;
+  }
+
+  function emmaThemeIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    switch (type) {
+      case "stadium": return base("#2f6b46", `<path d="M14 30a18 9 0 0 1 36 0v6a18 9 0 0 1-36 0z" fill="#e9f5ec" stroke="#141414" stroke-width="3"/><ellipse cx="32" cy="30" rx="18" ry="9" fill="#bfe3c8" stroke="#141414" stroke-width="3"/><ellipse cx="32" cy="30" rx="9" ry="4.2" fill="#7cc98a" stroke="#141414" stroke-width="2.4"/><path d="M18 26v8M25 23v10M32 22v10M39 23v10M46 26v8" stroke="#141414" stroke-width="1.6"/><path d="M30 12l4-2v6" stroke="#c65c35" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
+      case "dress": return base("#f4dceb", `<path d="M26 16h12l-2 7 6 4-4 21H26l-4-21 6-4z" fill="#e07aae" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M26 16l-4 6M38 16l4 6" stroke="#141414" stroke-width="3" stroke-linecap="round"/><path d="M25 33h14M24 39h16" stroke="#141414" stroke-width="1.6"/><circle cx="32" cy="24" r="1.6" fill="#fffdf7"/><path d="M46 40l1.4 3.2 3.2 1.4-3.2 1.4L46 49.2 44.6 46l-3.2-1.4 3.2-1.4z" fill="#ffe25c" stroke="#141414" stroke-width="1.4"/>`);
+      case "tornado": return base("#57616e", `<path d="M16 18h32M20 24h24M25 30h16M28 36h10M31 42h6M33 48h3" stroke="#eef2f6" stroke-width="4" stroke-linecap="round"/><path d="M16 18h32M20 24h24M25 30h16M28 36h10M31 42h6M33 48h3" stroke="#141414" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/><circle cx="47" cy="14" r="2" fill="#ffe25c"/><path d="M13 26l-3 2M12 33l-3 1" stroke="#c8d2dc" stroke-width="2" stroke-linecap="round"/>`);
+      default: return base("#4f7fd9", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
+    }
+  }
+
+  function registerEmmaThemeIcons(map) {
+    const jobs = ["stadium", "dress", "tornado"].map((type) => new Promise((resolve) => {
+      const name = `emma-theme-${type}`;
+      if (!map || (map.hasImage && map.hasImage(name))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(emmaThemeIconSvg(type))}`;
+    }));
+    return Promise.all(jobs);
+  }
+
+  function addEmmaRouteLayer(map) {
+    if (!map || activeProfile !== "emma" || map.getLayer("emma-route-stops-layer")) return;
+    const stops = emmaRouteStops();
+    if (!stops.length) return;
+    if (!map.getSource("emma-route-stops")) {
+      map.addSource("emma-route-stops", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: stops.map((stop) => ({
+            type: "Feature",
+            properties: { id: stop.id, themeIcon: `emma-theme-${stop.icon}` },
+            geometry: { type: "Point", coordinates: [stop.lon, stop.lat] }
+          }))
+        }
+      });
+    }
+    map.addLayer({
+      id: "emma-route-stops-layer",
+      type: "symbol",
+      source: "emma-route-stops",
+      layout: {
+        "icon-image": ["get", "themeIcon"],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "emma-route-stops-layer", (event) => {
+      const stop = emmaRouteStops().find((item) => item.id === event.features[0].properties.id);
+      if (stop) openEmmaRoutePopup(map, stop, event.features[0].geometry.coordinates);
+    });
+    map.on("mouseenter", "emma-route-stops-layer", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "emma-route-stops-layer", () => { map.getCanvas().style.cursor = ""; });
+  }
+
+  const EMMA_THEME_LABELS = { "stadium": "Sports & Stadiums", "dress": "Fashion & Design", "tornado": "Storm & Weather History" };
+
+  function openEmmaRoutePopup(map, stop, coordinates) {
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    const preview = byId("homeAttractionPreview");
+    if (preview) { preview.hidden = true; preview.innerHTML = ""; }
+    const detour = stop.detourMiles ? `${stop.detourMiles} mi detour` : "";
+    const time = stop.stopMinutes ? `~${stop.stopMinutes} min` : "";
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "280px", offset: 18, className: "elsie-marker-popup emma-route-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>${escapeHtml(EMMA_THEME_LABELS[stop.icon] || "Emma's Route")}</small>
+          <strong>${escapeHtml(stop.title)}</strong>
+          <p class="elsie-sheet-meta">${escapeHtml(stop.city)}, ${escapeHtml(stop.state)}${detour ? ` · ${escapeHtml(detour)}` : ""}${time ? ` · ${escapeHtml(time)}` : ""}${stop.stormEra ? ` · ${escapeHtml(stop.stormEra)}` : ""}</p>
+          <p>${escapeHtml(stop.summary)}</p>
+          <p><strong>The history:</strong> ${escapeHtml(stop.history)}</p>
+          <p class="elsie-popup-angle"><strong>Why it fits you:</strong> ${escapeHtml(stop.why)}</p>
+          <p class="elsie-popup-angle"><strong>Your mission:</strong> ${escapeHtml(stop.mission)}</p>
+          <p class="elsie-popup-angle"><strong>Mom &amp; Dad would say:</strong> ${escapeHtml(stop.momDad)}</p>
+          ${stop.access ? `<p class="elsie-popup-angle">⚠️ ${escapeHtml(stop.access)}</p>` : ""}
+          <div class="elsie-popup-links">
+            <a class="external-link" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener">Navigate</a>
+            ${stop.official ? `<a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a>` : ""}
+            ${stop.learnMore && stop.learnMore !== stop.official ? `<a class="external-link" href="${escapeHtml(stop.learnMore)}" target="_blank" rel="noopener">Learn more</a>` : ""}
           </div>
         </div>`)
       .addTo(map);
@@ -8696,6 +8805,7 @@
         registerElsieIcons(homeMap).then(() => {
           addElsieIconLayer(homeMap);
           if (activeProfile === "elsie") registerElsieGhostIcon(homeMap).then(() => addElsieHauntedLayer(homeMap));
+          if (activeProfile === "emma") registerEmmaThemeIcons(homeMap).then(() => addEmmaRouteLayer(homeMap));
         });
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
@@ -9110,6 +9220,11 @@
       const haunted = hauntedMatchForStop(item);
       if (haunted && homeMap) {
         openElsieHauntedPopup(homeMap, haunted, [item.lon, item.lat]);
+        return;
+      }
+      const emmaThemed = emmaMatchForStop(item);
+      if (emmaThemed && homeMap) {
+        openEmmaRoutePopup(homeMap, emmaThemed, [item.lon, item.lat]);
         return;
       }
       const preview = byId("homeAttractionPreview") || byId("exploreDetail");
