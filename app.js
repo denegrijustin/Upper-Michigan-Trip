@@ -7961,7 +7961,8 @@
           <small>👻 Haunted Route</small>
           <strong>${escapeHtml(stop.title)}</strong>
           <p class="elsie-sheet-meta">${escapeHtml(stop.city)}, ${escapeHtml(stop.state)} · ${escapeHtml(stop.siteType)}${detour ? ` · ${escapeHtml(detour)}` : ""}</p>
-          <p>${escapeHtml(stop.phenomenon)}</p>
+          ${stop.history ? `<p><strong>The history:</strong> ${escapeHtml(stop.history)}</p>` : ""}
+          <p class="elsie-popup-angle"><strong>What people report:</strong> ${escapeHtml(stop.phenomenon)}</p>
           <p class="elsie-popup-angle"><strong>Evidence:</strong> ${escapeHtml(stop.evidence)}</p>
           <p class="elsie-popup-angle"><strong>Best visit:</strong> ${escapeHtml(stop.visit)}</p>
           ${stop.access ? `<p class="elsie-popup-angle">⚠️ ${escapeHtml(stop.access)}</p>` : ""}

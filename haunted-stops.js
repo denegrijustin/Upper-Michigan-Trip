@@ -15,7 +15,8 @@ window.HAUNTED_STOPS = [
     "visit": "Exterior daylight photo stop",
     "access": "Private property. View only from a legal public location and do not enter the grounds.",
     "official": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/",
-    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/"
+    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/",
+    "history": "Anton Sauer, an Austrian immigrant who made his fortune in freight, built this Italianate villa above the Kaw River around 1871. Four generations of the family lived and died here, and the towered mansion has stood mostly empty for decades — which is exactly how a house earns a reputation. Generations of Kansas City kids have dared each other to drive past the tower at night."
   },
   {
     "id": "H-002",
@@ -33,7 +34,8 @@ window.HAUNTED_STOPS = [
     "visit": "Museum tour or scheduled evening event",
     "access": "Tour during posted museum hours. Evening and paranormal programming is event-specific.",
     "official": "https://wornallmajors.org/",
-    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/"
+    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/",
+    "history": "John Wornall built this Greek Revival farmhouse in 1858, and in October 1864 the Battle of Westport — the biggest Civil War battle west of the Mississippi — swept literally across his land. Both armies used the house as a field hospital, and soldiers died in its rooms. The pipe smoke and soldier figures people report tie straight back to those weeks."
   },
   {
     "id": "H-003",
@@ -51,7 +53,8 @@ window.HAUNTED_STOPS = [
     "visit": "Paranormal night or museum tour",
     "access": "Seasonal museum schedule. Book special investigations in advance.",
     "official": "https://wornallmajors.org/explore/majors-house/",
-    "folklore": "https://wornallmajors.org/events/paranormal-night-at-the-alexander-majors-house-museum/"
+    "folklore": "https://wornallmajors.org/events/paranormal-night-at-the-alexander-majors-house-museum/",
+    "history": "Alexander Majors was one of the founders of the Pony Express, and this 1856 house was his home base at the edge of the frontier. His great-granddaughter Louisa Johnston spent her last decades restoring the house nearly alone and died here in 1984 — staff say she never really clocked out, and the museum leans into it with organized paranormal nights."
   },
   {
     "id": "H-004",
@@ -69,7 +72,8 @@ window.HAUNTED_STOPS = [
     "visit": "Guided historic tour",
     "access": "Enter only during posted tour hours. The grounds may have separate seasonal rules.",
     "official": "https://www.vailemansion.org/",
-    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/"
+    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/",
+    "history": "Colonel Harvey Vaile finished this 31-room Second Empire showpiece in 1881 — it was called one of the finest houses west of the Mississippi. His wife Sophia died in the house in 1883 during a federal mail-contract scandal that consumed the family, and the figure reported in the upper windows is usually said to be her."
   },
   {
     "id": "H-005",
@@ -87,7 +91,8 @@ window.HAUNTED_STOPS = [
     "visit": "Public tasting-room visit or overnight stay",
     "access": "Operating business. Stay within guest and public areas; some buildings may be closed.",
     "official": "https://www.belvoirwinery.com/",
-    "folklore": "https://missouriwine.org/news/belvoir-winery-a-hauntingly-good-time"
+    "folklore": "https://missouriwine.org/news/belvoir-winery-a-hauntingly-good-time",
+    "history": "Belvoir began in the 1880s-1900s as the Odd Fellows Home District — a whole campus where the fraternal order housed its orphans, its elderly, and its sick, with its own hospital and cemetery. Hundreds of people lived out entire lives here. The winery and inn now occupy the old buildings, and they openly market the resident spirits rather than denying them."
   },
   {
     "id": "H-006",
@@ -105,7 +110,8 @@ window.HAUNTED_STOPS = [
     "visit": "Ghost tour or overnight",
     "access": "This is the largest Missouri-side detour. Reserve tours or lodging and respect guest-only areas.",
     "official": "https://www.elmshotelandspa.com/",
-    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/"
+    "folklore": "https://www.visitkc.com/articles/kansas-citys-real-haunted-houses/",
+    "history": "The Elms has burned to the ground twice — the current 1912 hotel is the third on the site. In its heyday the mineral-springs resort drew gangsters (Al Capone reputedly gambled here) and, famously, Harry Truman, who spent election night 1948 asleep here while the papers wrongly declared he'd lost. Staff stories center on a 1920s-era gambler and a housekeeper who never left."
   },
   {
     "id": "H-007",
@@ -123,7 +129,8 @@ window.HAUNTED_STOPS = [
     "visit": "Lobby, meal, or overnight",
     "access": "Operating hotel. Public spaces and booked guest areas only.",
     "official": "https://www.thetigerhotel.com/",
-    "folklore": "https://www.hauntedplaces.org/item/tiger-hotel/"
+    "folklore": "https://www.hauntedplaces.org/item/tiger-hotel/",
+    "history": "The Tiger opened in 1928 as Columbia's grand hotel — for decades the tallest building between St. Louis and Kansas City. It fell into decline, spent years as a retirement home, and was restored to a boutique hotel; the reports of phantom guests track the building's long, layered occupancy."
   },
   {
     "id": "H-008",
@@ -141,7 +148,8 @@ window.HAUNTED_STOPS = [
     "visit": "Two-hour ghost tour",
     "access": "Ticketed entry. Age restrictions apply to ghost hunts and overnight investigations. Choose the historical ghost tour for the least intense experience.",
     "official": "https://missouripentours.com/ghost-paranormal-tours/",
-    "folklore": "https://missouripentours.com/ghost-paranormal-tours/"
+    "folklore": "https://missouripentours.com/ghost-paranormal-tours/",
+    "history": "Missouri State Penitentiary opened in 1836 — it was already housing prisoners when the Alamo fell — and ran continuously until 2004, making it one of the oldest prisons west of the Mississippi. Time magazine once called it 'the bloodiest 47 acres in America.' Sonny Liston boxed here as an inmate; James Earl Ray escaped from here in 1967, a year before he assassinated Dr. King. The tours go into the dungeon cells and the gas chamber."
   },
   {
     "id": "H-009",
@@ -159,7 +167,8 @@ window.HAUNTED_STOPS = [
     "visit": "Reserved daytime tour",
     "access": "Security-controlled government property. Tours can require advance reservations and may be unavailable during official use.",
     "official": "https://mansion.mo.gov/",
-    "folklore": "https://www.legendsofamerica.com/mo-governorsmansion/"
+    "folklore": "https://www.legendsofamerica.com/mo-governorsmansion/",
+    "history": "Missouri's governors have lived in this 1871 mansion ever since it was built. The best-known story belongs to Carrie Crittenden, the nine-year-old daughter of Governor Thomas Crittenden, who died of diphtheria in the house in 1882 — staff and residents have reported a child's laughter and footsteps for over a century."
   },
   {
     "id": "H-010",
@@ -177,7 +186,8 @@ window.HAUNTED_STOPS = [
     "visit": "Late-afternoon walk before closing",
     "access": "Use only the official Rock Hollow Trail. Daily hours are 5 a.m. to 10 p.m. Do not enter closed rail property or remain after hours.",
     "official": "https://www.cityofwildwood.com/facilities/facility/details/Rock-Hollow-Trail-29",
-    "folklore": "https://www.legendsofamerica.com/mo-zombieroad/"
+    "folklore": "https://www.legendsofamerica.com/mo-zombieroad/",
+    "history": "Officially it's the Rock Hollow Trail, a paved path through Ozark woods — but for generations of St. Louis teenagers it was Zombie Road, an abandoned rail-and-quarry route with tales of shadow figures lining the tree line. The real history involves a 19th-century railroad, a vanished resort community by the Meramec River, and quarry accidents that seeded the legends."
   },
   {
     "id": "H-011",
@@ -195,7 +205,8 @@ window.HAUNTED_STOPS = [
     "visit": "Dinner, history tour, or overnight",
     "access": "Operating restaurant and inn. Reserve tours or rooms and stay out of private areas.",
     "official": "https://www.lempmansion.com/",
-    "folklore": "https://www.lempmansion.com/haunted-history/"
+    "folklore": "https://www.lempmansion.com/haunted-history/",
+    "history": "The Lemp family ran one of America's biggest breweries before Prohibition destroyed it — and the family with it. Four members, including three by their own hand inside this house, died across the early 1900s. The mansion is now a restaurant and inn that hosts murder-mystery dinners, and it's routinely ranked among the most haunted houses in America. A heavy story — the kind Elsie can decide how deep to go on."
   },
   {
     "id": "H-012",
@@ -213,7 +224,8 @@ window.HAUNTED_STOPS = [
     "visit": "Guided museum tour",
     "access": "Visit during museum hours or a scheduled special program.",
     "official": "https://www.campbellhousemuseum.org/",
-    "folklore": "https://www.stlouisghosts.com/haunted-places/campbell-house-museum/"
+    "folklore": "https://www.stlouisghosts.com/haunted-places/campbell-house-museum/",
+    "history": "The Campbell House preserves the world of Robert Campbell, a fur-trade millionaire, almost untouched — the family kept nearly everything, so the 1880s interiors are real, not recreated. Of the Campbells' thirteen children, only three survived to adulthood, and the reported footsteps and moved objects get attributed to a family that endured extraordinary loss."
   },
   {
     "id": "H-013",
@@ -231,7 +243,8 @@ window.HAUNTED_STOPS = [
     "visit": "Public theatre tour or performance",
     "access": "Backstage access is limited to tours and events. Check the current tour calendar.",
     "official": "https://www.fabulousfox.com/",
-    "folklore": "https://www.stlouisghosts.com/haunted-places/fabulous-fox-theatre/"
+    "folklore": "https://www.stlouisghosts.com/haunted-places/fabulous-fox-theatre/",
+    "history": "The 'Fabulous Fox' opened in 1929 as one of the most opulent movie palaces ever built — a Siamese-Byzantine fantasy with a 2,000-pound glass chandelier. Restored in 1982 after near-demolition, it's a working Broadway house where crews tell stories of a phantom projectionist and seats that flip on their own."
   },
   {
     "id": "H-014",
@@ -249,7 +262,8 @@ window.HAUNTED_STOPS = [
     "visit": "Scheduled history or paranormal tour",
     "access": "Active restoration site. Entry is by scheduled event or permission only.",
     "official": "https://www.mcpikemansion.com/",
-    "folklore": "https://www.mcpikemansion.com/"
+    "folklore": "https://www.mcpikemansion.com/",
+    "history": "Henry Guest McPike, an Alton mayor and horticulturist, built this Italianate mansion in 1869 on a hill above town. It's been slowly rescued from ruin by private owners for decades, and its vaulted wine cellar is the centerpiece of the ghost tours. Alton as a whole — a river town of Civil War prisons and cholera epidemics — calls itself one of the most haunted small towns in America."
   },
   {
     "id": "H-015",
@@ -267,7 +281,8 @@ window.HAUNTED_STOPS = [
     "visit": "Booked Alton history or ghost tour",
     "access": "Tenants and access arrangements change. Do not assume unrestricted entry; book through a current operator.",
     "official": "https://www.altonhauntings.com/",
-    "folklore": "https://www.altonhauntings.com/mineral-springs-hotel/"
+    "folklore": "https://www.altonhauntings.com/mineral-springs-hotel/",
+    "history": "Built by the Luer meatpacking brothers in 1914 after workers struck a mineral spring digging an ice house, this hotel promised healing waters. Its swimming pool — once the largest in Illinois — is where the building's saddest legends live. It's now shops and event space, with the old pool a stop on every Alton ghost tour."
   },
   {
     "id": "H-016",
@@ -285,7 +300,8 @@ window.HAUNTED_STOPS = [
     "visit": "Overnight stay",
     "access": "Operating lodging. Public and guest spaces only.",
     "official": "https://www.innat835.com/",
-    "folklore": "https://www.hauntedrooms.com/illinois/haunted-places/haunted-hotels/inn-at-835-springfield"
+    "folklore": "https://www.hauntedrooms.com/illinois/haunted-places/haunted-hotels/inn-at-835-springfield",
+    "history": "Bell Miller, a self-made businesswoman who built Springfield's biggest floral company, commissioned this Classical Revival building in 1909 with apartments above her flower business. It's now a bed-and-breakfast whose staff report gentle, housekeeping-style phenomena — doors, lights, the smell of flowers — attributed affectionately to Bell herself."
   },
   {
     "id": "H-017",
@@ -303,7 +319,8 @@ window.HAUNTED_STOPS = [
     "visit": "Daytime architectural tour",
     "access": "Guided entry only. Historic stairs and narrow areas may affect accessibility.",
     "official": "https://dnrhistoric.illinois.gov/experience/sites/site.dana-thomas-house.html",
-    "folklore": "https://www.hauntedplaces.org/item/dana-thomas-house/"
+    "folklore": "https://www.hauntedplaces.org/item/dana-thomas-house/",
+    "history": "Frank Lloyd Wright designed this house in 1902 for Susan Lawrence Dana, a wealthy widow and one of his most daring clients — it's one of the best-preserved early Wright interiors anywhere, with over 100 pieces of original furniture. Dana lost her fortune, turned to spiritualism, and held séances in the house; she died in poverty while the house survived intact."
   },
   {
     "id": "H-018",
@@ -321,7 +338,8 @@ window.HAUNTED_STOPS = [
     "visit": "Respectful daylight visit",
     "access": "Follow cemetery and historic-site hours. No nighttime wandering or intrusive investigation.",
     "official": "https://dnrhistoric.illinois.gov/experience/sites/site.lincoln-tomb.html",
-    "folklore": "https://springfieldwalks.com/"
+    "folklore": "https://springfieldwalks.com/",
+    "history": "Lincoln's tomb holds a genuinely wild true story: in 1876 a Chicago counterfeiting gang tried to steal his body and ransom it. They were caught mid-heist, and Lincoln's coffin was later encased in concrete to end the threat. Visitors rub the nose of the bronze bust for luck, and Oak Ridge is the second-most-visited cemetery in America after Arlington."
   },
   {
     "id": "H-019",
@@ -339,7 +357,8 @@ window.HAUNTED_STOPS = [
     "visit": "Historic guided or self-guided tour",
     "access": "Seasonal ticketed site, generally spring through fall. This recommendation is the historic prison, not a staged Halloween attraction.",
     "official": "https://www.jolietprison.org/tours.html",
-    "folklore": "https://www.wbez.org/culture-the-arts/2018/10/26/is-the-old-joliet-prison-haunted"
+    "folklore": "https://www.wbez.org/culture-the-arts/2018/10/26/is-the-old-joliet-prison-haunted",
+    "history": "Old Joliet Prison opened in 1858, its limestone walls quarried by the convicts themselves. It ran until 2002, held everyone from Leopold and Loeb to Richard Speck, and its castle-like front gate is famous worldwide from The Blues Brothers. Tours today walk the cellblocks that stood through 144 years of hard history."
   },
   {
     "id": "H-020",
@@ -357,7 +376,8 @@ window.HAUNTED_STOPS = [
     "visit": "Performance, architecture tour, or special event",
     "access": "Public access depends on shows and scheduled tours. Backstage areas are restricted.",
     "official": "https://rialtosquare.com/",
-    "folklore": "https://www.hauntedplaces.org/item/rialto-square-theatre/"
+    "folklore": "https://www.hauntedplaces.org/item/rialto-square-theatre/",
+    "history": "The Rialto opened in 1926 as a 'palace for the people' — an over-the-top Vaudeville house modeled on Versailles, with one of the largest hand-cut crystal chandeliers in the country. Its resident ghost story is a woman in white the staff call Rachel, said to drift the balcony during quiet hours."
   },
   {
     "id": "H-021",
@@ -375,7 +395,8 @@ window.HAUNTED_STOPS = [
     "visit": "Quiet daylight walk only",
     "access": "Use legal forest-preserve parking and trails. Respect graves, posted hours, and all closure signs. Do not visit after dark.",
     "official": "https://fpdcc.com/places/locations/rubio-woods/",
-    "folklore": "https://www.bachelorsgrove.com/"
+    "folklore": "https://www.bachelorsgrove.com/",
+    "history": "A small settlers' burial ground from the 1840s, abandoned as its community faded, vandalized for decades, and now surrounded by forest preserve. Bachelor's Grove is arguably the most famous haunted cemetery in America — the 'white lady' photograph taken here in 1991 is one of the most reproduced ghost photos ever. The lagoon next to it was reputedly a mob dumping ground in the 1920s."
   },
   {
     "id": "H-022",
@@ -393,7 +414,8 @@ window.HAUNTED_STOPS = [
     "visit": "Daylight cemetery visit or legal drive-by",
     "access": "Active sacred cemetery. Visit only during posted hours, do not block roads, and do not approach strangers or stage roadside encounters.",
     "official": "https://www.catholiccemeterieschicago.org/Locations/Details/Resurrection",
-    "folklore": "https://www.chicagohistory.org/resurrection-mary/"
+    "folklore": "https://www.chicagohistory.org/resurrection-mary/",
+    "history": "Resurrection Mary is Chicago's signature ghost story: since the 1930s, drivers on Archer Avenue have told of picking up a young blonde woman in a white party dress who asks to be let out at Resurrection Cemetery's gates — and vanishes. She's usually linked to a young woman killed walking home from the Oh Henry Ballroom. The bent bars on the cemetery gate became part of the legend."
   },
   {
     "id": "H-023",
@@ -411,7 +433,8 @@ window.HAUNTED_STOPS = [
     "visit": "Scheduled ghost or history tour",
     "access": "Entry is by tour or event. Check age guidance and current dates.",
     "official": "https://www.southshorecva.com/listing/old-lake-county-jail/247/",
-    "folklore": "https://www.southshorecva.com/blog/post/haunted-old-lake-county-jail/"
+    "folklore": "https://www.southshorecva.com/blog/post/haunted-old-lake-county-jail/",
+    "history": "This 1882 jail earned its place in history on March 3, 1934, when John Dillinger — America's most famous bank robber — broke out using a fake gun reportedly carved from wood and blackened with shoe polish, then drove off in the sheriff's own car. The museum tours cover the escape cell and the crime-wave era it belongs to."
   },
   {
     "id": "H-024",
@@ -429,7 +452,8 @@ window.HAUNTED_STOPS = [
     "visit": "Sunset hike while the park is open",
     "access": "Park fees and seasonal parking controls may apply. Stay on marked trails and confirm closing time before a sunset visit.",
     "official": "https://www.nps.gov/thingstodo/dianadunesdare.htm",
-    "folklore": "https://www.nps.gov/thingstodo/dianadunesdare.htm"
+    "folklore": "https://www.nps.gov/thingstodo/dianadunesdare.htm",
+    "history": "Diana of the Dunes was a real person: Alice Mabel Gray, a University of Chicago-educated woman who in 1915 walked away from city life to live alone in a driftwood shack among the dunes. Newspapers turned her into a legend while she lived; after her death in 1925 the legend turned ghostly — swimmers say she still walks the West Beach shoreline at dusk."
   },
   {
     "id": "H-025",
@@ -447,7 +471,8 @@ window.HAUNTED_STOPS = [
     "visit": "Guided mansion tour",
     "access": "Tour availability varies by season and restoration work.",
     "official": "https://www.barkermansion.com/",
-    "folklore": "https://www.hauntedplaces.org/item/barker-mansion/"
+    "folklore": "https://www.hauntedplaces.org/item/barker-mansion/",
+    "history": "John H. Barker made his fortune building railroad freight cars — at peak his Michigan City works turned out thousands a year. His 38-room mansion, finished in 1905, went to his daughter Catherine, orphaned at 14. Staff and visitors report a woman in period dress and a girl on the stairs; the mansion runs its own after-dark history tours."
   },
   {
     "id": "H-026",
@@ -465,7 +490,8 @@ window.HAUNTED_STOPS = [
     "visit": "Museum tour or scheduled investigation",
     "access": "Seasonal museum. Check stairs, tour hours, and special-event rules.",
     "official": "https://michigancitylighthousemuseum.com/",
-    "folklore": "https://michigancitylighthousemuseum.com/events/"
+    "folklore": "https://michigancitylighthousemuseum.com/events/",
+    "history": "Michigan City's 1858 lighthouse was kept for 43 years by Harriet Colfax, one of the most celebrated female lighthouse keepers in American history — she hauled oil up the tower into her 80s. The museum's ghost stories usually feature Harriet still tending her light, along with echoes of the 1886 wreck of the J.D. Marshall offshore."
   },
   {
     "id": "H-027",
@@ -483,7 +509,8 @@ window.HAUNTED_STOPS = [
     "visit": "Exterior campus stop or public event",
     "access": "Campus access is generally possible, but interior access depends on events and university rules.",
     "official": "https://washingtonhall.nd.edu/about-washington-hall/",
-    "folklore": "https://al.nd.edu/news/latest-news/a-history-of-washington-halland-of-notre-dame/"
+    "folklore": "https://al.nd.edu/news/latest-news/a-history-of-washington-halland-of-notre-dame/",
+    "history": "Washington Hall is Notre Dame's Victorian-era theater, and its ghost is campus legend: George Gipp — 'the Gipper' himself, Knute Rockne's star player — reputedly slept on the hall's steps one cold night in 1920, caught the illness that killed him weeks later, and has been blamed for footsteps and slamming doors in the building ever since."
   },
   {
     "id": "H-028",
@@ -501,7 +528,8 @@ window.HAUNTED_STOPS = [
     "visit": "Meal or public historic space",
     "access": "Operating restaurant and event venue. Private rooms and upper areas may be restricted.",
     "official": "https://www.tippe.com/",
-    "folklore": "https://www.visitsouthbend.com/blog/strange-things-in-south-bend-mishawaka/"
+    "folklore": "https://www.visitsouthbend.com/blog/strange-things-in-south-bend-mishawaka/",
+    "history": "Tippecanoe Place is the 40-room granite mansion Clement Studebaker — of the wagon-and-automobile dynasty — completed in 1889. It survived fire and decades of institutional use before becoming a restaurant, where servers trade stories of Victorian figures on the grand staircase after closing."
   },
   {
     "id": "H-029",
@@ -519,7 +547,8 @@ window.HAUNTED_STOPS = [
     "visit": "Ghost tour when scheduled, otherwise theatre tour",
     "access": "Regular tours are available by arrangement. Ghost tours are typically seasonal, so verify the 2026 calendar.",
     "official": "https://morriscenter.org/plan-your-visit/tours/",
-    "folklore": "https://morriscenter.org/event/ghost-tours/2025-09-19/1/"
+    "folklore": "https://morriscenter.org/event/ghost-tours/2025-09-19/1/",
+    "history": "Opened in 1922 as the Palace Theatre, this ornate house survived a near-demolition and reopened as the Morris. Its longtime backstage legend is a spectral usher and an organist heard when the house is empty — the kind of story every century-old theater accumulates, told here with unusual consistency."
   },
   {
     "id": "H-030",
@@ -537,7 +566,8 @@ window.HAUNTED_STOPS = [
     "visit": "Tour, meal, or overnight",
     "access": "Operating inn and event venue. Reserve ahead and respect guest privacy.",
     "official": "https://www.hendersoncastle.com/",
-    "folklore": "https://www.mlive.com/news/kalamazoo/2019/10/is-henderson-castle-haunted.html"
+    "folklore": "https://www.mlive.com/news/kalamazoo/2019/10/is-henderson-castle-haunted.html",
+    "history": "Frank Henderson made his money selling uniforms and regalia to fraternal lodges, and in 1895 crowned Kalamazoo's West Main Hill with this Queen Anne castle — Tiffany windows, a ballroom, and a third-floor tower. He died just four years after moving in. Now an inn, it embraces its reputation openly with resident-ghost lore about Frank and a former caretaker."
   },
   {
     "id": "H-031",
@@ -555,7 +585,8 @@ window.HAUNTED_STOPS = [
     "visit": "Performance or authorized tour",
     "access": "Interior access is event-dependent. Do not attempt backstage access without permission.",
     "official": "https://kalamazoostate.com/",
-    "folklore": "https://www.michiganhauntedhouses.com/real-haunt/kalamazoo-state-theatre.html"
+    "folklore": "https://www.michiganhauntedhouses.com/real-haunt/kalamazoo-state-theatre.html",
+    "history": "The State opened in 1927, a John Eberson 'atmospheric' theater built to feel like sitting in a Mediterranean courtyard under a night sky of twinkling lights. Its staff ghost is 'Thelma,' a former employee said to watch shows from the balcony — crews leave a seat for her."
   },
   {
     "id": "H-032",
@@ -573,7 +604,8 @@ window.HAUNTED_STOPS = [
     "visit": "Meal or overnight",
     "access": "Operating hospitality property. Public and booked guest areas only.",
     "official": "https://www.englishinn.com/directions",
-    "folklore": "https://www.hauntedplaces.org/item/the-english-inn/"
+    "folklore": "https://www.hauntedplaces.org/item/the-english-inn/",
+    "history": "This riverside Tudor mansion was built in 1927 as 'Medovue,' the home of Irving Reuter, general manager of Oldsmobile, and his wife Janet. The Reuters' fortunes fell with the Depression; the house passed through many hands before becoming an inn and restaurant, where Janet is the name attached to most of the gentle goings-on."
   },
   {
     "id": "H-033",
@@ -591,7 +623,8 @@ window.HAUNTED_STOPS = [
     "visit": "Historic tour or scheduled event",
     "access": "City facility. Interior access is limited to tours, rentals, and public events.",
     "official": "https://www.lansingmi.gov/461/Turner-Dodge-House",
-    "folklore": "https://www.michigan.org/property/lansing-ghost-tour-lawless-legends-and-laments-lanternlight"
+    "folklore": "https://www.michigan.org/property/lansing-ghost-tour-lawless-legends-and-laments-lanternlight",
+    "history": "James Turner was one of Lansing's founding businessmen, and his daughter's family, the Dodges, expanded this Grand River mansion around 1900 with architect Darius Moon. It later spent years as a school and community building — the layered institutional history is where its footsteps-and-voices stories come from. The city now runs it and hosts history and paranormal programs."
   },
   {
     "id": "H-034",
@@ -609,7 +642,8 @@ window.HAUNTED_STOPS = [
     "visit": "Free daytime tour",
     "access": "Security screening applies. Public hours are generally weekdays and the first Saturday of each month; verify current schedule.",
     "official": "https://capitol.michigan.gov/tours",
-    "folklore": "https://www.michigan.org/property/lansing-ghost-tour-lawless-legends-and-laments-lanternlight"
+    "folklore": "https://www.michigan.org/property/lansing-ghost-tour-lawless-legends-and-laments-lanternlight",
+    "history": "Michigan's 1879 Capitol was one of the first state capitols built after the Civil War to be deliberately fireproof — which is ironic given its ghost stories center on a night watchman devoted to the building. Its restored Victorian interior, all hand-painted illusion work, is genuinely one of the finest in the country."
   },
   {
     "id": "H-035",
@@ -627,7 +661,8 @@ window.HAUNTED_STOPS = [
     "visit": "Daylight historical stop",
     "access": "Use public roads and marked access only. Roads can be sandy or muddy. Do not enter private parcels, disturb graves, or remain after dark.",
     "official": "https://www.michigan.gov/libraryofmichigan/public/michigan/county-guides/guides/crawford",
-    "folklore": "https://www.michiganpublic.org/offbeat/2017-07-12/how-did-pere-cheney-become-a-ghost-town"
+    "folklore": "https://www.michiganpublic.org/offbeat/2017-07-12/how-did-pere-cheney-become-a-ghost-town",
+    "history": "Pere Cheney was a real lumber town of several hundred people founded in the 1870s — and diphtheria epidemics in the 1890s emptied it. By the 1910s it was gone; today only the cemetery remains in the pines, with broken headstones and a century of witch-and-curse legends layered over a very real story of a town that sickness erased."
   },
   {
     "id": "H-036",
@@ -645,7 +680,8 @@ window.HAUNTED_STOPS = [
     "visit": "Daytime fort tour",
     "access": "Seasonal ticketed attraction. Special spooky programs can be more theatrical than the rest of this list, so choose the regular history visit.",
     "official": "https://www.mackinacparks.com/attraction/colonial-michilimackinac/",
-    "folklore": "https://www.mackinacparks.com/event/fort-fright/"
+    "folklore": "https://www.mackinacparks.com/event/fort-fright/",
+    "history": "The fort at the Straits dates to 1715, and its darkest true chapter is the 1763 attack during Pontiac's War, when Ojibwe warriors used a game of baggatiway (lacrosse) to get inside the palisade and overwhelm the British garrison. Archaeologists have dug here every summer since 1959; the reconstructed fort's ghost stories borrow from a genuinely violent history."
   },
   {
     "id": "H-037",
@@ -663,7 +699,8 @@ window.HAUNTED_STOPS = [
     "visit": "Lighthouse and tower tour",
     "access": "Seasonal hours. Tower access involves stairs and may be weather-dependent.",
     "official": "https://www.mackinacparks.com/attraction/old-mackinac-point-lighthouse/",
-    "folklore": "https://www.mackinacparks.com/attraction/old-mackinac-point-lighthouse/"
+    "folklore": "https://www.mackinacparks.com/attraction/old-mackinac-point-lighthouse/",
+    "history": "The 1892 'Castle of the Straits' guided ships through some of the deadliest water on the Great Lakes until 1957, when the new Mackinac Bridge's lights made it obsolete. Keeper George Marshall and his family tended the light for decades — museum staff attribute the footsteps on the tower stairs to a keeper who never stopped his rounds."
   },
   {
     "id": "H-038",
@@ -681,7 +718,8 @@ window.HAUNTED_STOPS = [
     "visit": "Performance or authorized tour",
     "access": "Interior access depends on performances and events. This is close to the Bois Blanc ferry staging area.",
     "official": "https://theoperahouse.org/",
-    "folklore": "https://theoperahouse.org/book/"
+    "folklore": "https://theoperahouse.org/book/",
+    "history": "Cheboygan's opera house first rose in 1877, burned, and was rebuilt in 1888 — a frontier lumber town's bid for culture, hosting everyone from Annie Oakley (by local tradition) to touring Victorian troupes. Restored by the community, it keeps a classic theater-ghost tradition of a performer who never left the stage."
   },
   {
     "id": "H-039",
@@ -699,7 +737,8 @@ window.HAUNTED_STOPS = [
     "visit": "Separate Mackinac Island overnight or day trip",
     "access": "Not on the Bois Blanc ferry route. This requires a separate passenger ferry from Mackinaw City or St. Ignace and several hours of added logistics.",
     "official": "https://www.missionpoint.com/our-resort",
-    "folklore": "https://www.audacy.com/wwjnewsradio/news/local/mission-point-resort-on-mackinac-island-has-a-famous-ghost"
+    "folklore": "https://www.audacy.com/wwjnewsradio/news/local/mission-point-resort-on-mackinac-island-has-a-famous-ghost",
+    "history": "Mission Point's sprawling grounds began as the world headquarters of Moral Re-Armament, a postwar spiritual movement that built the soaring timber-lodge theater in the 1950s, and later briefly housed a college. The resort's famous ghost is 'Harvey,' a heartbroken student of that era whose story staff share freely — guests report him mostly in the theater wing."
   },
   {
     "id": "H-040",
@@ -717,6 +756,7 @@ window.HAUNTED_STOPS = [
     "visit": "View from public water or legal public vantage",
     "access": "The historic lighthouse is privately owned. Do not enter or approach private property. Island roads are mostly unpaved and conditions vary.",
     "official": "https://www.history.uscg.mil/Browse-by-Topic/Assets/Land/Lighthouses-Light-Stations/Article/1900384/bois-blanc-island-light/",
-    "folklore": "https://www.us-lighthouses.com/bois-blanc-island-lighthouse"
+    "folklore": "https://www.us-lighthouses.com/bois-blanc-island-lighthouse",
+    "history": "A light was first established on Bois Blanc in 1829 — one of the earliest on the Great Lakes — and the surviving 1867 tower replaced earlier ones claimed by storm and erosion. Its most dramatic true story belongs to an early keeper's daughter who reputedly kept the light burning alone through a storm after her father was lost crossing the ice. Deactivated in the 1920s, it's now a private residence: view respectfully from the road or shore."
   }
 ];
