@@ -2193,3 +2193,82 @@ body.elsie-map-active #bottomDrawer { display: none; }
   border-color: #5a3b1e;
 }
 .katrina-quest-popup .elsie-popup-card small { color: #a35d2d; }
+
+/* Jules: cartoon popup, big touch targets, minimal reading */
+.maplibregl-popup.jules-popup .maplibregl-popup-content {
+  background: #eaf3ff;
+  border-color: #10265c;
+  border-radius: 20px;
+}
+.jules-popup-card { text-align: center; }
+.jules-popup-emoji { font-size: 2.6rem; line-height: 1.1; }
+.jules-popup-card strong { font-size: 1.05rem; display: block; margin: 4px 0; }
+.jules-popup-line { font-size: 0.95rem; margin: 4px 0; }
+.jules-popup-mission {
+  background: #ffd93b;
+  border: 2px solid #10265c;
+  border-radius: 12px;
+  padding: 7px 9px;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.jules-popup-actions { justify-content: center; }
+.jules-popup-actions button, .jules-popup-actions a {
+  font-size: 1.5rem;
+  min-width: 54px;
+  min-height: 48px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.jules-adult-notes { text-align: left; font-size: 0.8rem; margin-top: 8px; }
+.jules-adult-notes summary { cursor: pointer; font-weight: 600; }
+
+/* Jules games */
+.jules-games { text-align: center; }
+.jules-games h4 { font-size: 1.15rem; margin: 12px 0 4px; }
+.jules-ttt-status { font-weight: 700; margin: 6px 0; }
+.jules-ttt-board {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  gap: 8px;
+  justify-content: center;
+  margin: 8px 0;
+}
+.jules-ttt-cell {
+  width: 72px;
+  height: 72px;
+  font-size: 2rem;
+  border: 3px solid #10265c;
+  border-radius: 14px;
+  background: #fffdf7;
+}
+.jules-ttt-cell:disabled { opacity: 1; }
+.jules-ispy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(60px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+.jules-ispy-item {
+  font-size: 1.7rem;
+  padding: 10px 4px;
+  border: 3px solid #10265c;
+  border-radius: 14px;
+  background: #fffdf7;
+}
+.jules-ispy-item.is-found { background: #a5eab9; }
+.jules-game-reset {
+  border: 2px solid #10265c;
+  border-radius: 999px;
+  background: #ffd93b;
+  padding: 8px 16px;
+  font-weight: 700;
+  margin: 6px 0 4px;
+}
+.jules-games-chip { font-size: 1rem; }
+
+/* GPS auto toggle fab */
+.elsie-gps-fab.is-on { background: #d9f2e2; border-color: #1d7a43; }

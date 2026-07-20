@@ -5862,6 +5862,7 @@
       tripLeg: "day1",
       includeIndianaDunes: true,
       completedStops: {},
+      gpsAutoOn: true,
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5906,6 +5907,7 @@
     state.draftPhotos ||= [];
     state.visitedStops ||= {};
     state.completedStops ||= {};
+    if (typeof state.gpsAutoOn !== "boolean") state.gpsAutoOn = true;
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -6729,6 +6731,24 @@
         return { ...badge, title, description, required };
       });
     }
+    if (activeProfile === "jules") {
+      const julesSet = {
+        "great-lakes": ["Big Water", "See 3 Great Lakes places.", 3],
+        "sand-dune-explorer": ["Sand Mountain", "Visit Indiana Dunes.", 1],
+        "island-explorer": ["Island Hero", "Reach Bois Blanc Island.", 1],
+        "mackinac-bridge": ["Mega Bridge", "Cross or spot the Mackinac Bridge.", 1],
+        "lighthouse-explorer": ["Light Tower", "Spot lighthouses.", 2],
+        "photo-memory": ["Photo Mission", "Take a trip photo.", 1],
+        "nature-explorer": ["Animal Tracker", "Collect parks and animal stops.", 3],
+        "museum-explorer": ["Machine Master", "Visit machine and museum stops.", 3],
+        "roadside-oddity": ["Super Spotter", "Find 3 weird and wonderful stops.", 3],
+        "dark-sky-observer": ["Star Captain", "Look at the night sky.", 1]
+      };
+      return adventureBadges.filter((badge) => julesSet[badge.id]).map((badge) => {
+        const [title, description, required] = julesSet[badge.id];
+        return { ...badge, title, description, required };
+      });
+    }
     if (activeProfile === "eliette") {
       const elietteSet = {
         "roadside-oddity": ["Tiny Treasure Hunter", "Find 3 stops with a small detail worth remembering.", 3],
@@ -7381,11 +7401,12 @@
       if (isKatrina) return ["EXPLORE BOIS BLANC", "History, hidden facts, and island mysteries"];
       if (isEmma) return ["EXPLORE BOIS BLANC", "How island life works: ferry, store, beach, and games"];
       if (isEliette) return ["EXPLORE BOIS BLANC", "Tiny treasures, shiny rocks, and hidden details"];
+      if (activeProfile === "jules") return ["ISLAND MISSION", "🏝️ 🚤 🐾 ⭐"];
       return ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
     }
     if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
     if (state.phase === "pretrip") {
-      const name = isKatrina ? "KATRINA'S" : isEmma ? "EMMA'S" : isEliette ? "ELIETTE'S" : "ELSIE'S";
+      const name = isKatrina ? "KATRINA'S" : isEmma ? "EMMA'S" : isEliette ? "ELIETTE'S" : activeProfile === "jules" ? "CAPTAIN JULES'" : "ELSIE'S";
       return [`${name} ROUTE`, "Merrillville first, Indiana Dunes next, then the ferry"];
     }
     const subtitle = target === data.route.destinationTargets.indianaDunes
@@ -7393,6 +7414,7 @@
       : isKatrina ? "Smart facts and quiz-the-car energy along the way"
       : isEmma ? "Real life, sports, and why-people-go-here energy"
       : isEliette ? "Cool facts, hidden details, and the occasional gross truth"
+      : activeProfile === "jules" ? "🏁 🏎️ 🦸 ⚾ 🐾"
       : "Live route context without the clutter";
     return [`${target.label.toUpperCase()} IS NEXT`, subtitle];
   }
@@ -7470,6 +7492,9 @@
     const islandChip = island ? `
       <div id="elsieRadar" class="elsie-float-bottom" aria-label="Elsie quick controls">
         <button type="button" class="elsie-chip" data-elsie-sheet="island">Island Ideas · ${elsieIslandActivities().board.length}</button>
+      </div>` : activeProfile === "jules" ? `
+      <div id="elsieRadar" class="elsie-float-bottom" aria-label="Jules quick controls">
+        <button type="button" class="elsie-chip jules-games-chip" data-elsie-sheet="julesgames" aria-label="Games">🎮 Games</button>
       </div>` : "";
     return `${islandChip}
       <button type="button" class="elsie-badge-tracker" data-elsie-sheet="badges" aria-label="Badges ${summary.earned} of ${summary.total} earned">
@@ -7481,7 +7506,7 @@
 
   /* ===================== ELSIE MAP EXPERIENCE ===================== */
 
-  const MAP_PROFILES = ["elsie", "katrina", "emma", "eliette"];
+  const MAP_PROFILES = ["elsie", "katrina", "emma", "eliette", "jules"];
   function isMapProfile(p = activeProfile) {
     return MAP_PROFILES.includes(p);
   }
@@ -7615,10 +7640,43 @@
     }
   }
 
+  const JULES_ICON_OVERRIDES = {};
+  const JULES_ICON_TYPES = ["ring", "flag", "ball", "stadium", "hero", "machine", "paw"];
+
+  function getJulesIconType(stop) {
+    if (!stop) return "";
+    const override = JULES_ICON_OVERRIDES[stop.id] || JULES_ICON_OVERRIDES[stop.title];
+    if (override) return override;
+    const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""} ${stop.profiles?.jules || ""}`.toLowerCase();
+    const isBattle = /battle|battlefield|\bfort\b|\bwar\b|massacre/.test(text);
+    if (!isBattle && /speedway|raceway|racetrack|race|dragst/.test(text)) return "flag";
+    if (!isBattle && /stadium|ballpark|arena|\bgym\b/.test(text)) return "stadium";
+    if (/train|locomotive|railroad|boat|ship|ferry|plane|aviation|truck|machine|engine|factory|bridge|lock/.test(text)) return "machine";
+    if (/dino|fossil|animal|zoo|wildlife|paw|farm|creature|bird/.test(text)) return "paw";
+    if (/soccer|baseball|basketball|hockey|football|\bball\b|sport/.test(text)) return "ball";
+    if (isBattle || /hero|castle|tower|lighthouse/.test(text)) return "hero";
+    return "ring";
+  }
+
+  function julesIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#10265c" stroke-width="4.5"/>${inner}</svg>`;
+    switch (type) {
+      case "ring": return base("#1c4fd6", `<circle cx="32" cy="32" r="12" fill="none" stroke="#ffd93b" stroke-width="7"/><circle cx="32" cy="32" r="12" fill="none" stroke="#b8860b" stroke-width="1.6"/><path d="M46 20l3 2M49 30l4 1M46 42l3-2" stroke="#9fd8ff" stroke-width="3" stroke-linecap="round"/>`);
+      case "flag": return base("#e23b3b", `<path d="M24 14v36" stroke="#10265c" stroke-width="4" stroke-linecap="round"/><path d="M24 16h22l-5 7 5 7H24z" fill="#fffdf7" stroke="#10265c" stroke-width="3" stroke-linejoin="round"/><path d="M28 16h5v5h-5zM38 16h5v5h-5zM33 21h5v5h-5zM28 26h5v4h-5zM38 26h5v4h-5z" fill="#10265c"/>`);
+      case "ball": return base("#f6a821", `<circle cx="32" cy="32" r="14" fill="#fffdf7" stroke="#10265c" stroke-width="3.4"/><path d="M22 24q10 4 20 0M22 40q10-4 20 0M32 18v28" stroke="#e23b3b" stroke-width="2.6" fill="none"/>`);
+      case "stadium": return base("#2f9e5b", `<path d="M14 30a18 9 0 0 1 36 0v6a18 9 0 0 1-36 0z" fill="#eafbef" stroke="#10265c" stroke-width="3"/><ellipse cx="32" cy="30" rx="18" ry="9" fill="#a5eab9" stroke="#10265c" stroke-width="3"/><ellipse cx="32" cy="30" rx="8.5" ry="4" fill="#57d07d" stroke="#10265c" stroke-width="2.4"/><path d="M18 26v8M26 23v10M38 23v10M46 26v8" stroke="#10265c" stroke-width="1.8"/>`);
+      case "hero": return base("#5a34c8", `<path d="M32 14l14 5v12c0 10-6 16-14 19-8-3-14-9-14-19V19z" fill="#8fd0ff" stroke="#10265c" stroke-width="3.4" stroke-linejoin="round"/><path d="M32 22l3 6.4 7 .8-5.2 4.6 1.5 6.8L32 37l-6.3 3.6 1.5-6.8L22 29.2l7-.8z" fill="#ffd93b" stroke="#10265c" stroke-width="2"/>`);
+      case "machine": return base("#4a5568", `<rect x="16" y="26" width="24" height="14" rx="3" fill="#8fd0ff" stroke="#10265c" stroke-width="3"/><rect x="38" y="30" width="10" height="10" rx="2" fill="#e23b3b" stroke="#10265c" stroke-width="3"/><circle cx="23" cy="44" r="4.6" fill="#10265c"/><circle cx="23" cy="44" r="1.8" fill="#fffdf7"/><circle cx="41" cy="44" r="4.6" fill="#10265c"/><circle cx="41" cy="44" r="1.8" fill="#fffdf7"/><path d="M12 33h-3M12 38h-4" stroke="#9fd8ff" stroke-width="2.6" stroke-linecap="round"/>`);
+      case "paw": return base("#c98544", `<ellipse cx="32" cy="38" rx="8" ry="6.4" fill="#fff2d9" stroke="#10265c" stroke-width="3"/><circle cx="23" cy="28" r="3.8" fill="#fff2d9" stroke="#10265c" stroke-width="2.6"/><circle cx="32" cy="24" r="3.8" fill="#fff2d9" stroke="#10265c" stroke-width="2.6"/><circle cx="41" cy="28" r="3.8" fill="#fff2d9" stroke="#10265c" stroke-width="2.6"/>`);
+      default: return base("#1c4fd6", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#10265c" stroke-width="3"/>`);
+    }
+  }
+
   function mapIconType(stop, profile = activeProfile) {
     if (profile === "katrina") return getKatrinaIconType(stop);
     if (profile === "emma") return getEmmaIconType(stop);
     if (profile === "eliette") return getElietteIconType(stop);
+    if (profile === "jules") return getJulesIconType(stop);
     return getElsieIconType(stop);
   }
 
@@ -7626,6 +7684,7 @@
     if (profile === "katrina") return katrinaIconSvg(type);
     if (profile === "emma") return emmaIconSvg(type);
     if (profile === "eliette") return elietteIconSvg(type);
+    if (profile === "jules") return julesIconSvg(type);
     return elsieIconSvg(type);
   }
 
@@ -7633,6 +7692,7 @@
     if (profile === "katrina") return KATRINA_ICON_TYPES;
     if (profile === "emma") return EMMA_ICON_TYPES;
     if (profile === "eliette") return ELIETTE_ICON_TYPES;
+    if (profile === "jules") return JULES_ICON_TYPES;
     return ELSIE_ICON_TYPES;
   }
 
@@ -7985,6 +8045,8 @@
     if (emmaThemed) return openEmmaRoutePopup(map, emmaThemed, coordinates);
     const quest = katrinaQuestMatchForStop(item);
     if (quest) return openKatrinaQuestPopup(map, quest, coordinates);
+    const speedStop = julesMatchForStop(item);
+    if (speedStop) return openJulesPopup(map, speedStop, coordinates);
     const profile = activeProfile;
     const iconType = mapIconType(item, profile);
     const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
@@ -8247,6 +8309,160 @@
         </div>`)
       .addTo(map);
   }
+
+  /* ---------- Jules speed hero layer + games ---------- */
+
+  function julesRouteStops() {
+    return Array.isArray(window.JULES_STOPS) ? window.JULES_STOPS : [];
+  }
+
+  function julesMatchForStop(item) {
+    if (activeProfile !== "jules" || !item) return null;
+    const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const title = norm(item.title || item.name);
+    return julesRouteStops().find((stop) =>
+      norm(stop.title) === title ||
+      (Number.isFinite(item.lat) && haversineMiles({ lat: item.lat, lon: item.lon }, { lat: stop.lat, lon: stop.lon }) < 0.35)
+    ) || null;
+  }
+
+  function addJulesRouteLayer(map) {
+    if (!map || activeProfile !== "jules" || map.getLayer("jules-route-layer")) return;
+    const stops = julesRouteStops();
+    if (!stops.length) return;
+    if (!map.getSource("jules-route-stops")) {
+      map.addSource("jules-route-stops", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: stops.map((stop) => ({
+            type: "Feature",
+            properties: { id: stop.id, heroIcon: `jules-${stop.icon}` },
+            geometry: { type: "Point", coordinates: [stop.lon, stop.lat] }
+          }))
+        }
+      });
+    }
+    map.addLayer({
+      id: "jules-route-layer",
+      type: "symbol",
+      source: "jules-route-stops",
+      layout: {
+        "icon-image": ["get", "heroIcon"],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.4, 6, 0.56, 9, 0.68, 12, 0.78],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "jules-route-layer", (event) => {
+      const stop = julesRouteStops().find((item) => item.id === event.features[0].properties.id);
+      if (stop) openJulesPopup(map, stop, event.features[0].geometry.coordinates);
+    });
+    map.on("mouseenter", "jules-route-layer", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "jules-route-layer", () => { map.getCanvas().style.cursor = ""; });
+  }
+
+  function registerJulesGpsImage(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("jules-gps-car"))) return resolve();
+      const image = new Image(112, 112);
+      image.onload = () => {
+        try { if (!map.hasImage("jules-gps-car")) map.addImage("jules-gps-car", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/jules-gps.png";
+    });
+  }
+
+  function openJulesPopup(map, stop, coordinates) {
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    const preview = byId("homeAttractionPreview");
+    if (preview) { preview.hidden = true; preview.innerHTML = ""; }
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 18, className: "elsie-marker-popup jules-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card jules-popup-card">
+          <div class="jules-popup-emoji" aria-hidden="true">${stop.emoji}</div>
+          <strong>${escapeHtml(stop.title)}</strong>
+          <p class="jules-popup-line">${escapeHtml(stop.why.split(",")[0].split(".")[0])}.</p>
+          <p class="jules-popup-mission">🎯 ${escapeHtml(stop.mission)}</p>
+          ${stop.noise && /loud/i.test(stop.noise) ? `<p class="jules-popup-line">🙉 Loud!</p>` : ""}
+          <div class="elsie-popup-actions jules-popup-actions">
+            <button type="button" data-shortlist="${escapeHtml(stop.title)}" data-category="${escapeHtml(stop.theme)}" data-url="${escapeHtml(stop.official)}" aria-label="Save this stop">⭐</button>
+            <button type="button" data-visited-stop="${escapeHtml(stop.title)}" aria-label="Mark visited">✅</button>
+            <a href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener" aria-label="Navigate">🗺️</a>
+          </div>
+          <details class="jules-adult-notes"><summary>Grown-up notes</summary><p>${escapeHtml(stop.adultNotes)}${stop.noise ? ` ${escapeHtml(stop.noise)}.` : ""}</p><a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a></details>
+        </div>`)
+      .addTo(map);
+  }
+
+  /* ----- Jules games (Tic-Tac-Toe + I Spy) ----- */
+
+  let julesTicTacToe = { board: Array(9).fill(""), turn: "🔵", winner: null };
+  const JULES_ISPY_ITEMS = ["🚛", "🚜", "🏍️", "🚌", "🐄", "🐎", "🚂", "⛽", "🌽", "💧", "🚧", "🇺🇸"];
+  let julesISpyFound = new Set();
+
+  function julesCheckWinner(board) {
+    const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for (const [a,b,c] of lines) {
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+    }
+    return board.every(Boolean) ? "tie" : null;
+  }
+
+  function renderJulesGamesSheet() {
+    const t = julesTicTacToe;
+    const status = t.winner === "tie" ? "🤝 Tie!" : t.winner ? `${t.winner} wins! 🎉` : `${t.turn}'s turn`;
+    return `${elsieSheetHead("🎮 Games")}
+      <div class="jules-games">
+        <h4>❌⭕ Tic-Tac-Toe</h4>
+        <p class="jules-ttt-status">${status}</p>
+        <div class="jules-ttt-board" role="grid" aria-label="Tic tac toe board">
+          ${t.board.map((cell, index) => `<button type="button" class="jules-ttt-cell" data-jules-ttt="${index}" ${cell || t.winner ? "disabled" : ""} aria-label="Square ${index + 1}">${cell || ""}</button>`).join("")}
+        </div>
+        <button type="button" class="jules-game-reset" data-jules-ttt-reset>🔄 New game</button>
+        <h4>👀 I Spy</h4>
+        <p class="jules-ttt-status">Tap it when you spot it out the window!</p>
+        <div class="jules-ispy-grid">
+          ${JULES_ISPY_ITEMS.map((emoji) => `<button type="button" class="jules-ispy-item ${julesISpyFound.has(emoji) ? "is-found" : ""}" data-jules-ispy="${emoji}" aria-label="I spy item">${emoji}${julesISpyFound.has(emoji) ? "✔️" : ""}</button>`).join("")}
+        </div>
+        <p class="jules-ttt-status">${julesISpyFound.size}/${JULES_ISPY_ITEMS.length} found${julesISpyFound.size === JULES_ISPY_ITEMS.length ? " — 🏆 ALL FOUND!" : ""}</p>
+        <button type="button" class="jules-game-reset" data-jules-ispy-reset>🔄 Start over</button>
+      </div>`;
+  }
+
+  document.addEventListener("click", (event) => {
+    const cell = event.target.closest("[data-jules-ttt]");
+    if (cell) {
+      const index = Number(cell.dataset.julesTtt);
+      if (!julesTicTacToe.board[index] && !julesTicTacToe.winner) {
+        julesTicTacToe.board[index] = julesTicTacToe.turn;
+        julesTicTacToe.winner = julesCheckWinner(julesTicTacToe.board);
+        julesTicTacToe.turn = julesTicTacToe.turn === "🔵" ? "🟡" : "🔵";
+        openElsieSheet("julesgames");
+      }
+      return;
+    }
+    if (event.target.closest("[data-jules-ttt-reset]")) {
+      julesTicTacToe = { board: Array(9).fill(""), turn: "🔵", winner: null };
+      openElsieSheet("julesgames");
+      return;
+    }
+    const spy = event.target.closest("[data-jules-ispy]");
+    if (spy) {
+      const emoji = spy.dataset.julesIspy;
+      julesISpyFound.has(emoji) ? julesISpyFound.delete(emoji) : julesISpyFound.add(emoji);
+      openElsieSheet("julesgames");
+      return;
+    }
+    if (event.target.closest("[data-jules-ispy-reset]")) {
+      julesISpyFound = new Set();
+      openElsieSheet("julesgames");
+      return;
+    }
+  });
 
   /* ---------- Emma sports / fashion / storm layer ---------- */
 
@@ -8684,6 +8900,7 @@
     if (type === "eta") return `${elsieSheetHead("Route + ETA")}${elsieRouteTrackerMarkup()}`;
     if (type === "picks") return renderElsiePicksSheet();
     if (type === "island") return renderElsieIslandSheet();
+    if (type === "julesgames") return renderJulesGamesSheet();
     if (type === "radar") return renderElsieRadarSheet();
     if (type === "badges") return renderElsieBadgeSheet();
     if (type === "breadcrumb") return renderElsieTrailSheet();
@@ -8911,6 +9128,9 @@
     const elsie = isMapProfile();
     const [elsieTitle, elsieSubtitle] = elsieHeaderCopy();
     document.body.classList.toggle("elsie-map-active", elsie);
+    if (elsie && state.gpsAutoOn && watchId === null && navigator.geolocation) {
+      window.setTimeout(() => { if (state.gpsAutoOn && watchId === null) useLocation(); }, 400);
+    }
     container.innerHTML = elsie ? `
       <div class="elsie-map-shell">
         <div id="homeClusterMap" class="home-cluster-map maplibre-canvas elsie-map-canvas" role="application" aria-label="${currentProfile().name}'s route map with ${attractions.length} trip stops">
@@ -8925,6 +9145,7 @@
         <div class="elsie-float-right">
           <button type="button" class="elsie-map-fab ${state.radarEnabled ? "is-on" : ""}" data-elsie-sheet="radar" aria-haspopup="dialog" aria-label="Weather radar controls">🌦</button>
           <button type="button" class="elsie-map-fab" data-elsie-sheet="breadcrumb" aria-haspopup="dialog" aria-label="Sasquatch trail controls">👣</button>
+          <button type="button" class="elsie-map-fab elsie-gps-fab ${state.gpsAutoOn ? "is-on" : ""}" data-gps-auto-toggle aria-pressed="${state.gpsAutoOn}" aria-label="GPS tracking ${state.gpsAutoOn ? "on" : "off"}">📍</button>
         </div>
         ${renderElsieRadarMarkup()}
         <div id="elsieSheetScrim" class="elsie-sheet-scrim" hidden></div>
@@ -9064,6 +9285,7 @@
           if (activeProfile === "elsie") registerElsieGhostIcon(homeMap).then(() => addElsieHauntedLayer(homeMap));
           if (activeProfile === "emma") registerEmmaThemeIcons(homeMap).then(() => addEmmaRouteLayer(homeMap));
           if (activeProfile === "katrina") registerKatrinaHauntIcons(homeMap).then(() => addKatrinaQuestLayer(homeMap));
+          if (activeProfile === "jules") addJulesRouteLayer(homeMap);
         });
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
@@ -9126,12 +9348,24 @@
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [state.lastPosition.lon, state.lastPosition.lat] } }
         });
-        homeMap.addLayer({
-          id: "current-location-dot",
-          type: "circle",
-          source: "current-location",
-          paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
-        });
+        if (activeProfile === "jules") {
+          registerJulesGpsImage(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "jules-gps-car", "icon-size": 0.42, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
+        } else {
+          homeMap.addLayer({
+            id: "current-location-dot",
+            type: "circle",
+            source: "current-location",
+            paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+          });
+        }
       }
       homeMap.on("click", "home-clusters", (event) => {
         const features = homeMap.queryRenderedFeatures(event.point, { layers: ["home-clusters"] });
@@ -9488,6 +9722,11 @@
       const quest = katrinaQuestMatchForStop(item);
       if (quest && homeMap) {
         openKatrinaQuestPopup(homeMap, quest, [item.lon, item.lat]);
+        return;
+      }
+      const speedStop = julesMatchForStop(item);
+      if (speedStop && homeMap) {
+        openJulesPopup(homeMap, speedStop, [item.lon, item.lat]);
         return;
       }
       const preview = byId("homeAttractionPreview") || byId("exploreDetail");
@@ -11007,6 +11246,14 @@
     if (target.dataset.startGps !== undefined) {
       event.preventDefault();
       useLocation();
+    }
+    if (target.dataset.gpsAutoToggle !== undefined) {
+      event.preventDefault();
+      state.gpsAutoOn = !state.gpsAutoOn;
+      saveState();
+      if (state.gpsAutoOn) useLocation();
+      else stopLocation();
+      renderHomeMapPanel();
     }
   }
 

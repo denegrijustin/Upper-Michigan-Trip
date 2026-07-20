@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v51-eliette-real-cool-facts";
+const CACHE_NAME = "elskatemm-trip-v52-jules-experience";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -10,6 +10,8 @@ const CORE_ASSETS = [
   "/haunted-stops.js",
   "/emma-stops.js",
   "/katrina-stops.js",
+  "/jules-stops.js",
+  "/jules-gps.png",
   "/manifest.json",
   "/icon.svg"
 ];
@@ -32,7 +34,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
   const appShell = ["/", "/index.html"].includes(url.pathname);
-  const staticAsset = ["/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/trip-stops.js", "/haunted-stops.js", "/emma-stops.js", "/katrina-stops.js", "/manifest.json", "/icon.svg"].includes(url.pathname);
+  const staticAsset = ["/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/trip-stops.js", "/haunted-stops.js", "/emma-stops.js", "/katrina-stops.js", "/jules-stops.js", "/jules-gps.png", "/manifest.json", "/icon.svg"].includes(url.pathname);
   if (appShell) {
     event.respondWith(
       fetch(event.request)
