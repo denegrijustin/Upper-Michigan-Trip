@@ -7842,6 +7842,8 @@
 
   function openElsieMarkerPopup(map, rawItem, coordinates) {
     const item = enrichStop(rawItem);
+    const haunted = hauntedMatchForStop(item);
+    if (haunted) return openElsieHauntedPopup(map, haunted, coordinates);
     const profile = activeProfile;
     const iconType = mapIconType(item, profile);
     const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
@@ -7896,6 +7898,16 @@
 
   function hauntedStops() {
     return Array.isArray(window.HAUNTED_STOPS) ? window.HAUNTED_STOPS : [];
+  }
+
+  function hauntedMatchForStop(item) {
+    if (activeProfile !== "elsie" || !item) return null;
+    const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const title = norm(item.title || item.name);
+    return hauntedStops().find((stop) =>
+      norm(stop.title) === title ||
+      (Number.isFinite(item.lat) && haversineMiles({ lat: item.lat, lon: item.lon }, { lat: stop.lat, lon: stop.lon }) < 0.35)
+    ) || null;
   }
 
   function elsieGhostIconSvg() {
@@ -8679,8 +8691,10 @@
           }, "home-unclustered-point");
         }
         syncBreadcrumbLayers(homeMap);
-        registerElsieIcons(homeMap).then(() => addElsieIconLayer(homeMap));
-        if (activeProfile === "elsie") registerElsieGhostIcon(homeMap).then(() => addElsieHauntedLayer(homeMap));
+        registerElsieIcons(homeMap).then(() => {
+          addElsieIconLayer(homeMap);
+          if (activeProfile === "elsie") registerElsieGhostIcon(homeMap).then(() => addElsieHauntedLayer(homeMap));
+        });
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
