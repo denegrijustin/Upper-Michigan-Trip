@@ -7690,7 +7690,144 @@
     "nails": "Everyday Life"
   };
 
+  const EMMA_STOP_FACTS = {
+    "P1-006": { // National WWI Museum and Memorial
+      whyGo: "It's America's official World War I museum — people come from all over the world because nowhere else tells this story as completely.",
+      sports: "Real girls' sports fact: just down the hill, Kansas City built CPKC Stadium in 2024 — the first stadium in the world ever built specifically for a women's professional team (the KC Current).",
+      funFact: "The glass bridge at the entrance crosses a field of 9,000 red poppies — each one stands for 1,000 soldiers who died in the war.",
+      discovery: "Kansas Citians raised over $2.5 million in just ten days in 1919 to build the Liberty Memorial — the whole city decided together that this hill was the spot.",
+      momDad: "Congress officially designated it the national WWI museum, and the view from the 217-foot Liberty Memorial Tower is the best skyline view in Kansas City."
+    },
+    "P1-007": { // Union Station Kansas City
+      whyGo: "It was once one of the busiest train stations in America — at its peak during WWII, about a million travelers a year passed through this one building.",
+      sports: "KC Current players and fans stream past here on match days — their CPKC Stadium (2024) was the first in the world purpose-built for a women's pro team.",
+      funFact: "The Grand Hall's ceiling is 95 feet high, and each of its three chandeliers weighs 3,500 pounds — as much as a car.",
+      discovery: "It opened in 1914; by the 1980s it was nearly abandoned, until voters in BOTH Missouri and Kansas approved the first two-state tax in U.S. history to restore it.",
+      momDad: "The 1999 restoration is one of the great building-rescue stories in the country — and there's a science center inside."
+    },
+    "P1-008": { // Negro Leagues Baseball Museum
+      whyGo: "This is the only museum in the world dedicated to the Negro Leagues — the story of players who were shut out of the majors and built something legendary anyway.",
+      sports: "Real girls' sports fact: three women actually played professional Negro Leagues baseball with the men — Toni Stone, Mamie 'Peanut' Johnson, and Connie Morgan. Look for them inside.",
+      funFact: "The museum sits at 18th & Vine, the same jazz-and-baseball neighborhood where the leagues were founded in 1920 at a YMCA a few blocks away.",
+      discovery: "It started in 1990 in a tiny one-room office, largely thanks to former player Buck O'Neil telling the story until the world finally listened.",
+      momDad: "Buck O'Neil is one of the great storytellers in sports history — his statue is inside, and the field of bronze players is unforgettable."
+    },
+    "P1-009": { // Arabia Steamboat Museum
+      whyGo: "You get to see 200 tons of frontier cargo — dishes, tools, boots, even preserved food — from a steamboat that sank in 1856.",
+      sports: "No teams here, but excavating the Arabia took the strength of a whole crew digging 45 feet down through a winter.",
+      funFact: "The pickles recovered from the wreck were still sealed — and reportedly still edible — after 130 years underground.",
+      discovery: "This one's amazing: the Missouri River moved over time, so a family found the sunken boat in 1988 under a Kansas CORNFIELD, half a mile from the water.",
+      momDad: "It's one of the best-preserved time capsules of 1850s frontier life anywhere — everyday objects, not fancy museum pieces."
+    },
+    "P1-023": { // Gateway Arch National Park
+      whyGo: "At 630 feet, it's the tallest arch in the world and the tallest monument in the U.S. — and you can ride to the top.",
+      sports: "St. Louis is one of America's oldest soccer cities — its youth leagues helped supply the famous 1950 U.S. World Cup team that shocked England.",
+      funFact: "The Arch is exactly as wide as it is tall: 630 feet — and it can sway up to 18 inches in high wind, on purpose.",
+      discovery: "Architect Eero Saarinen won a 1947 design competition to build a monument to westward expansion; it was finished October 28, 1965.",
+      momDad: "The tram pods to the top are tiny egg-shaped capsules from the 1960s — the engineering is half the fun."
+    },
+    "P1-024": { // City Museum St. Louis
+      whyGo: "It's a giant climbing playground built inside an old shoe factory — airplanes, caves, tunnels, and a 10-story slide.",
+      sports: "This place IS the sport — kids treat it like a full-body obstacle course. Wear grippy shoes.",
+      funFact: "There's a real school bus hanging off the roof and a Ferris wheel ON the roof.",
+      discovery: "Artist Bob Cassilly opened it in 1997, building almost everything from salvaged city pieces — old bridges, chimneys, tiles, and factory parts.",
+      momDad: "It's consistently ranked among the most creative reuse-of-a-building projects in the country — and adults are absolutely allowed to climb."
+    },
+    "P1-027": { // Cahokia Mounds
+      whyGo: "A thousand years ago this was the biggest city north of Mexico — around 1100 AD, more people lived here than in London at the time.",
+      sports: "Real ancient sports fact: Cahokians played a game called chunkey, hurling spears at a rolling stone disc — crowds gathered to watch, like a stadium sport.",
+      funFact: "Monks Mound is the largest earthen mound in the Americas — people carried roughly 15 million baskets of soil to build it, one basket at a time.",
+      discovery: "Native nations always knew of the mounds; archaeologists later confirmed the city's massive scale, and UNESCO named it a World Heritage Site in 1982.",
+      momDad: "It's one of only about two dozen UNESCO World Heritage Sites in the entire U.S. — same list as the Grand Canyon and Statue of Liberty."
+    },
+    "P1-032": { // Indiana Dunes National Park
+      whyGo: "Beaches, forests, wetlands, and 15,000 acres of dunes all crammed together — it became America's 61st national park in 2019.",
+      sports: "Real one: the Lake Michigan beaches here are a genuine beach-volleyball spot in summer — nets go up right on the sand.",
+      funFact: "The sand actually 'sings' — dragging your feet on dry dune sand makes a squeaky whistling sound because of the quartz grains.",
+      discovery: "Scientist Henry Cowles studied plant life here in the 1890s and basically helped invent the science of ecology on these dunes.",
+      momDad: "Acre for acre it's one of the most biodiverse parks in the national park system — over 1,100 plant species in a park you can cross in a day."
+    },
+    "P2-009": { // Bronner's Christmas Wonderland
+      whyGo: "It's the world's largest Christmas store — open and fully decorated 361 days a year.",
+      sports: "Frankenmuth's other claim: it hosts one of Michigan's biggest youth volleyball and cheer tournament scenes at the local sports complex.",
+      funFact: "The salesroom covers about 2.2 acres — roughly the size of one and a half football fields — with over 6,000 ornament styles.",
+      discovery: "Wally Bronner started it in 1945 painting signs and displays for nearby towns, and it just never stopped growing.",
+      momDad: "Outside there's a replica of the Silent Night Chapel from Oberndorf, Austria — where that carol was first sung in 1818."
+    },
+    "P2-010": { // Hartwick Pines State Park
+      whyGo: "This is one of the last places in Michigan where you can walk through old-growth white pines that loggers never cut — some are around 350 years old.",
+      sports: "Grayling, the town next door, hosts the start of the AuSable River Canoe Marathon — one of the longest, toughest canoe races in North America.",
+      funFact: "Michigan's lumber era cut down almost all of the state's original forest; these 49 acres survived essentially by luck and one family's donation.",
+      discovery: "Karen Hartwick donated the land in 1927 to honor her husband — on the condition the big trees never be cut.",
+      momDad: "The logging museum shows how white pine from forests like this literally built Chicago and the Midwest's cities."
+    },
+    "P2-015": { // Colonial Michilimackinac
+      whyGo: "It's a reconstructed 1715 fur-trading fort where costumed staff fire muskets and cook like it's the 1770s.",
+      sports: "Real one: voyageurs who paddled here raced their canoes for sport and bragging rights — a loaded canoe crew could cover 50+ miles a day.",
+      funFact: "Archaeologists have been digging at this site every summer since 1959 — one of the longest-running archaeology programs in North America.",
+      discovery: "The French built it in 1715 to control the fur trade at the Straits; the British took it over, then moved the whole fort to Mackinac Island.",
+      momDad: "You can often watch the live archaeological dig in progress — real artifacts coming out of the ground."
+    },
+    "P2-016": { // Old Mackinac Point Lighthouse
+      whyGo: "Nicknamed the 'Castle of the Straits,' this 1892 lighthouse guided ships through some of the trickiest water on the Great Lakes.",
+      sports: "Every Labor Day, tens of thousands of people — kids included — walk the 5-mile Mackinac Bridge right next door.",
+      funFact: "It was retired in 1957 for a funny reason: the brand-new Mackinac Bridge's lights were bright enough to guide ships, making the lighthouse unnecessary.",
+      discovery: "The Straits were so dangerous for ships that Congress funded a fog signal here first (1890) — the light tower followed two years later.",
+      momDad: "You can climb the tower for one of the best straight-on views of the Mackinac Bridge anywhere."
+    },
+    "P2-017": { // Mackinac Bridge
+      whyGo: "The 'Mighty Mac' is 5 miles long — when it opened in 1957 it finally connected Michigan's two peninsulas after people had talked about it since the 1880s.",
+      sports: "The Annual Bridge Walk every Labor Day draws tens of thousands of walkers — one of the biggest walking events in America.",
+      funFact: "The bridge is built to sway: in high winds the roadway at the center can move up to 35 feet side to side, completely safely.",
+      discovery: "Engineers said for decades it couldn't be done — designer David Steinman finally proved them wrong, and it opened November 1, 1957.",
+      momDad: "It's the longest suspension bridge between anchorages in the Western Hemisphere — and driving it is the whole show."
+    },
+    "P2-019": { // Headlands International Dark Sky Park
+      whyGo: "It's one of the darkest publicly accessible night skies in the Midwest — on clear nights you can see the Milky Way with bare eyes.",
+      sports: "Night-hike challenge: walk the trail to the beach by starlight — your eyes take about 30 minutes to fully adjust to the dark.",
+      funFact: "It was named an International Dark Sky Park in 2011 — one of the first ten places in the world to earn that title.",
+      discovery: "Locals realized the Straits' low light pollution was itself worth protecting — so they preserved darkness the way parks usually preserve land.",
+      momDad: "This far north, the aurora borealis (northern lights) makes genuine appearances — worth checking the forecast the night you're near."
+    },
+    "P2-025": { // Plaunt Transportation Ferry
+      whyGo: "This little ferry is the island's lifeline — groceries, mail, cars, and people all cross on it.",
+      sports: "Island kids ride this same ferry to mainland games and practices — imagine your whole team commuting by boat.",
+      funFact: "The ferry Kristen D carries up to 16 vehicles — and in winter, when the Straits freeze, islanders drive an ICE ROAD marked with old evergreen trees instead.",
+      discovery: "The Plaunt family has been running boats between Cheboygan and Bois Blanc for generations — it's a true family operation.",
+      momDad: "Bois Blanc didn't even have electricity until 1964, when a cable was run under the water — this crossing is how everything reaches the island."
+    },
+    "P3-001": { // Soo Locks
+      whyGo: "Giant freighters up to 1,000 feet long get raised and lowered 21 feet right in front of you — Lake Superior sits that much higher than Lake Huron.",
+      sports: "Real UP fact: high school teams up here routinely travel 2-3 hours EACH WAY for games — sports commitment on a different level.",
+      funFact: "About 7,000 vessel passages happen here a year, carrying more cargo tonnage than almost any other lock system on Earth.",
+      discovery: "Before the first lock opened in 1855, ships had to be dragged around the St. Marys rapids on rollers — it could take weeks.",
+      momDad: "The free observation platform puts you close enough to wave at freighter crews — check the shipping schedule for arrival times."
+    },
+    "P3-002": { // Tahquamenon Falls
+      whyGo: "The Upper Falls is one of the largest waterfalls east of the Mississippi — nearly 200 feet across with up to 50,000 gallons a second in spring.",
+      sports: "The river below is a real paddling route — and in winter this whole park becomes a snowshoe and cross-country ski destination.",
+      funFact: "The water is root-beer brown — not dirty, but stained by natural tannins from cedar and hemlock swamps upstream. The foam is natural too.",
+      discovery: "The river appears in Longfellow's 1855 poem 'The Song of Hiawatha' — Hiawatha builds his canoe by these waters.",
+      momDad: "There's a brewery literally inside the state park at the Upper Falls — one of the only ones in any state park in America."
+    },
+    "P3-003": { // Great Lakes Shipwreck Museum / Whitefish Point
+      whyGo: "This coast is called the 'Graveyard of the Great Lakes' — about 200 ships went down near here, and this museum tells their stories.",
+      sports: "Endurance fact: Whitefish Point is also a world-class bird migration site — hawk counters here log tens of thousands of raptors each spring.",
+      funFact: "The actual bronze bell of the Edmund Fitzgerald — the famous freighter lost with all 29 crew on November 10, 1975 — was recovered in 1995 and is displayed here.",
+      discovery: "The Fitzgerald sank just 17 miles from this point; the wreck was located within days by aircraft, resting 530 feet down.",
+      momDad: "If you know the Gordon Lightfoot song, standing in front of that bell is genuinely moving."
+    },
+    "P2-026": { // Bois Blanc Township
+      whyGo: "About 70 people live here year-round — visiting shows what real off-grid island life looks like.",
+      sports: "Movement is the sport here: no paved roads means bikes, ORVs, kayaks, and walking are how everyone gets around.",
+      funFact: "The island still operates a one-room schoolhouse — one of the last in Michigan.",
+      discovery: "Electricity only reached the island in 1964, through a long underwater cable from the mainland.",
+      momDad: "In hard winters an ice road forms to the mainland, marked with evergreen trees frozen into the ice — islanders drive across the lake."
+    }
+  };
+
   function emmaPopupContent(item) {
+    const curated = EMMA_STOP_FACTS[item.id];
     const seed = item.id || item.title || "stop";
     const category = (item.category || "").toLowerCase();
     const angle = item.profiles?.emma || "";
@@ -7718,6 +7855,16 @@
       `What did the GPS say about ${item.title}? "I've been re-routing everyone here for years."`
     ];
     const joke = jokeBank[stableIndex(`${seed}-joke`, jokeBank.length)];
+    if (curated) {
+      return {
+        whyGo: curated.whyGo,
+        sports: curated.sports,
+        funFact: curated.funFact,
+        discovery: curated.discovery,
+        momDad: curated.momDad,
+        joke
+      };
+    }
     return { whyGo, sports, funFact, discovery, momDad, joke };
   }
 
