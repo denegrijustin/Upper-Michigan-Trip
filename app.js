@@ -11332,9 +11332,17 @@
           updatePosition(position);
           if (fab) fab.textContent = "📍";
         },
-        () => {
+        (error) => {
           state.gpsStatus = "Unavailable";
           if (fab) fab.textContent = "📍";
+          const reason = !window.isSecureContext
+            ? "Location needs the secure site. Open https://michigantrip.elskatemm.com"
+            : error && error.code === 1
+              ? "Location is blocked for this site. Allow it in your browser's site settings, then try again."
+              : error && error.code === 3
+                ? "Location timed out. Try again with a clearer sky view."
+                : "Location unavailable right now. Try again in a moment.";
+          window.alert(reason);
         },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
       );

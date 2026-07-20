@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v54-gps-on-demand";
+const CACHE_NAME = "elskatemm-trip-v55-https-location-fix";
 const CORE_ASSETS = [
   "/",
   "/index.html",
