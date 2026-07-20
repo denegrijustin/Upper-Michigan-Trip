@@ -7379,14 +7379,14 @@
 
   function renderElsieRadarMarkup() {
     const island = isElsieIslandMode();
-    const picks = island ? elsieIslandActivities().board : elsieRadarStops();
     const summary = elsieBadgeSummary();
     const trailIcon = `<span class="elsie-mini-badge elsie-mini-badge-emoji ${summary.trail.earned ? "is-earned" : ""}">👣</span>`;
     const icons = summary.items.map(({ badge, progress }) => elsieMiniBadgeIcon(badge, progress)).join("") + trailIcon;
-    return `
+    const islandChip = island ? `
       <div id="elsieRadar" class="elsie-float-bottom" aria-label="Elsie quick controls">
-        <button type="button" class="elsie-chip" data-elsie-sheet="${island ? "island" : "picks"}">${island ? "Island Ideas" : "Elsie's Picks"} · ${picks.length}</button>
-      </div>
+        <button type="button" class="elsie-chip" data-elsie-sheet="island">Island Ideas · ${elsieIslandActivities().board.length}</button>
+      </div>` : "";
+    return `${islandChip}
       <button type="button" class="elsie-badge-tracker" data-elsie-sheet="badges" aria-label="Badges ${summary.earned} of ${summary.total} earned">
         <span class="elsie-badge-tracker-icons">${icons}</span>
         <span class="elsie-badge-tracker-count">${summary.earned}/${summary.total}</span>
@@ -7880,6 +7880,11 @@
       <div class="elsie-island-sheet">
         <p class="elsie-sheet-meta">While you're on Bois Blanc: things to look for, and things to do.</p>
         ${interests.length ? `<div class="elsie-island-interests">${interests.map((idea) => `<span>${escapeHtml(idea)}</span>`).join("")}</div>` : ""}
+        ${Object.keys(groups).length ? `<h4>Pinned on the map</h4>${Object.entries(groups).map(([group, items]) => `
+          <p class="elsie-sheet-meta"><strong>${escapeHtml(group)}:</strong> ${items.map((i) => escapeHtml(i.title)).join(", ")}</p>
+        `).join("")}` : ""}
+        <h4>Worth seeking out</h4>
+        <p class="elsie-sheet-meta">These don't have an exact map pin yet — ask a local or check the island museum for precise directions.</p>
         <div class="elsie-picks-list">
           ${board.map((item) => `<article>
             <small>${escapeHtml(item.type)}</small><strong>${escapeHtml(item.title)}</strong>
@@ -7892,9 +7897,6 @@
             </div>
           </article>`).join("") || "<p>No new island activities right now — check Badges for what's already logged.</p>"}
         </div>
-        ${Object.keys(groups).length ? `<h4>On the map</h4>${Object.entries(groups).map(([group, items]) => `
-          <p class="elsie-sheet-meta"><strong>${escapeHtml(group)}:</strong> ${items.map((i) => escapeHtml(i.title)).join(", ")}</p>
-        `).join("")}` : ""}
       </div>`;
   }
 
@@ -7972,15 +7974,19 @@
     return activeProfile === "elsie" && (state.phase === "island" || state.phase === "complete");
   }
 
+  function elsieShortLabel(label) {
+    return String(label || "").replace(/\s*overnight$/i, "").replace(/\s*ferry$/i, "").trim();
+  }
+
   function elsieEtaPillText() {
     if (isElsieIslandMode()) {
-      return `<b>Exploring Bois Blanc</b><span>Island mode</span><em>On Island</em>`;
+      return `<b>Bois Blanc</b><span>Island mode</span><em>On Island</em>`;
     }
     const target = getActiveTripTarget();
     const route = currentRouteResult();
     const miles = route.distanceMeters ? Math.round(route.distanceMeters / 1609.344) : target.plannedMiles;
-    const status = route.isFallback ? (route.source === "planned" ? "Planned" : "Cached") : route.isLive ? "Live" : "Approximate";
-    return `<b>${escapeHtml(target.label)}</b><span>${formatRouteDuration(route.durationSeconds)} · ${Number(miles || 0).toLocaleString()} mi</span><em>${status}</em>`;
+    const status = route.isFallback ? (route.source === "planned" ? "Planned" : "Cached") : route.isLive ? "Live" : "Approx";
+    return `<b>${escapeHtml(elsieShortLabel(target.label))}</b><span>${formatRouteDuration(route.durationSeconds)} · ${Number(miles || 0).toLocaleString()} mi</span><em>${status}</em>`;
   }
 
   function elsieIslandActivities() {
