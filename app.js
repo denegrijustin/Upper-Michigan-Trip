@@ -7276,7 +7276,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "jules-gps-car", "icon-size": 0.42, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "jules-gps-car", "icon-size": 0.62, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -9428,7 +9428,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "jules-gps-car", "icon-size": 0.42, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "jules-gps-car", "icon-size": 0.62, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {

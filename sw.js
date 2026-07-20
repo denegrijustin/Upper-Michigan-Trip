@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v55-https-location-fix";
+const CACHE_NAME = "elskatemm-trip-v56-bigger-jules-marker";
 const CORE_ASSETS = [
   "/",
   "/index.html",
