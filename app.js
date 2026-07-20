@@ -8641,12 +8641,39 @@
     julesRouteStops().forEach((stop) => features.push({ type: "Feature", properties: { origin: "jules", id: stop.id, decoIcon: "momdad-deco-jules" }, geometry: { type: "Point", coordinates: [stop.lon, stop.lat] } }));
     if (!features.length) return;
     if (!map.getSource("family-overlay-stops")) {
-      map.addSource("family-overlay-stops", { type: "geojson", data: { type: "FeatureCollection", features } });
+      map.addSource("family-overlay-stops", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features },
+        cluster: true,
+        clusterMaxZoom: 11,
+        clusterRadius: 46
+      });
     }
+    map.addLayer({
+      id: "family-overlay-clusters",
+      type: "circle",
+      source: "family-overlay-stops",
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": "#123a5c",
+        "circle-radius": ["step", ["get", "point_count"], 15, 10, 19, 25, 24],
+        "circle-stroke-width": 3,
+        "circle-stroke-color": "#d9a441"
+      }
+    });
+    map.addLayer({
+      id: "family-overlay-cluster-count",
+      type: "symbol",
+      source: "family-overlay-stops",
+      filter: ["has", "point_count"],
+      layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 13 },
+      paint: { "text-color": "#f5efdf" }
+    });
     map.addLayer({
       id: "family-overlay",
       type: "symbol",
       source: "family-overlay-stops",
+      filter: ["!", ["has", "point_count"]],
       layout: {
         "icon-image": ["get", "decoIcon"],
         "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.32, 6, 0.46, 9, 0.58, 12, 0.68],
@@ -8654,6 +8681,18 @@
         "icon-ignore-placement": true
       }
     });
+    map.on("click", "family-overlay-clusters", (event) => {
+      const feature = event.features && event.features[0];
+      if (!feature) return;
+      const source = map.getSource("family-overlay-stops");
+      if (!source || !source.getClusterExpansionZoom) return;
+      source.getClusterExpansionZoom(feature.properties.cluster_id, (error, zoom) => {
+        if (error) return;
+        map.easeTo({ center: feature.geometry.coordinates, zoom });
+      });
+    });
+    map.on("mouseenter", "family-overlay-clusters", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "family-overlay-clusters", () => { map.getCanvas().style.cursor = ""; });
     map.on("click", "family-overlay", (event) => {
       const { origin, id } = event.features[0].properties;
       const coords = event.features[0].geometry.coordinates;
