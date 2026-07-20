@@ -5863,6 +5863,7 @@
       includeIndianaDunes: true,
       completedStops: {},
       gpsAutoOn: true,
+      julesMarkerStyle: "sonic",
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5908,6 +5909,7 @@
     state.visitedStops ||= {};
     state.completedStops ||= {};
     if (typeof state.gpsAutoOn !== "boolean") state.gpsAutoOn = true;
+    if (state.julesMarkerStyle !== "sonic" && state.julesMarkerStyle !== "f1") state.julesMarkerStyle = "sonic";
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -7277,7 +7279,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "jules-gps-car", "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -7539,6 +7541,7 @@
       </div>` : activeProfile === "jules" ? `
       <div id="elsieRadar" class="elsie-float-bottom" aria-label="Jules quick controls">
         <button type="button" class="elsie-chip jules-games-chip" data-elsie-sheet="julesgames" aria-label="Games">🎮 Games</button>
+        <button type="button" class="elsie-chip jules-marker-chip" data-jules-marker-toggle aria-label="Switch GPS marker">${state.julesMarkerStyle === "f1" ? "🏎️ F1 Car" : "🦔 Sonic Car"}</button>
       </div>` : "";
     return `${islandChip}
       <button type="button" class="elsie-badge-tracker" data-elsie-sheet="badges" aria-label="Badges ${summary.earned} of ${summary.total} earned">
@@ -8465,17 +8468,24 @@
     map.on("mouseleave", "jules-route-layer", () => { map.getCanvas().style.cursor = ""; });
   }
 
+  const JULES_MARKER_IMAGES = { sonic: { file: "/jules-gps.png", name: "jules-gps-car-sonic" }, f1: { file: "/jules-gps-f1.png", name: "jules-gps-car-f1" } };
+
+  function julesGpsImageName() {
+    return JULES_MARKER_IMAGES[state.julesMarkerStyle]?.name || JULES_MARKER_IMAGES.sonic.name;
+  }
+
   function registerJulesGpsImage(map) {
-    return new Promise((resolve) => {
-      if (!map || (map.hasImage && map.hasImage("jules-gps-car"))) return resolve();
+    const jobs = Object.values(JULES_MARKER_IMAGES).map(({ file, name }) => new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage(name))) return resolve();
       const image = new Image(224, 224);
       image.onload = () => {
-        try { if (!map.hasImage("jules-gps-car")) map.addImage("jules-gps-car", image, { pixelRatio: 2 }); } catch {}
+        try { if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2 }); } catch {}
         resolve();
       };
       image.onerror = () => resolve();
-      image.src = "/jules-gps.png";
-    });
+      image.src = file;
+    }));
+    return Promise.all(jobs);
   }
 
   const JULES_LOOKFOR_MAP = [
@@ -9595,7 +9605,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "jules-gps-car", "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -11486,6 +11496,21 @@
     if (target.dataset.startGps !== undefined) {
       event.preventDefault();
       useLocation();
+    }
+    if (target.dataset.julesMarkerToggle !== undefined) {
+      event.preventDefault();
+      state.julesMarkerStyle = state.julesMarkerStyle === "f1" ? "sonic" : "f1";
+      saveState();
+      if (homeMap) {
+        registerJulesGpsImage(homeMap).then(() => {
+          if (homeMap && homeMap.getLayer("current-location-dot")) {
+            try { homeMap.setLayoutProperty("current-location-dot", "icon-image", julesGpsImageName()); } catch {}
+          }
+        });
+      }
+      const radar = byId("elsieRadar");
+      if (radar) radar.outerHTML = renderElsieRadarMarkup();
+      return;
     }
     if (target.dataset.gpsLocate !== undefined) {
       event.preventDefault();
