@@ -6207,10 +6207,30 @@
     return lastRouteOrigin && point && haversineMiles(lastRouteOrigin, point) >= 3;
   }
 
+  function activeLegWaypoints() {
+    const day = selectedDayDate();
+    const stops = data.route.coordinates;
+    if (state.phase === "return" || day === "2026-08-08" || state.tripLeg === "return") {
+      return [{ lat: stops.merrillville.lat, lon: stops.merrillville.lon }];
+    }
+    if (state.phase === "island" || state.phase === "complete") return [];
+    if (day === "2026-08-01" || state.tripLeg === "day2") {
+      if (state.includeIndianaDunes && !state.completedStops["indiana-dunes"]) return [];
+      return [
+        { lat: stops.grandRapids.lat, lon: stops.grandRapids.lon },
+        { lat: stops.grayling.lat, lon: stops.grayling.lon }
+      ];
+    }
+    return [
+      { lat: stops.columbia.lat, lon: stops.columbia.lon },
+      { lat: stops.stLouis.lat, lon: stops.stLouis.lon },
+      { lat: stops.indianapolis.lat, lon: stops.indianapolis.lon }
+    ];
+  }
+
   function refreshActiveRoute(force = false) {
     if (document.visibilityState === "hidden") return Promise.resolve(currentRouteResult());
-    const plan = routePlan();
-    const waypoints = plan.waypoints.map((w) => w.location);
+    const waypoints = activeLegWaypoints();
     return getActiveRoute({ force, waypoints }).then((route) => {
       if (route.distanceMeters) state.gpsMilesToActiveDestination = route.distanceMeters / 1609.344;
       if (state.initialLegDistanceMeters && route.distanceMeters) {
@@ -8115,8 +8135,9 @@
       });
       if (activeProfile === "elsie") {
         const routed = currentRouteResult().coordinates || [];
-        const plan = routePlan();
-        const planned = [plan.origin, ...plan.waypoints, plan.destination].map((point) => [point.location.lon, point.location.lat]);
+        const legTarget = getActiveTripTarget();
+        const legOrigin = state.lastPosition || activeOrigin();
+        const planned = [legOrigin, ...activeLegWaypoints(), legTarget].map((point) => [point.lon, point.lat]);
         homeMap.addSource("elsie-active-route", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: routed.length > 1 ? routed : planned } }
