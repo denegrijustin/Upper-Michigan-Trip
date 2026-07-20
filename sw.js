@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v29-elsie-route-markers-popup";
+const CACHE_NAME = "elskatemm-trip-v30-auto-update-reload";
 const CORE_ASSETS = [
   "/",
   "/index.html",

@@ -10082,7 +10082,20 @@
   }
 
   function registerServiceWorker() {
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    if (!("serviceWorker" in navigator)) return;
+    let reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloadedForUpdate) return;
+      reloadedForUpdate = true;
+      window.location.reload();
+    });
+    navigator.serviceWorker.register("/sw.js").then((registration) => {
+      registration.update().catch(() => {});
+      window.setInterval(() => registration.update().catch(() => {}), 10 * 60 * 1000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") registration.update().catch(() => {});
+      });
+    }).catch(() => {});
   }
 
   function render() {
