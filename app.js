@@ -6209,7 +6209,9 @@
 
   function refreshActiveRoute(force = false) {
     if (document.visibilityState === "hidden") return Promise.resolve(currentRouteResult());
-    return getActiveRoute({ force }).then((route) => {
+    const plan = routePlan();
+    const waypoints = plan.waypoints.map((w) => w.location);
+    return getActiveRoute({ force, waypoints }).then((route) => {
       if (route.distanceMeters) state.gpsMilesToActiveDestination = route.distanceMeters / 1609.344;
       if (state.initialLegDistanceMeters && route.distanceMeters) {
         const progress = clamp(1 - route.distanceMeters / state.initialLegDistanceMeters, 0, 1) * 100;

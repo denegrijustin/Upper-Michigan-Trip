@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v31-elsie-markers-dedicated-source";
+const CACHE_NAME = "elskatemm-trip-v32-route-waypoints-forced";
 const CORE_ASSETS = [
   "/",
   "/index.html",
