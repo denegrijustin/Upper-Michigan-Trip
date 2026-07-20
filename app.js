@@ -7514,7 +7514,9 @@
     const override = EMMA_ICON_OVERRIDES[stop.id] || EMMA_ICON_OVERRIDES[stop.title];
     if (override) return override;
     const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""} ${stop.why || ""} ${stop.profiles?.emma || ""}`.toLowerCase();
-    if (/sport|stadium|field|ballpark|arena|team|gym|college|school|race/.test(text)) return "volleyball";
+    const isBattleSite = /battle|battlefield|fort|war|massacre|skirmish/.test(text);
+    if (!isBattleSite && /sport|stadium|ballpark|arena|gym|speedway|raceway|racetrack|team|athletic|ballfield|playing field|soccer|baseball|football|volleyball|hockey/.test(text)) return "volleyball";
+    if (isBattleSite) return "flower";
     if (/food|restaurant|cafe|diner|ice cream|fudge|donut|market|orchard|candy|bakery/.test(text)) return "icecream";
     if (/wildlife|zoo|animal|farm|habitat|refuge|aquarium|bird/.test(text)) return "cat";
     if (/park|garden|nature|trail|preserve|dune|forest|flower|meadow|shoreline|falls|scenic/.test(text)) return "flower";
@@ -7820,7 +7822,14 @@
       "Discovery story: look for a founding date on a sign or plaque — then figure out who would have been here first."
     ];
     const discovery = discoveryBank[stableIndex(`${seed}-disc`, discoveryBank.length)];
-    const momDad = item.why || item.profiles?.momdad || "Mom and Dad will like the story behind it — and that it's a real reason to get out of the car.";
+    const momDadBank = [
+      "Mom and Dad will like that this one has a real story behind it, not just a photo op.",
+      "This is the kind of stop Mom and Dad point at on the way past and say 'we should have stopped there' — so stop.",
+      "Mom and Dad angle: it breaks up the drive AND gives everyone something to talk about for the next twenty miles.",
+      "Parents love a stop where the kids learn something without noticing — this is one of those.",
+      "Mom and Dad will appreciate that this is a real place locals actually use, not a tourist trap."
+    ];
+    const momDad = item.profiles?.momdad || item.why || momDadBank[stableIndex(`${seed}-momdad`, momDadBank.length)];
     const jokeBank = [
       `Why did the family stop at ${item.title}? Because the car said it was "wheely" worth it.`,
       `${item.title} called — it said you're going to have an ice day. Wait, wrong stop.`,
