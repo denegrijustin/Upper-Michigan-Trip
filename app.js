@@ -5870,7 +5870,15 @@
       weather: {},
       actionMessage: "No action yet.",
       gpsStatus: "Off",
-      trackingStatus: "Off"
+      trackingStatus: "Off",
+      breadcrumbTrail: [],
+      breadcrumbVisible: true,
+      radarEnabled: false,
+      radarOpacity: 0.45,
+      radarAnimationEnabled: false,
+      radarStationsVisible: false,
+      radarCachedFrame: null,
+      activeElsieSheet: null
     };
   }
 
@@ -5913,6 +5921,12 @@
     });
     state.badges ||= {};
     state.weather ||= {};
+    if (!Array.isArray(state.breadcrumbTrail)) state.breadcrumbTrail = [];
+    if (typeof state.breadcrumbVisible !== "boolean") state.breadcrumbVisible = true;
+    if (typeof state.radarEnabled !== "boolean") state.radarEnabled = false;
+    if (!Number.isFinite(Number(state.radarOpacity))) state.radarOpacity = 0.45;
+    if (typeof state.radarAnimationEnabled !== "boolean") state.radarAnimationEnabled = false;
+    if (typeof state.radarStationsVisible !== "boolean") state.radarStationsVisible = false;
   }
 
   function saveState() {
@@ -6206,6 +6220,7 @@
       const routeSource = homeMap?.getSource?.("elsie-active-route");
       if (routeSource && route.coordinates?.length > 1) routeSource.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: route.coordinates } });
       renderElsieRouteTracker();
+      refreshElsieEtaPill();
       return route;
     });
   }
@@ -6838,6 +6853,9 @@
       lat: stop.lat,
       lon: stop.lon
     };
+    if (Number.isFinite(stop.lat) && Number.isFinite(stop.lon)) {
+      addBreadcrumb({ lat: stop.lat, lon: stop.lon }, "stop-visited", null, `Visited ${stop.title || stop.name}`);
+    }
     if (/indiana dunes/i.test(stop.title || stop.name)) {
       state.completedStops["indiana-dunes"] = true;
       state.initialLegDistanceMeters = null;
@@ -7127,6 +7145,8 @@
     state.lastPosition = { lat: point.lat, lon: point.lon, accuracy: position.coords.accuracy, updatedAt: new Date().toISOString() };
     state.gpsStatus = "Active";
     state.trackingStatus = `Active - ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    maybeRecordBreadcrumb(point, position.coords.accuracy);
+    refreshElsieEtaPill();
     state.destinationStatus = `${destination.label} · ${position.coords.accuracy > 100 ? "GPS signal is weak" : "GPS active"}`;
     renderHomeMapPanel();
     renderRouteMapPanel();
@@ -7269,8 +7289,7 @@
         <div class="elsie-progress" role="progressbar" aria-label="Active route progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}"><span style="width:${progress}%"></span></div>
         <small>${escapeHtml(state.gpsStatus || "GPS off")} · ETA updated ${updated} · ${escapeHtml(route.source || "planned")}</small>
         <div class="elsie-tracker-actions">
-          <button type="button" data-start-gps="true">Start Live Trip</button>
-          <button type="button" data-stop-gps>Stop Tracking</button>
+          ${watchId === null ? `<button type="button" data-start-gps="true">Start Live Trip</button>` : `<button type="button" data-stop-gps>Stop Tracking</button>`}
           <button type="button" data-refresh-route>Refresh ETA</button>
           <a href="${googleMapsNavigationUrl(target)}" target="_blank" rel="noopener">Navigate</a>
         </div>
@@ -7307,19 +7326,579 @@
   }
 
   function renderElsieRadarMarkup() {
-    const stops = elsieRadarStops();
+    const picks = elsieRadarStops();
+    const badges = elsieBadgeSummary();
     return `
-      <aside id="elsieRadar" class="elsie-radar ${state.elsieRadarCollapsed ? "is-collapsed" : ""}" aria-label="Elsie's Radar">
-        <button type="button" class="elsie-radar-toggle" data-toggle-elsie-radar aria-expanded="${!state.elsieRadarCollapsed}"><span>ELSIE'S RADAR</span><b>${stops.length}</b></button>
-        <div class="elsie-radar-list">
-          ${stops.map((item) => `<article>
-            <small>${elsieRadarLabel(item)}</small><strong>${escapeHtml(item.title)}</strong>
-            <p>${escapeHtml(item.profiles?.elsie || item.summary || "A stop with a story worth retelling.")}</p>
-            <div><button type="button" data-preview-stop="${escapeHtml(item.title)}">Preview</button><button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button><a href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a></div>
-          </article>`).join("")}
-        </div>
-      </aside>`;
+      <div id="elsieRadar" class="elsie-float-bottom" aria-label="Elsie quick controls">
+        <button type="button" class="elsie-chip" data-elsie-sheet="picks">Elsie's Picks · ${picks.length}</button>
+        <button type="button" class="elsie-chip" data-elsie-sheet="badges">Badges ${badges.earned}/${badges.total}</button>
+      </div>`;
   }
+
+
+  /* ===================== ELSIE MAP EXPERIENCE ===================== */
+
+  const ELSIE_ICON_OVERRIDES = {
+    // "stop-id": "spooky"
+  };
+
+  const ELSIE_ICON_TYPES = ["spooky", "strange-history", "weird-stop", "science", "stars", "anime-vibe", "music-energy", "mystery", "animal-watch"];
+
+  function getElsieIconType(stop) {
+    if (!stop) return "";
+    const override = ELSIE_ICON_OVERRIDES[stop.id] || ELSIE_ICON_OVERRIDES[stop.title];
+    if (override) return override;
+    const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""} ${stop.why || ""} ${stop.profiles?.elsie || ""}`.toLowerCase();
+    if (/ghost|haunt|cemeter|grave|prison|jail|tunnel|eerie|abandon|spirit|spook/.test(text)) return "spooky";
+    if (/mystery|legend|secret|unexplained|hidden room|cryptic|lost /.test(text)) return "mystery";
+    if (/dark sky|astronom|observator|stargaz|planetari|night sky|\bstar\b/.test(text)) return "stars";
+    if (/science|aviation|geolog|engineer|invention|technolog|experiment|weather station/.test(text)) return "science";
+    if (/music|opera|concert|sound|record|organ|band/.test(text)) return "music-energy";
+    if (/largest|giant|odd|weird|unusual|roadside|novelty|quirk/.test(text)) return "weird-stop";
+    if (/wildlife|zoo|wetland|bird|habitat|animal|refuge|aquarium/.test(text)) return "animal-watch";
+    if (/fort|battle|\bwar\b|outlaw|frontier|historic|history|heritage/.test(text)) return "strange-history";
+    if (/waterfall|falls|dune|lighthouse|bridge|overlook|scenic|vista|shoreline|canyon/.test(text)) return "anime-vibe";
+    return "";
+  }
+
+  function elsieIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    switch (type) {
+      case "spooky": return base("#3a2a54", `<path d="M32 16c-8 0-12 7-12 14v14l4-3 4 3 4-3 4 3 4-3 4 3V30c0-7-4-14-12-14z" fill="#efe6ff" stroke="#141414" stroke-width="3"/><circle cx="27" cy="30" r="2.6" fill="#141414"/><circle cx="37" cy="30" r="2.6" fill="#141414"/><circle cx="27.9" cy="29.1" r="0.9" fill="#fff"/><path d="M45 15a6 6 0 1 0 4 10 8 8 0 0 1-4-10z" fill="#cbb7f2" stroke="#141414" stroke-width="2.5"/>`);
+      case "strange-history": return base("#8a5a2b", `<rect x="20" y="18" width="24" height="30" rx="3" fill="#f2e3c2" stroke="#141414" stroke-width="3"/><path d="M24 26h16M24 32h16M24 38h11" stroke="#141414" stroke-width="2.5" stroke-linecap="round"/><path d="M44 18l6-4M44 48l6 4" stroke="#141414" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="42" r="4.5" fill="#e0aa3e" stroke="#141414" stroke-width="2.5"/>`);
+      case "weird-stop": return base("#7a3fa0", `<g transform="rotate(-8 32 32)"><rect x="18" y="22" width="28" height="16" rx="3" fill="#f7c948" stroke="#141414" stroke-width="3"/><path d="M32 38v10" stroke="#141414" stroke-width="4"/><circle cx="32" cy="30" r="5.5" fill="none" stroke="#141414" stroke-width="3"/><circle cx="32" cy="30" r="1.8" fill="#141414"/></g><path d="M50 14l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ff8b3d" stroke="#141414" stroke-width="2"/>`);
+      case "science": return base("#0e5e78", `<ellipse cx="32" cy="32" rx="16" ry="6.5" fill="none" stroke="#7ff0ff" stroke-width="3"/><ellipse cx="32" cy="32" rx="16" ry="6.5" transform="rotate(60 32 32)" fill="none" stroke="#7ff0ff" stroke-width="3"/><ellipse cx="32" cy="32" rx="16" ry="6.5" transform="rotate(120 32 32)" fill="none" stroke="#7ff0ff" stroke-width="3"/><circle cx="32" cy="32" r="5" fill="#ffe14d" stroke="#141414" stroke-width="3"/>`);
+      case "stars": return base("#141b3f", `<path d="M32 14l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#f4efff" stroke="#141414" stroke-width="2.5"/><circle cx="46" cy="20" r="2" fill="#cfd6ff"/><circle cx="20" cy="44" r="2" fill="#cfd6ff"/><path d="M44 42a7 7 0 1 0 5 11 9 9 0 0 1-5-11z" fill="#c3b6f5" stroke="#141414" stroke-width="2.5"/>`);
+      case "anime-vibe": return base("#1c3a63", `<circle cx="32" cy="36" r="10" fill="#ffd24d" stroke="#141414" stroke-width="3"/><path d="M32 18v6M18 36h-6M52 36h-6M22 26l-4-4M42 26l4-4" stroke="#ff5fa2" stroke-width="3.5" stroke-linecap="round"/><path d="M14 47h36" stroke="#66e0ff" stroke-width="4" stroke-linecap="round"/>`);
+      case "music-energy": return base("#152417", `<path d="M16 34h4l3-8 4 16 4-22 4 26 4-16 3 4h6" fill="none" stroke="#5dff8a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M44 18l6-2v8" stroke="#8f7bff" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="43" cy="25" r="3" fill="#8f7bff" stroke="#141414" stroke-width="2"/>`);
+      case "mystery": return base("#1a2436", `<circle cx="32" cy="28" r="9" fill="#0e1420" stroke="#d9c069" stroke-width="3"/><path d="M32 28m-3 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0M32 31v8l-3 5h6l-3-5" fill="#d9c069" stroke="#d9c069" stroke-width="1.5"/><circle cx="45" cy="18" r="1.6" fill="#aab6d3"/><circle cx="19" cy="45" r="1.6" fill="#aab6d3"/>`);
+      case "animal-watch": return base("#22532f", `<ellipse cx="32" cy="38" rx="7" ry="5.5" fill="#f0dcb4" stroke="#141414" stroke-width="3"/><circle cx="24" cy="28" r="3.4" fill="#f0dcb4" stroke="#141414" stroke-width="2.5"/><circle cx="32" cy="24" r="3.4" fill="#f0dcb4" stroke="#141414" stroke-width="2.5"/><circle cx="40" cy="28" r="3.4" fill="#f0dcb4" stroke="#141414" stroke-width="2.5"/>`);
+      default: return base("#1f78a4", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
+    }
+  }
+
+  let elsieIconsRegistered = false;
+  function registerElsieIcons(map) {
+    if (!map) return Promise.resolve();
+    const jobs = ELSIE_ICON_TYPES.map((type) => new Promise((resolve) => {
+      const name = `elsie-${type}`;
+      if (map.hasImage && map.hasImage(name)) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage(name)) map.addImage(name, image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(elsieIconSvg(type))}`;
+    }));
+    return Promise.all(jobs).then(() => { elsieIconsRegistered = true; });
+  }
+
+  function addElsieIconLayer(map) {
+    if (!map || map.getLayer("elsie-artwork")) return;
+    if (!map.getSource("home-attractions")) return;
+    map.addLayer({
+      id: "elsie-artwork",
+      type: "symbol",
+      source: "home-attractions",
+      filter: ["all", ["!", ["has", "point_count"]], ["!=", ["get", "elsieIcon"], ""]],
+      layout: {
+        "icon-image": ["get", "elsieIcon"],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.42, 8, 0.5, 11, 0.58],
+        "icon-allow-overlap": true
+      }
+    });
+    try {
+      map.setFilter("home-unclustered-point", ["all", ["!", ["has", "point_count"]], ["==", ["get", "elsieIcon"], ""]]);
+      map.setFilter("home-unclustered-icon", ["all", ["!", ["has", "point_count"]], ["==", ["get", "elsieIcon"], ""]]);
+    } catch {}
+    map.on("click", "elsie-artwork", (event) => {
+      const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
+      if (item) showAttractionPreview(item);
+    });
+    map.on("mouseenter", "elsie-artwork", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "elsie-artwork", () => { map.getCanvas().style.cursor = ""; });
+  }
+
+  /* ---------- Weather radar (RainViewer) ---------- */
+
+  const elsieWeatherRadar = { host: "https://tilecache.rainviewer.com", frames: [], lastFetch: 0, frameIndex: 0, animTimer: null };
+
+  function fetchRadarMeta(force = false) {
+    const now = Date.now();
+    if (!force && now - elsieWeatherRadar.lastFetch < 5 * 60 * 1000 && elsieWeatherRadar.frames.length) return Promise.resolve(elsieWeatherRadar.frames);
+    if (document.visibilityState === "hidden") return Promise.resolve(elsieWeatherRadar.frames);
+    elsieWeatherRadar.lastFetch = now;
+    return fetch("https://api.rainviewer.com/public/weather-maps.json")
+      .then((response) => response.json())
+      .then((meta) => {
+        elsieWeatherRadar.host = meta.host || elsieWeatherRadar.host;
+        elsieWeatherRadar.frames = (meta.radar?.past || []).slice(-8);
+        elsieWeatherRadar.frameIndex = Math.max(0, elsieWeatherRadar.frames.length - 1);
+        const latest = elsieWeatherRadar.frames[elsieWeatherRadar.frameIndex];
+        if (latest) {
+          state.radarCachedFrame = { path: latest.path, time: latest.time, host: elsieWeatherRadar.host };
+          saveState();
+        }
+        return elsieWeatherRadar.frames;
+      })
+      .catch(() => {
+        if (state.radarCachedFrame) {
+          elsieWeatherRadar.host = state.radarCachedFrame.host || elsieWeatherRadar.host;
+          elsieWeatherRadar.frames = [{ path: state.radarCachedFrame.path, time: state.radarCachedFrame.time }];
+          elsieWeatherRadar.frameIndex = 0;
+        }
+        return elsieWeatherRadar.frames;
+      });
+  }
+
+  function currentRadarFrame() {
+    return elsieWeatherRadar.frames[elsieWeatherRadar.frameIndex] || (state.radarCachedFrame ? { path: state.radarCachedFrame.path, time: state.radarCachedFrame.time } : null);
+  }
+
+  function getRadarFrame() { return currentRadarFrame(); }
+
+  function radarTileUrl(frame) {
+    return `${elsieWeatherRadar.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+  }
+
+  function firstElsieBaseLayerId(map) {
+    if (map.getLayer("elsie-breadcrumb-line")) return "elsie-breadcrumb-line";
+    if (map.getLayer("home-clusters")) return "home-clusters";
+    return undefined;
+  }
+
+  function applyRadarLayer(map = homeMap) {
+    if (!map || activeProfile !== "elsie") return;
+    const frame = currentRadarFrame();
+    if (!frame) return;
+    const apply = () => {
+      if (map.getLayer("elsie-radar-layer")) map.removeLayer("elsie-radar-layer");
+      if (map.getSource("elsie-radar")) map.removeSource("elsie-radar");
+      map.addSource("elsie-radar", {
+        type: "raster",
+        tiles: [radarTileUrl(frame)],
+        tileSize: 256,
+        attribution: "Radar © RainViewer"
+      });
+      map.addLayer({
+        id: "elsie-radar-layer",
+        type: "raster",
+        source: "elsie-radar",
+        paint: { "raster-opacity": Number(state.radarOpacity) || 0.45 }
+      }, firstElsieBaseLayerId(map));
+    };
+    if (map.isStyleLoaded && !map.isStyleLoaded()) map.once("load", apply);
+    else apply();
+  }
+
+  function removeRadarLayer(map = homeMap) {
+    if (!map) return;
+    try {
+      if (map.getLayer("elsie-radar-layer")) map.removeLayer("elsie-radar-layer");
+      if (map.getSource("elsie-radar")) map.removeSource("elsie-radar");
+    } catch {}
+  }
+
+  function stopRadarAnimation() {
+    if (elsieWeatherRadar.animTimer) window.clearInterval(elsieWeatherRadar.animTimer);
+    elsieWeatherRadar.animTimer = null;
+  }
+
+  function startRadarAnimation() {
+    stopRadarAnimation();
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!state.radarEnabled || !state.radarAnimationEnabled || reduced || document.visibilityState === "hidden") return;
+    if (elsieWeatherRadar.frames.length < 2) return;
+    elsieWeatherRadar.animTimer = window.setInterval(() => {
+      elsieWeatherRadar.frameIndex = (elsieWeatherRadar.frameIndex + 1) % elsieWeatherRadar.frames.length;
+      applyRadarLayer();
+    }, 700);
+  }
+
+  function setRadarEnabled(enabled) {
+    state.radarEnabled = Boolean(enabled);
+    saveState();
+    if (state.radarEnabled) {
+      fetchRadarMeta().then(() => {
+        applyRadarLayer();
+        startRadarAnimation();
+      });
+    } else {
+      stopRadarAnimation();
+      removeRadarLayer();
+    }
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      stopRadarAnimation();
+    } else if (state.radarEnabled && activeProfile === "elsie") {
+      fetchRadarMeta().then(() => {
+        applyRadarLayer();
+        startRadarAnimation();
+      });
+    }
+  });
+
+  const ELSIE_RADAR_STATIONS = [
+    { code: "KEAX", name: "Kansas City / Pleasant Hill NEXRAD", lat: 38.8103, lon: -94.2645 },
+    { code: "KLSX", name: "St. Louis NEXRAD", lat: 38.6989, lon: -90.6828 },
+    { code: "KIND", name: "Indianapolis NEXRAD", lat: 39.7075, lon: -86.2803 },
+    { code: "KLOT", name: "Chicago NEXRAD", lat: 41.6045, lon: -88.0847 },
+    { code: "KGRR", name: "Grand Rapids NEXRAD", lat: 42.8939, lon: -85.5449 },
+    { code: "KAPX", name: "Gaylord NEXRAD", lat: 44.9072, lon: -84.7198 }
+  ];
+
+  function syncRadarStationLayer(map = homeMap) {
+    if (!map) return;
+    const visible = activeProfile === "elsie" && state.radarStationsVisible;
+    if (!visible) {
+      try { if (map.getLayer("elsie-radar-stations")) map.setLayoutProperty("elsie-radar-stations", "visibility", "none"); } catch {}
+      return;
+    }
+    if (!map.getSource("elsie-radar-stations")) {
+      map.addSource("elsie-radar-stations", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: ELSIE_RADAR_STATIONS.map((station) => ({
+            type: "Feature",
+            properties: { code: station.code, name: station.name },
+            geometry: { type: "Point", coordinates: [station.lon, station.lat] }
+          }))
+        }
+      });
+      map.addLayer({
+        id: "elsie-radar-stations",
+        type: "symbol",
+        source: "elsie-radar-stations",
+        layout: { "text-field": "📡", "text-size": 14, "text-allow-overlap": true }
+      });
+      map.on("click", "elsie-radar-stations", (event) => {
+        const props = event.features[0].properties;
+        new maplibregl.Popup({ closeButton: true })
+          .setLngLat(event.features[0].geometry.coordinates)
+          .setText(`${props.code} · ${props.name} · NOAA/NWS NEXRAD`)
+          .addTo(map);
+      });
+    }
+    map.setLayoutProperty("elsie-radar-stations", "visibility", "visible");
+  }
+
+  /* ---------- Sasquatch breadcrumb trail ---------- */
+
+  const BREADCRUMB_MAX = 2000;
+  const MEANINGFUL_REASONS = ["stop-visited", "waypoint-arrival", "leg-change"];
+
+  function lastBreadcrumb() {
+    return state.breadcrumbTrail[state.breadcrumbTrail.length - 1] || null;
+  }
+
+  function addBreadcrumb(point, reason, accuracy, label) {
+    state.breadcrumbTrail.push({
+      id: makeId("crumb"),
+      latitude: Number(point.lat.toFixed(5)),
+      longitude: Number(point.lon.toFixed(5)),
+      recordedAt: new Date().toISOString(),
+      tripLeg: state.tripLeg || state.phase || "day1",
+      reason,
+      accuracy: Number.isFinite(accuracy) ? Math.round(accuracy) : null,
+      profile: "elsie",
+      label: label || ""
+    });
+    pruneBreadcrumbs();
+    saveState();
+    syncBreadcrumbLayers();
+  }
+
+  function pruneBreadcrumbs() {
+    if (state.breadcrumbTrail.length <= BREADCRUMB_MAX) return;
+    const meaningful = state.breadcrumbTrail.filter((crumb) => MEANINGFUL_REASONS.includes(crumb.reason));
+    const ordinary = state.breadcrumbTrail.filter((crumb) => !MEANINGFUL_REASONS.includes(crumb.reason));
+    const half = Math.floor(ordinary.length / 2);
+    const thinnedOld = ordinary.slice(0, half).filter((crumb, index) => index % 2 === 0);
+    state.breadcrumbTrail = [...meaningful, ...thinnedOld, ...ordinary.slice(half)]
+      .sort((a, b) => Date.parse(a.recordedAt) - Date.parse(b.recordedAt));
+  }
+
+  function maybeRecordBreadcrumb(point, accuracy) {
+    const last = lastBreadcrumb();
+    if (!last) return addBreadcrumb(point, "distance", accuracy);
+    const previous = { lat: last.latitude, lon: last.longitude };
+    const miles = haversineMiles(previous, point);
+    const minutes = (Date.now() - Date.parse(last.recordedAt)) / 60000;
+    if (miles >= 1) return addBreadcrumb(point, "distance", accuracy);
+    if (minutes >= 10 && miles >= 0.1) return addBreadcrumb(point, "time", accuracy);
+  }
+
+  function getBreadcrumbGeoJson() {
+    const crumbs = state.breadcrumbTrail;
+    return {
+      line: {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates: crumbs.map((crumb) => [crumb.longitude, crumb.latitude]) }
+      },
+      points: {
+        type: "FeatureCollection",
+        features: crumbs.map((crumb, index) => ({
+          type: "Feature",
+          properties: {
+            rank: MEANINGFUL_REASONS.includes(crumb.reason) ? 0 : index % 20 === 0 ? 1 : index % 5 === 0 ? 2 : 3,
+            reason: crumb.reason,
+            label: crumb.label || "",
+            recordedAt: crumb.recordedAt,
+            tripLeg: crumb.tripLeg
+          },
+          geometry: { type: "Point", coordinates: [crumb.longitude, crumb.latitude] }
+        }))
+      }
+    };
+  }
+
+  function syncBreadcrumbLayers(map = homeMap) {
+    if (!map || !map.getStyle) return;
+    const visible = activeProfile === "elsie" && state.breadcrumbVisible && state.breadcrumbTrail.length > 0;
+    const geo = getBreadcrumbGeoJson();
+    try {
+      if (!map.getSource("elsie-breadcrumb-line")) {
+        if (!map.isStyleLoaded || !map.isStyleLoaded()) return;
+        map.addSource("elsie-breadcrumb-line", { type: "geojson", data: geo.line });
+        map.addLayer({
+          id: "elsie-breadcrumb-line",
+          type: "line",
+          source: "elsie-breadcrumb-line",
+          paint: { "line-color": "#6b4f3a", "line-width": 2, "line-opacity": 0.45, "line-dasharray": [2, 3] }
+        }, map.getLayer("home-clusters") ? "home-clusters" : undefined);
+        map.addSource("elsie-breadcrumb-steps", { type: "geojson", data: geo.points });
+        map.addLayer({
+          id: "elsie-breadcrumb-steps",
+          type: "symbol",
+          source: "elsie-breadcrumb-steps",
+          filter: ["<=", ["get", "rank"], ["step", ["zoom"], 1, 7, 2, 10, 3]],
+          layout: {
+            "text-field": "👣",
+            "text-size": ["case", ["==", ["get", "rank"], 0], 16, 11],
+            "text-allow-overlap": false
+          }
+        });
+        map.on("click", "elsie-breadcrumb-steps", (event) => {
+          const props = event.features[0].properties;
+          if (Number(props.rank) !== 0 && map.getZoom() < 9) return;
+          const when = new Date(props.recordedAt).toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" });
+          const text = props.label ? `${props.label} · ${when}` : `Passed here · ${when} · ${props.tripLeg}`;
+          new maplibregl.Popup({ closeButton: true }).setLngLat(event.features[0].geometry.coordinates).setText(text).addTo(map);
+        });
+      } else {
+        map.getSource("elsie-breadcrumb-line").setData(geo.line);
+        map.getSource("elsie-breadcrumb-steps").setData(geo.points);
+      }
+      const visibility = visible ? "visible" : "none";
+      map.setLayoutProperty("elsie-breadcrumb-line", "visibility", visibility);
+      map.setLayoutProperty("elsie-breadcrumb-steps", "visibility", visibility);
+    } catch {}
+  }
+
+  function clearBreadcrumbTrail() {
+    state.breadcrumbTrail = [];
+    saveState();
+    syncBreadcrumbLayers();
+  }
+
+  function sasquatchTrailProgress() {
+    const legs = new Set(state.breadcrumbTrail.map((crumb) => crumb.tripLeg).filter((leg) => ["day1", "day2", "return", "outbound", "island"].includes(leg)));
+    const normalized = new Set([...legs].map((leg) => (leg === "outbound" ? "day1" : leg === "island" ? "day2" : leg)));
+    const covered = ["day1", "day2", "return"].filter((leg) => normalized.has(leg)).length;
+    return { value: covered, total: 3, earned: covered >= 3 };
+  }
+
+  /* ---------- Shared bottom sheet ---------- */
+
+  let elsieSheetLastFocus = null;
+
+  function openElsieSheet(type, payload) {
+    if (activeProfile !== "elsie") return;
+    const sheet = byId("elsieSheet");
+    const scrim = byId("elsieSheetScrim");
+    if (!sheet) return;
+    state.activeElsieSheet = type;
+    elsieSheetLastFocus = document.activeElement;
+    sheet.innerHTML = renderElsieSheetContent(type, payload);
+    sheet.hidden = false;
+    if (scrim) scrim.hidden = false;
+    sheet.querySelector("button, a, input")?.focus?.();
+  }
+
+  function closeElsieSheet() {
+    const sheet = byId("elsieSheet");
+    const scrim = byId("elsieSheetScrim");
+    if (sheet) { sheet.hidden = true; sheet.innerHTML = ""; }
+    if (scrim) scrim.hidden = true;
+    state.activeElsieSheet = null;
+    if (elsieSheetLastFocus?.focus) elsieSheetLastFocus.focus();
+    elsieSheetLastFocus = null;
+  }
+
+  function elsieSheetHead(title) {
+    return `<div class="elsie-sheet-head"><strong>${escapeHtml(title)}</strong><button type="button" data-elsie-close-sheet aria-label="Close sheet">Close</button></div>`;
+  }
+
+  function renderElsieSheetContent(type, payload) {
+    if (type === "eta") return `${elsieSheetHead("Route + ETA")}${elsieRouteTrackerMarkup()}`;
+    if (type === "picks") return renderElsiePicksSheet();
+    if (type === "radar") return renderElsieRadarSheet();
+    if (type === "badges") return renderElsieBadgeSheet();
+    if (type === "breadcrumb") return renderElsieTrailSheet();
+    return elsieSheetHead("Elsie");
+  }
+
+  function renderElsiePicksSheet() {
+    const stops = elsieRadarStops();
+    return `${elsieSheetHead("Elsie's Picks")}
+      <div class="elsie-picks-list">
+        ${stops.length ? stops.map((item) => `<article>
+          <small>${elsieRadarLabel(item)}</small><strong>${escapeHtml(item.title)}</strong>
+          <p>${escapeHtml(item.profiles?.elsie || item.summary || "A stop with a story worth retelling.")}</p>
+          <div><button type="button" data-preview-stop="${escapeHtml(item.title)}">Preview</button><button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button><a href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a></div>
+        </article>`).join("") : "<p>No picks ahead on this leg right now.</p>"}
+      </div>`;
+  }
+
+  function renderElsieRadarSheet() {
+    const frame = currentRadarFrame();
+    const frameTime = frame ? new Date(frame.time * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "no data yet";
+    const opacities = [0, 0.25, 0.45, 0.65];
+    return `${elsieSheetHead("Weather radar")}
+      <div class="elsie-radar-sheet">
+        <label class="elsie-switch"><input type="checkbox" data-radar-toggle ${state.radarEnabled ? "checked" : ""}> Radar on</label>
+        <p class="elsie-sheet-meta">Latest frame: ${frameTime}${state.radarEnabled && frame && state.radarCachedFrame && frame.path === state.radarCachedFrame.path && elsieWeatherRadar.frames.length <= 1 ? " · using cached frame" : ""}</p>
+        <div class="elsie-opacity-row" role="group" aria-label="Radar opacity">
+          ${opacities.map((value) => `<button type="button" data-radar-opacity="${value}" aria-pressed="${Number(state.radarOpacity) === value}">${Math.round(value * 100)}%</button>`).join("")}
+        </div>
+        <div class="elsie-radar-actions">
+          <button type="button" data-radar-anim>${state.radarAnimationEnabled ? "Pause" : "Play"}</button>
+          <button type="button" data-radar-refresh>Refresh</button>
+        </div>
+        <label class="elsie-switch"><input type="checkbox" data-radar-stations ${state.radarStationsVisible ? "checked" : ""}> Show radar stations</label>
+        <p class="elsie-sheet-meta">Radar data © RainViewer · Stations: NOAA / NWS NEXRAD</p>
+      </div>`;
+  }
+
+  function elsieBadgeSummary() {
+    const list = visibleAdventureBadges();
+    const items = list.map((badge) => ({ badge, progress: adventureBadgeProgress(badge) }));
+    const trail = sasquatchTrailProgress();
+    const earned = items.filter((entry) => entry.progress.earned).length + (trail.earned ? 1 : 0);
+    return { items, trail, earned, total: items.length + 1 };
+  }
+
+  function renderElsieBadgeSheet() {
+    const summary = elsieBadgeSummary();
+    return `${elsieSheetHead(`Badges ${summary.earned}/${summary.total}`)}
+      <div class="elsie-badge-list">
+        ${summary.items.map(({ badge, progress }) => `
+          <article class="${progress.earned ? "is-earned" : ""}">
+            <strong>${escapeHtml(badge.title)}</strong>
+            <p>${escapeHtml(badge.description || "")}</p>
+            <div class="elsie-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${progress.total}" aria-valuenow="${progress.value}" aria-label="${escapeHtml(badge.title)} progress"><span style="width:${progress.pct}%"></span></div>
+            <small>${progress.value}/${progress.total}${progress.earned ? " · Earned" : ""}</small>
+          </article>`).join("")}
+        <article class="${summary.trail.earned ? "is-earned" : ""}">
+          <strong>Sasquatch Trail 👣</strong>
+          <p>Record breadcrumbs across all three travel legs.</p>
+          <div class="elsie-progress" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${summary.trail.value}" aria-label="Sasquatch Trail progress"><span style="width:${Math.round((summary.trail.value / 3) * 100)}%"></span></div>
+          <small>${summary.trail.value}/3 legs${summary.trail.earned ? " · Earned" : ""}</small>
+        </article>
+      </div>`;
+  }
+
+  function renderElsieTrailSheet() {
+    const count = state.breadcrumbTrail.length;
+    return `${elsieSheetHead("Sasquatch trail")}
+      <div class="elsie-trail-sheet">
+        <p>${count ? `${count} footprints recorded. A tiny mysterious creature has been following the route.` : "No footprints yet. Start Live Trip and the trail begins."}</p>
+        <label class="elsie-switch"><input type="checkbox" data-trail-visible ${state.breadcrumbVisible ? "checked" : ""}> Show trail</label>
+        <button type="button" class="elsie-danger" data-trail-clear ${count ? "" : "disabled"}>Clear trail</button>
+      </div>`;
+  }
+
+  function elsieEtaPillText() {
+    const target = getActiveTripTarget();
+    const route = currentRouteResult();
+    const miles = route.distanceMeters ? Math.round(route.distanceMeters / 1609.344) : target.plannedMiles;
+    const status = route.isFallback ? (route.source === "planned" ? "Planned" : "Cached") : route.isLive ? "Live" : "Approximate";
+    return `<b>${escapeHtml(target.label)}</b><span>${formatRouteDuration(route.durationSeconds)} · ${Number(miles || 0).toLocaleString()} mi</span><em>${status}</em>`;
+  }
+
+  function refreshElsieEtaPill() {
+    const pill = byId("elsieEtaPill");
+    if (pill) pill.innerHTML = elsieEtaPillText();
+  }
+
+  document.addEventListener("click", (event) => {
+    const opener = event.target.closest("[data-elsie-sheet]");
+    if (opener) {
+      const type = opener.dataset.elsieSheet;
+      if (state.activeElsieSheet === type) closeElsieSheet();
+      else openElsieSheet(type);
+      return;
+    }
+    if (event.target.closest("[data-elsie-close-sheet]") || event.target.id === "elsieSheetScrim") {
+      closeElsieSheet();
+      return;
+    }
+    const opacityButton = event.target.closest("[data-radar-opacity]");
+    if (opacityButton) {
+      state.radarOpacity = Number(opacityButton.dataset.radarOpacity);
+      saveState();
+      if (state.radarEnabled && homeMap?.getLayer?.("elsie-radar-layer")) homeMap.setPaintProperty("elsie-radar-layer", "raster-opacity", state.radarOpacity);
+      openElsieSheet("radar");
+      return;
+    }
+    if (event.target.closest("[data-radar-refresh]")) {
+      fetchRadarMeta(false).then(() => { applyRadarLayer(); openElsieSheet("radar"); });
+      return;
+    }
+    if (event.target.closest("[data-radar-anim]")) {
+      state.radarAnimationEnabled = !state.radarAnimationEnabled;
+      saveState();
+      if (state.radarAnimationEnabled) startRadarAnimation();
+      else { stopRadarAnimation(); applyRadarLayer(); }
+      openElsieSheet("radar");
+      return;
+    }
+    if (event.target.closest("[data-trail-clear]")) {
+      if (window.confirm("Clear the entire Sasquatch trail? This cannot be undone.")) {
+        clearBreadcrumbTrail();
+        openElsieSheet("breadcrumb");
+      }
+      return;
+    }
+  });
+
+  document.addEventListener("change", (event) => {
+    if (event.target.matches("[data-radar-toggle]")) {
+      setRadarEnabled(event.target.checked);
+      openElsieSheet("radar");
+    }
+    if (event.target.matches("[data-radar-stations]")) {
+      state.radarStationsVisible = event.target.checked;
+      saveState();
+      syncRadarStationLayer();
+    }
+    if (event.target.matches("[data-trail-visible]")) {
+      state.breadcrumbVisible = event.target.checked;
+      saveState();
+      syncBreadcrumbLayers();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.activeElsieSheet) closeElsieSheet();
+  });
+
+  /* =================== END ELSIE MAP EXPERIENCE =================== */
 
   function renderHomeMapPanel() {
     const container = byId("homeRouteMapPanel");
@@ -7329,16 +7908,36 @@
     if (count) count.textContent = `${attractions.length} stops`;
     const elsie = activeProfile === "elsie";
     const [elsieTitle, elsieSubtitle] = elsieHeaderCopy();
-    container.innerHTML = `
-      ${elsie ? `<div class="elsie-map-header"><p>${elsieTitle}</p><span>${elsieSubtitle}</span></div>${elsieRouteTrackerMarkup()}` : ""}
+    document.body.classList.toggle("elsie-map-active", elsie);
+    container.innerHTML = elsie ? `
+      <div class="elsie-map-shell">
+        <div id="homeClusterMap" class="home-cluster-map maplibre-canvas elsie-map-canvas" role="application" aria-label="Elsie's route map with ${attractions.length} trip stops">
+          <div class="map-fallback">
+            <strong>Loading Elsie's map</strong>
+            <p>${attractions.length} trip stops are ready.</p>
+          </div>
+        </div>
+        <div class="elsie-float-top">
+          <button type="button" id="elsieEtaPill" class="elsie-eta-pill" data-elsie-sheet="eta" aria-haspopup="dialog" aria-label="Route and ETA details">${elsieEtaPillText()}</button>
+        </div>
+        <div class="elsie-float-right">
+          <button type="button" class="elsie-map-fab ${state.radarEnabled ? "is-on" : ""}" data-elsie-sheet="radar" aria-haspopup="dialog" aria-label="Weather radar controls">🌦</button>
+          <button type="button" class="elsie-map-fab" data-elsie-sheet="breadcrumb" aria-haspopup="dialog" aria-label="Sasquatch trail controls">👣</button>
+        </div>
+        ${renderElsieRadarMarkup()}
+        <div id="elsieSheetScrim" class="elsie-sheet-scrim" hidden></div>
+        <section id="elsieSheet" class="elsie-sheet" role="dialog" aria-modal="true" aria-label="Elsie map sheet" hidden></section>
+        <div id="clusterDrawer" class="cluster-drawer" hidden></div>
+      </div>
+    ` : `
       <div id="homeClusterMap" class="home-cluster-map maplibre-canvas" role="application" aria-label="Explore map with ${attractions.length} uploaded trip stops">
         <div class="map-fallback">
           <strong>Loading explore map</strong>
           <p>${attractions.length} uploaded trip stops are ready. Clusters expand as you zoom in.</p>
         </div>
       </div>
-      ${elsie ? "" : `<div id="homeDomMarkerLayer" class="home-dom-marker-layer" aria-label="Visible stop markers"></div>`}
-      ${elsie ? renderElsieRadarMarkup() : renderUploadedStopsPanel(attractions)}
+      <div id="homeDomMarkerLayer" class="home-dom-marker-layer" aria-label="Visible stop markers"></div>
+      ${renderUploadedStopsPanel(attractions)}
       <div id="clusterDrawer" class="cluster-drawer" hidden></div>
     `;
     if (!window.maplibregl) {
@@ -7453,6 +8052,10 @@
           source: "elsie-active-route",
           paint: { "line-color": "#6f50a0", "line-width": 5, "line-opacity": 0.82 }
         }, "home-unclustered-point");
+        syncBreadcrumbLayers(homeMap);
+        registerElsieIcons(homeMap).then(() => addElsieIconLayer(homeMap));
+        if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
+        syncRadarStationLayer(homeMap);
       }
       if (state.lastPosition) {
         homeMap.addSource("current-location", {
@@ -8102,7 +8705,8 @@
           segment: item.routeSegment,
           tier: item.tier,
           stopTime: item.estimatedStopTime,
-          icon: item.icon
+          icon: item.icon,
+          elsieIcon: activeProfile === "elsie" && getElsieIconType(item) ? `elsie-${getElsieIconType(item)}` : ""
         },
         geometry: { type: "Point", coordinates: [item.lon, item.lat] }
       }))
@@ -9445,6 +10049,9 @@
       renderBottomDrawer();
       byId("activeTraveler").textContent = `${currentProfile().name}'s view`;
     } else {
+      document.body.classList.remove("elsie-map-active");
+      stopRadarAnimation();
+      closeElsieSheet();
       if (homeMap) {
         homeMap.remove();
         homeMap = null;

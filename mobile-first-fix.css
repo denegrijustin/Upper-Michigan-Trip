@@ -1816,3 +1816,232 @@ body[data-page="explore"] .stop-detail-card {
     min-height: 94px;
   }
 }
+
+/* ===================== Elsie map experience ===================== */
+
+body.elsie-map-active { overflow: hidden; }
+body.elsie-map-active main { padding: 0; }
+body.elsie-map-active .topbar { max-height: 64px; }
+body.elsie-map-active .today-summary-card,
+body.elsie-map-active #topBadgePreview,
+body.elsie-map-active #bottomDrawer { display: none; }
+
+.elsie-map-shell {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  z-index: 18;
+  background: #dfe8e2;
+}
+
+.elsie-map-shell .elsie-map-canvas,
+.elsie-map-shell .home-cluster-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+}
+
+.elsie-float-top {
+  position: absolute;
+  top: calc(max(12px, env(safe-area-inset-top)) + 64px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
+  pointer-events: none;
+  width: min(92vw, 380px);
+  display: flex;
+  justify-content: center;
+}
+
+.elsie-eta-pill {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid #141414;
+  background: #fffdf7;
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.35);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.elsie-eta-pill b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.elsie-eta-pill span { white-space: nowrap; color: #3c463f; }
+.elsie-eta-pill em {
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #5b4aa0;
+  color: #fffdf7;
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.elsie-float-right {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  top: calc(max(12px, env(safe-area-inset-top)) + 128px);
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.elsie-map-fab {
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid #141414;
+  background: #fffdf7;
+  font-size: 1.15rem;
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.35);
+  cursor: pointer;
+}
+.elsie-map-fab.is-on { background: #cfe8ff; }
+
+.elsie-float-bottom {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 6px);
+  z-index: 22;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+  max-height: 48px;
+}
+.elsie-chip {
+  pointer-events: auto;
+  border: 2px solid #141414;
+  border-radius: 999px;
+  background: #fffdf7;
+  padding: 9px 14px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.35);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.elsie-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 28;
+  background: rgba(15, 20, 17, 0.28);
+}
+.elsie-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  max-height: min(72vh, 72dvh);
+  overflow-y: auto;
+  background: #fffdf7;
+  border-top: 3px solid #141414;
+  border-radius: 18px 18px 0 0;
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 24px rgba(15, 20, 17, 0.25);
+}
+.elsie-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.elsie-sheet-head strong { font-size: 1rem; }
+.elsie-sheet-head button,
+.elsie-radar-actions button,
+.elsie-opacity-row button,
+.elsie-danger {
+  border: 2px solid #141414;
+  border-radius: 10px;
+  background: #fffdf7;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.elsie-opacity-row { display: flex; gap: 8px; margin: 10px 0; }
+.elsie-opacity-row button[aria-pressed="true"] { background: #5b4aa0; color: #fffdf7; }
+.elsie-radar-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+.elsie-switch { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.elsie-sheet-meta { font-size: 0.78rem; color: #4c564f; margin: 6px 0; }
+.elsie-danger { background: #f3d1c8; }
+.elsie-danger[disabled] { opacity: 0.5; cursor: default; }
+
+.elsie-picks-list article,
+.elsie-badge-list article {
+  border: 2px solid #141414;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: #fbf7ec;
+}
+.elsie-picks-list small {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: #5b4aa0;
+  font-weight: 700;
+}
+.elsie-picks-list article div { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.elsie-picks-list article div button,
+.elsie-picks-list article div a {
+  border: 2px solid #141414;
+  border-radius: 10px;
+  background: #fffdf7;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.elsie-badge-list article.is-earned { background: #e3f2e4; }
+.elsie-badge-list .elsie-progress,
+.elsie-sheet .elsie-progress {
+  height: 8px;
+  border: 2px solid #141414;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fffdf7;
+  margin: 6px 0 4px;
+}
+.elsie-sheet .elsie-progress span,
+.elsie-badge-list .elsie-progress span {
+  display: block;
+  height: 100%;
+  background: #5b4aa0;
+}
+
+.elsie-sheet .elsie-route-tracker {
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+  position: static;
+  width: auto;
+  max-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .elsie-sheet, .elsie-eta-pill, .elsie-map-fab { transition: none; }
+}
+
+@media (min-width: 860px) {
+  .elsie-sheet {
+    left: auto;
+    right: 18px;
+    bottom: 18px;
+    width: 380px;
+    border: 3px solid #141414;
+    border-radius: 18px;
+  }
+}
