@@ -7926,9 +7926,46 @@
     "P3-003": "Eerie but true: the lake is so cold and deep that shipwrecks down there barely decay — some wrecks over a century old still look nearly new."
   };
 
+  const ELIETTE_COOL_FACTS = {
+    "P1-001": "This is the only stop left on the entire Santa Fe Trail where you can still ride an actual stagecoach — every other one is gone.",
+    "P1-006": "The glass bridge at the entrance crosses 9,000 red poppies — and each single poppy stands for 1,000 people who died in WWI. Do the math while you're standing on it.",
+    "P1-007": "In 1933, gangsters ambushed FBI agents right outside these doors in the 'Union Station Massacre' — marks attributed to the gunfight can still be found near the east entrance.",
+    "P1-008": "Three women played professional baseball WITH the men in the Negro Leagues — Toni Stone once got a hit off the legendary Satchel Paige.",
+    "P1-009": "A whole steamboat was found buried 45 feet under a Kansas CORNFIELD — the river had moved half a mile since it sank in 1856. The pickles on board were still sealed and reportedly still edible.",
+    "P1-017": "You're standing on the longest rail-trail in America — about 240 miles of old railroad turned into a path you could walk almost across the entire state.",
+    "P1-020": "The famous murals inside scandalized Missouri politicians when unveiled — the artist painted real corruption and rough frontier life instead of flattering scenes, and some wanted them destroyed.",
+    "P1-021": "This prison is older than the fall of the Alamo — and boxing champion Sonny Liston learned to fight inside these walls as an inmate.",
+    "P1-022": "The entire village is a National Historic Landmark — and only about 50 people live in it. The whole town is basically a museum people happen to live inside.",
+    "P1-023": "The Arch is exactly as wide as it is tall — 630 feet both ways — and on the final day of construction, crews sprayed fire hoses on the steel to shrink it enough to fit the last piece in.",
+    "P1-024": "Almost everything you climb on was salvaged from demolished buildings around St. Louis — old bridges, chimneys, even airplane parts. There's a real school bus hanging off the roof.",
+    "P1-027": "A thousand years ago, this city was BIGGER than London. And its people built a circle of giant posts — 'Woodhenge' — that worked as a sun calendar, like an American Stonehenge made of wood.",
+    "P1-028": "This is the only house Abraham Lincoln ever owned — and the stair rail is the original. You can put your hand exactly where his was.",
+    "P1-029": "The museum has the actual gloves Lincoln was carrying the night he was assassinated at Ford's Theatre — still stained. One of the most haunting real objects in any American museum.",
+    "P1-032": "In 2013 a moving dune here swallowed a 6-year-old boy into a hidden hole — he survived over three hours buried in sand, and scientists discovered a brand-new dune phenomenon trying to explain how the hole existed.",
+    "P2-003": "The Air Zoo has the only surviving SR-71B Blackbird trainer on Earth — the Blackbird family are the fastest jets ever built, able to outrun missiles by simply accelerating.",
+    "P2-004": "One of the biggest car museums in North America — hundreds of cars — and it's all on an old farm because one couple's hobby completely got out of hand.",
+    "P2-009": "It's Christmas here 361 days a year, and outside stands a replica of the tiny Austrian chapel where 'Silent Night' was first sung in 1818.",
+    "P2-010": "These white pines are 350+ years old and taller than a 15-story building — they were already giants before the United States existed, and they survived only because one family refused to let them be cut.",
+    "P2-014": "This 1790s sawmill site was completely LOST for about a century — until a local history buff rediscovered it in 1972 and it was dug back out of the forest.",
+    "P2-015": "In 1763, warriors got inside this fort using a lacrosse game as the trick — the ball 'accidentally' went over the wall, and when the gates opened, the game became an attack. Also: archaeologists here dig up 250-year-old toilets on purpose, because that's where the best artifacts hide.",
+    "P2-016": "This lighthouse was fired from its job by a bridge — when the Mackinac Bridge opened in 1957, its lights guided ships better than the lighthouse could, so the light was simply switched off.",
+    "P2-017": "The bridge is designed to swing up to 35 feet sideways in high wind — on purpose. And every Labor Day, tens of thousands of people walk all five miles of it.",
+    "P2-019": "This is one of the first ten places on the entire planet officially named an International Dark Sky Park — and this far north, the northern lights make real appearances.",
+    "P2-022": "Hidden in this park are the ruins of an 1859 lighthouse you can hike to — most visitors drive past without ever knowing it's back there.",
+    "P2-025": "In hard winters, islanders skip this ferry entirely and drive across the FROZEN LAKE on an ice road marked with old evergreen trees frozen upright into the ice.",
+    "P2-026": "The island didn't get electricity until 1964 — through a cable run underwater from the mainland — and it still runs a one-room schoolhouse, one of the last in Michigan.",
+    "P2-027": "The island's school is a real one-room schoolhouse — all grades, one teacher, one room, still operating in the 2020s.",
+    "P2-029": "The dwarf lake iris growing here is Michigan's state wildflower — and it grows almost nowhere else on Earth except Great Lakes shorelines like this one.",
+    "P2-032": "Cars have been BANNED on Mackinac Island since 1898 — an early automobile scared the horses, so the island simply outlawed cars forever. About 500 horses do all the work instead.",
+    "P2-033": "The Officers' Stone Quarters here, built in 1780, is the oldest building in the entire state of Michigan — older than the United States Constitution.",
+    "P3-001": "Fish sometimes ride through the locks alongside the freighters — a free 21-foot water elevator between two Great Lakes. About 7,000 ships a year make the trip.",
+    "P3-002": "The waterfall is genuinely root-beer colored with tan foam on top — stained by tree tannins — and this exact river appears in Longfellow's 'Song of Hiawatha,' written in 1855.",
+    "P3-003": "Lake Superior is so cold and deep that shipwrecks barely decay — and this museum displays the actual bronze bell of the Edmund Fitzgerald, raised from 530 feet down, 20 years after she sank with all 29 crew."
+  };
+
   function eliettePopupContent(item) {
     const seed = item.id || item.title || "stop";
-    const coolFact = item.why || item.summary || "";
+    const coolFact = ELIETTE_COOL_FACTS[item.id] || item.why || item.summary || "";
     const detailPromptBank = [
       "Look closer: find one tiny detail here nobody else in the family will notice.",
       "Look closer: what's the smallest interesting object you can spot at this place?",
