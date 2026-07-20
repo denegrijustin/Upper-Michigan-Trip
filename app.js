@@ -7331,7 +7331,10 @@
   }
 
   function elsieMiniBadgeIcon(badge, progress) {
-    const svg = badgeDoodleSvg(badge, progress);
+    const svg = badgeDoodleSvg(badge, progress).replace(
+      '<svg class="badge-doodle-svg"',
+      '<svg xmlns="http://www.w3.org/2000/svg" class="badge-doodle-svg"'
+    );
     const src = `data:image/svg+xml;base64,${b64encode(svg)}`;
     return `<img src="${src}" alt="${escapeHtml(badge.title)}${progress.earned ? " (earned)" : ""}" class="elsie-mini-badge ${progress.earned ? "is-earned" : ""}">`;
   }
