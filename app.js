@@ -7382,7 +7382,7 @@
   }
 
   function elsieIconSvg(type) {
-    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
     switch (type) {
       case "spooky": return base("#3a2a54", `<path d="M32 16c-8 0-12 7-12 14v14l4-3 4 3 4-3 4 3 4-3 4 3V30c0-7-4-14-12-14z" fill="#efe6ff" stroke="#141414" stroke-width="3"/><circle cx="27" cy="30" r="2.6" fill="#141414"/><circle cx="37" cy="30" r="2.6" fill="#141414"/><circle cx="27.9" cy="29.1" r="0.9" fill="#fff"/><path d="M45 15a6 6 0 1 0 4 10 8 8 0 0 1-4-10z" fill="#cbb7f2" stroke="#141414" stroke-width="2.5"/>`);
       case "strange-history": return base("#8a5a2b", `<rect x="20" y="18" width="24" height="30" rx="3" fill="#f2e3c2" stroke="#141414" stroke-width="3"/><path d="M24 26h16M24 32h16M24 38h11" stroke="#141414" stroke-width="2.5" stroke-linecap="round"/><path d="M44 18l6-4M44 48l6 4" stroke="#141414" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="42" r="4.5" fill="#e0aa3e" stroke="#141414" stroke-width="2.5"/>`);
@@ -7430,10 +7430,50 @@
     });
     map.on("click", "elsie-artwork", (event) => {
       const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
-      if (item) showAttractionPreview(item);
+      if (item) openElsieMarkerPopup(map, item, event.features[0].geometry.coordinates);
     });
     map.on("mouseenter", "elsie-artwork", () => { map.getCanvas().style.cursor = "pointer"; });
     map.on("mouseleave", "elsie-artwork", () => { map.getCanvas().style.cursor = ""; });
+  }
+
+  const ELSIE_ICON_LABELS = {
+    "spooky": "Spooky",
+    "strange-history": "Strange History",
+    "weird-stop": "Weird Stop",
+    "science": "Science",
+    "stars": "Stars",
+    "anime-vibe": "Anime Vibe",
+    "music-energy": "Music Energy",
+    "mystery": "Mystery",
+    "animal-watch": "Animal Watch"
+  };
+
+  let elsieMarkerPopup = null;
+
+  function openElsieMarkerPopup(map, rawItem, coordinates) {
+    const item = enrichStop(rawItem);
+    const iconType = getElsieIconType(item);
+    const label = ELSIE_ICON_LABELS[iconType] || "Worth the Detour";
+    const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "260px", offset: 18, className: "elsie-marker-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>${escapeHtml(label)}</small>
+          <strong>${escapeHtml(item.title)}</strong>
+          <p>${escapeHtml(item.summary || item.why || "")}</p>
+          ${item.profiles?.elsie ? `<p class="elsie-popup-angle">${escapeHtml(item.profiles.elsie)}</p>` : ""}
+          <div class="elsie-popup-actions">
+            <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
+            <button type="button" data-visited-stop="${escapeHtml(item.title)}">${isStopVisited(item) ? "Visited" : "Mark visited"}</button>
+          </div>
+          <div class="elsie-popup-links">
+            <a class="external-link" href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a>
+            <a class="external-link" href="${link}" target="_blank" rel="noopener">Visit official site</a>
+          </div>
+        </div>`)
+      .addTo(map);
   }
 
   /* ---------- Weather radar (RainViewer) ---------- */
@@ -8072,6 +8112,7 @@
         registerElsieIcons(homeMap).then(() => addElsieIconLayer(homeMap));
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
+        refreshActiveRoute();
       }
       if (state.lastPosition) {
         homeMap.addSource("current-location", {

@@ -2100,3 +2100,54 @@ body.elsie-map-active #bottomDrawer { display: none; }
     border-radius: 18px;
   }
 }
+
+/* Elsie attraction marker popup (click-to-identify + summary + link) */
+.maplibregl-popup.elsie-marker-popup .maplibregl-popup-content {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid #141414;
+  box-shadow: 0 4px 0 rgba(20, 20, 20, 0.3);
+  font-family: inherit;
+}
+.elsie-popup-card small {
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5b4aa0;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.elsie-popup-card strong {
+  display: block;
+  font-size: 0.98rem;
+  margin-bottom: 4px;
+}
+.elsie-popup-card p {
+  font-size: 0.82rem;
+  margin: 0 0 6px;
+  color: #2b322d;
+}
+.elsie-popup-angle {
+  font-style: italic;
+  color: #4c564f !important;
+}
+.elsie-popup-actions,
+.elsie-popup-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.elsie-popup-actions button,
+.elsie-popup-links a {
+  border: 2px solid #141414;
+  border-radius: 9px;
+  background: #fffdf7;
+  padding: 5px 9px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
