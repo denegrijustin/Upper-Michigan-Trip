@@ -2272,3 +2272,21 @@ body.elsie-map-active #bottomDrawer { display: none; }
 
 /* GPS auto toggle fab */
 .elsie-gps-fab.is-on { background: #d9f2e2; border-color: #1d7a43; }
+
+/* Jules visual-first popup v2 */
+.jules-popup-hero { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.jules-popup-art { border-radius: 50%; }
+.jules-lookfor {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  background: #fffdf7;
+  border: 2px dashed #10265c;
+  border-radius: 14px;
+  padding: 6px 8px;
+}
+.jules-lookfor-eyes { font-size: 1.4rem; }
+.jules-lookfor-item { font-size: 1.9rem; line-height: 1.15; }

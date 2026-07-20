@@ -7260,6 +7260,41 @@
     render();
   }
 
+  function updateLiveMapPosition() {
+    if (!homeMap || !state.lastPosition) return false;
+    const feature = { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [state.lastPosition.lon, state.lastPosition.lat] } };
+    const source = homeMap.getSource("current-location");
+    if (source && source.setData) {
+      source.setData(feature);
+    } else if (homeMap.isStyleLoaded && homeMap.isStyleLoaded()) {
+      try {
+        homeMap.addSource("current-location", { type: "geojson", data: feature });
+        if (activeProfile === "jules") {
+          registerJulesGpsImage(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "jules-gps-car", "icon-size": 0.42, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
+        } else {
+          homeMap.addLayer({
+            id: "current-location-dot",
+            type: "circle",
+            source: "current-location",
+            paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+          });
+        }
+      } catch { return false; }
+    } else {
+      return false;
+    }
+    syncBreadcrumbLayers(homeMap);
+    return true;
+  }
+
   function updatePosition(position) {
     const now = Date.now();
     if (now - lastGpsRender < 5000) return;
@@ -7273,7 +7308,12 @@
     maybeRecordBreadcrumb(point, position.coords.accuracy);
     refreshElsieEtaPill();
     state.destinationStatus = `${destination.label} · ${position.coords.accuracy > 100 ? "GPS signal is weak" : "GPS active"}`;
-    renderHomeMapPanel();
+    if (isMapProfile() && isHomeMapPage()) {
+      // Surgical update: move the marker without rebuilding the map (fixes flashing)
+      if (!updateLiveMapPosition()) renderHomeMapPanel();
+    } else {
+      renderHomeMapPanel();
+    }
     renderRouteMapPanel();
     renderExploreMapPanel();
     offerNearbyBadges(point);
@@ -8375,25 +8415,61 @@
     });
   }
 
+  const JULES_LOOKFOR_MAP = [
+    [/race car|racecar|nascar|stock car/i, "🏎️"], [/pit crew|pit stop/i, "🔧"], [/flag/i, "🏁"],
+    [/engine|motor/i, "⚙️"], [/grandstand|crowd|fans|cheer/i, "📣"], [/train|locomotive|railroad|rail/i, "🚂"],
+    [/plane|jet|aviation|fly/i, "✈️"], [/rocket|space/i, "🚀"], [/ship|boat|ferry|icebreaker/i, "🚢"],
+    [/bridge/i, "🌉"], [/lighthouse/i, "🗼"], [/baseball|home run|bat\b/i, "⚾"], [/soccer/i, "⚽"],
+    [/football|helmet/i, "🏈"], [/hockey|puck|ice rink/i, "🏒"], [/basketball/i, "🏀"],
+    [/mascot/i, "🎉"], [/horse/i, "🐎"], [/deer|wildlife|animal/i, "🦌"], [/bird|eagle/i, "🦅"],
+    [/fish/i, "🐟"], [/dog\b/i, "🐕"], [/dino|fossil/i, "🦕"], [/water|lake|river|falls/i, "💧"],
+    [/sand|dune|beach/i, "🏖️"], [/ice cream|treat|snack|food|popcorn|hot dog/i, "🍦"],
+    [/truck|machine|crane|tractor/i, "🚛"], [/tunnel|slide|climb/i, "🛝"], [/light|glow|dark sky|star/i, "✨"],
+    [/hero|shield|power/i, "🦸"], [/gecko|lizard/i, "🦎"], [/fast|speed|zoom|quick/i, "💨"],
+    [/loud|roar|noise/i, "🔊"], [/count|number/i, "🔢"], [/color|paint/i, "🎨"], [/flag.*wave|wave.*flag/i, "👋"]
+  ];
+
+  function julesLookForEmojis(stop) {
+    const text = `${stop.title} ${stop.why} ${stop.mission} ${stop.theme} ${stop.character}`;
+    const found = [];
+    for (const [pattern, emoji] of JULES_LOOKFOR_MAP) {
+      if (pattern.test(text) && !found.includes(emoji)) found.push(emoji);
+      if (found.length >= 6) break;
+    }
+    return found.length ? found : ["⭐"];
+  }
+
   function openJulesPopup(map, stop, coordinates) {
     if (elsieMarkerPopup) elsieMarkerPopup.remove();
     const preview = byId("homeAttractionPreview");
     if (preview) { preview.hidden = true; preview.innerHTML = ""; }
-    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 18, className: "elsie-marker-popup jules-popup" })
+    const markerArt = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(julesIconSvg(stop.icon))}`;
+    const lookFor = julesLookForEmojis(stop);
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "280px", offset: 18, className: "elsie-marker-popup jules-popup" })
       .setLngLat(coordinates)
       .setHTML(`
         <div class="elsie-popup-card jules-popup-card">
-          <div class="jules-popup-emoji" aria-hidden="true">${stop.emoji}</div>
+          <div class="jules-popup-hero">
+            <img class="jules-popup-art" src="${markerArt}" alt="" width="72" height="72">
+            <div class="jules-popup-emoji" aria-hidden="true">${stop.emoji}</div>
+          </div>
           <strong>${escapeHtml(stop.title)}</strong>
-          <p class="jules-popup-line">${escapeHtml(stop.why.split(",")[0].split(".")[0])}.</p>
-          <p class="jules-popup-mission">🎯 ${escapeHtml(stop.mission)}</p>
-          ${stop.noise && /loud/i.test(stop.noise) ? `<p class="jules-popup-line">🙉 Loud!</p>` : ""}
+          <div class="jules-lookfor" aria-label="Things to look for">
+            <span class="jules-lookfor-eyes" aria-hidden="true">👀</span>
+            ${lookFor.map((emoji) => `<span class="jules-lookfor-item">${emoji}</span>`).join("")}
+          </div>
+          ${stop.noise && /loud/i.test(stop.noise) ? `<div class="jules-lookfor"><span class="jules-lookfor-item">🙉</span><span class="jules-lookfor-item">🔊</span></div>` : ""}
           <div class="elsie-popup-actions jules-popup-actions">
             <button type="button" data-shortlist="${escapeHtml(stop.title)}" data-category="${escapeHtml(stop.theme)}" data-url="${escapeHtml(stop.official)}" aria-label="Save this stop">⭐</button>
             <button type="button" data-visited-stop="${escapeHtml(stop.title)}" aria-label="Mark visited">✅</button>
             <a href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${stop.lat}%2C${stop.lon}" target="_blank" rel="noopener" aria-label="Navigate">🗺️</a>
           </div>
-          <details class="jules-adult-notes"><summary>Grown-up notes</summary><p>${escapeHtml(stop.adultNotes)}${stop.noise ? ` ${escapeHtml(stop.noise)}.` : ""}</p><a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a></details>
+          <details class="jules-adult-notes"><summary>Grown-up notes</summary>
+            <p><strong>Why he'll like it:</strong> ${escapeHtml(stop.why)}</p>
+            <p><strong>Kid mission (read aloud):</strong> ${escapeHtml(stop.mission)}</p>
+            <p>${escapeHtml(stop.adultNotes)}${stop.noise ? ` ${escapeHtml(stop.noise)}.` : ""}</p>
+            <a class="external-link" href="${escapeHtml(stop.official)}" target="_blank" rel="noopener">Official site</a>
+          </details>
         </div>`)
       .addTo(map);
   }
