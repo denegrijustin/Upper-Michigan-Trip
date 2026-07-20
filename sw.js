@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v33-fix-active-leg-waypoints";
+const CACHE_NAME = "elskatemm-trip-v34-tweak-batch-1";
 const CORE_ASSETS = [
   "/",
   "/index.html",

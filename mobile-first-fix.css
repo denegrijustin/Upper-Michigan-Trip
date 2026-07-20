@@ -2151,3 +2151,19 @@ body.elsie-map-active #bottomDrawer { display: none; }
   color: inherit;
   cursor: pointer;
 }
+
+/* Island mode: activity interests row */
+.elsie-island-interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.elsie-island-interests span {
+  border: 2px solid #141414;
+  border-radius: 999px;
+  background: #eef2e6;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}

@@ -5833,7 +5833,6 @@
   const parentPages = ["today", "route", "explore", "nearby", "learn", "lens", "rewards", "memories", "detail", "gps", "weather", "ferry", "stops", "votes", "saved", "badges", "photos", "sources", "settings"];
   const mainMenuItems = [
     ["explore", "Explore Map", "All uploaded trip stops on one clustered map"],
-    ["lens", "Real Life Lens", "Analyze a photo and save the story"],
     ["memories", "Trip Summary", "Saved photos, stats, and timeline"],
     ["photos", "Photos", "Captured media"],
     ["rewards", "Badges", "Earned and upcoming trip badges"],
@@ -6205,6 +6204,14 @@
     const route = liveRouteResults[routeResultKey()];
     if (!route || Date.now() - Number(route.calculatedAt || 0) > 5 * 60 * 1000) return true;
     return lastRouteOrigin && point && haversineMiles(lastRouteOrigin, point) >= 3;
+  }
+
+  function currentTripLegId() {
+    const day = selectedDayDate();
+    if (state.phase === "return" || day === "2026-08-08" || state.tripLeg === "return") return "return";
+    if (state.phase === "island" || state.phase === "complete") return "island";
+    if (day === "2026-08-01" || state.tripLeg === "day2") return "day2";
+    return "day1";
   }
 
   function activeLegWaypoints() {
@@ -6682,7 +6689,15 @@
       "great-lakes": ["Lake Effect", "Explore 3 Great Lakes locations.", 3],
       "lighthouse-explorer": ["Lighthouse Files", "Visit or save 3 lighthouse locations.", 3],
       "sand-dune-explorer": ["Dunes Discovered", "Visit Indiana Dunes.", 1],
-      "island-explorer": ["Island Arrival", "Reach Bois Blanc Island.", 1]
+      "island-explorer": ["Island Arrival", "Reach Bois Blanc Island.", 1],
+      "mitten-state": ["Route Reader", "Trace the trip from the palm to the tip of Michigan.", 3],
+      "dark-sky-observer": ["Night Signal", "Use the sky and stargazing layer during the trip.", 1],
+      "museum-explorer": ["Science Detour", "Open, save, or visit museum and science stops.", 3],
+      "mackinac-bridge": ["Bridge Crossing", "Find the bridge and Straits stories that connect the peninsulas.", 1],
+      "waterfall-hunter": ["Falls Finder", "Find a falls or rushing-water stop.", 1],
+      "nature-explorer": ["Wild Places", "Collect parks, preserves, trails, and wildlife stops.", 4],
+      "state-capitol": ["Capitol Story", "Connect the route to a capitol or government story.", 1],
+      "photo-memory": ["Snapshot Hunter", "Capture a trip photo and save it to the journal.", 1]
     };
     return adventureBadges.filter((badge) => mature[badge.id]).map((badge) => {
       const [title, description, required] = mature[badge.id];
@@ -7291,6 +7306,7 @@
 
   function elsieHeaderCopy() {
     const target = getActiveTripTarget();
+    if (isElsieIslandMode()) return ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
     if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
     if (state.phase === "pretrip") return ["ELSIE'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"];
     return [`${target.label.toUpperCase()} IS NEXT`, target === data.route.destinationTargets.indianaDunes ? "Dunes, wetlands, forest, then north to the ferry" : "Live route context without the clutter"];
@@ -7362,13 +7378,14 @@
   }
 
   function renderElsieRadarMarkup() {
-    const picks = elsieRadarStops();
+    const island = isElsieIslandMode();
+    const picks = island ? elsieIslandActivities().board : elsieRadarStops();
     const summary = elsieBadgeSummary();
     const trailIcon = `<span class="elsie-mini-badge elsie-mini-badge-emoji ${summary.trail.earned ? "is-earned" : ""}">👣</span>`;
     const icons = summary.items.map(({ badge, progress }) => elsieMiniBadgeIcon(badge, progress)).join("") + trailIcon;
     return `
       <div id="elsieRadar" class="elsie-float-bottom" aria-label="Elsie quick controls">
-        <button type="button" class="elsie-chip" data-elsie-sheet="picks">Elsie's Picks · ${picks.length}</button>
+        <button type="button" class="elsie-chip" data-elsie-sheet="${island ? "island" : "picks"}">${island ? "Island Ideas" : "Elsie's Picks"} · ${picks.length}</button>
       </div>
       <button type="button" class="elsie-badge-tracker" data-elsie-sheet="badges" aria-label="Badges ${summary.earned} of ${summary.total} earned">
         <span class="elsie-badge-tracker-icons">${icons}</span>
@@ -7696,7 +7713,7 @@
       latitude: Number(point.lat.toFixed(5)),
       longitude: Number(point.lon.toFixed(5)),
       recordedAt: new Date().toISOString(),
-      tripLeg: state.tripLeg || state.phase || "day1",
+      tripLeg: currentTripLegId(),
       reason,
       accuracy: Number.isFinite(accuracy) ? Math.round(accuracy) : null,
       profile: "elsie",
@@ -7842,10 +7859,42 @@
   function renderElsieSheetContent(type, payload) {
     if (type === "eta") return `${elsieSheetHead("Route + ETA")}${elsieRouteTrackerMarkup()}`;
     if (type === "picks") return renderElsiePicksSheet();
+    if (type === "island") return renderElsieIslandSheet();
     if (type === "radar") return renderElsieRadarSheet();
     if (type === "badges") return renderElsieBadgeSheet();
     if (type === "breadcrumb") return renderElsieTrailSheet();
     return elsieSheetHead("Elsie");
+  }
+
+  function renderElsieIslandSheet() {
+    const { board, interests } = elsieIslandActivities();
+    const stops = elsieIslandStops();
+    const groups = {};
+    stops.forEach((item) => {
+      const group = elsieIslandLandmarkGroup(item);
+      groups[group] = groups[group] || [];
+      groups[group].push(item);
+    });
+    return `${elsieSheetHead("Island Ideas")}
+      <div class="elsie-island-sheet">
+        <p class="elsie-sheet-meta">While you're on Bois Blanc: things to look for, and things to do.</p>
+        ${interests.length ? `<div class="elsie-island-interests">${interests.map((idea) => `<span>${escapeHtml(idea)}</span>`).join("")}</div>` : ""}
+        <div class="elsie-picks-list">
+          ${board.map((item) => `<article>
+            <small>${escapeHtml(item.type)}</small><strong>${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
+            <p class="elsie-popup-angle">Look for: ${escapeHtml(item.lookFor)}</p>
+            <div>
+              <button type="button" data-complete-activity="${escapeHtml(item.title)}">Done</button>
+              <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.type)}" data-url="${item.link}">Save</button>
+              <a href="${item.link}" target="_blank" rel="noopener">Learn more</a>
+            </div>
+          </article>`).join("") || "<p>No new island activities right now — check Badges for what's already logged.</p>"}
+        </div>
+        ${Object.keys(groups).length ? `<h4>On the map</h4>${Object.entries(groups).map(([group, items]) => `
+          <p class="elsie-sheet-meta"><strong>${escapeHtml(group)}:</strong> ${items.map((i) => escapeHtml(i.title)).join(", ")}</p>
+        `).join("")}` : ""}
+      </div>`;
   }
 
   function renderElsiePicksSheet() {
@@ -7918,12 +7967,40 @@
       </div>`;
   }
 
+  function isElsieIslandMode() {
+    return activeProfile === "elsie" && (state.phase === "island" || state.phase === "complete");
+  }
+
   function elsieEtaPillText() {
+    if (isElsieIslandMode()) {
+      return `<b>Exploring Bois Blanc</b><span>Island mode</span><em>On Island</em>`;
+    }
     const target = getActiveTripTarget();
     const route = currentRouteResult();
     const miles = route.distanceMeters ? Math.round(route.distanceMeters / 1609.344) : target.plannedMiles;
     const status = route.isFallback ? (route.source === "planned" ? "Planned" : "Cached") : route.isLive ? "Live" : "Approximate";
     return `<b>${escapeHtml(target.label)}</b><span>${formatRouteDuration(route.durationSeconds)} · ${Number(miles || 0).toLocaleString()} mi</span><em>${status}</em>`;
+  }
+
+  function elsieIslandActivities() {
+    const elsieProfile = data.profiles.find((p) => p.id === "elsie");
+    const board = (data.activityBoard.elsie || []).filter((item) => ["Island", "Nature", "Great Lakes"].includes(item.type));
+    const interests = elsieProfile?.islandInterests || [];
+    const completed = new Set(state.completed.filter((item) => item.profile === "elsie").map((item) => item.activityTitle));
+    return { board: board.filter((item) => !completed.has(item.title)), interests };
+  }
+
+  function elsieIslandStops() {
+    return allAttractions().filter((item) => haversineMiles({ lat: item.lat, lon: item.lon }, { lat: 45.7465, lon: -84.4948 }) <= 6);
+  }
+
+  function elsieIslandLandmarkGroup(item) {
+    const text = `${item.title} ${item.category}`.toLowerCase();
+    if (/lighthouse/.test(text)) return "Landmark";
+    if (/natural area|park|forest|shoreline/.test(text)) return "Wildlife & nature";
+    if (/museum|library|township|school|community/.test(text)) return "Island life";
+    if (/airport|transit/.test(text)) return "Getting around";
+    return "Landmark";
   }
 
   function refreshElsieEtaPill() {
@@ -8134,25 +8211,70 @@
         paint: { "text-color": "#fffdf7" }
       });
       if (activeProfile === "elsie") {
-        const routed = currentRouteResult().coordinates || [];
-        const legTarget = getActiveTripTarget();
-        const legOrigin = state.lastPosition || activeOrigin();
-        const planned = [legOrigin, ...activeLegWaypoints(), legTarget].map((point) => [point.lon, point.lat]);
-        homeMap.addSource("elsie-active-route", {
-          type: "geojson",
-          data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: routed.length > 1 ? routed : planned } }
-        });
-        homeMap.addLayer({
-          id: "elsie-active-route-line",
-          type: "line",
-          source: "elsie-active-route",
-          paint: { "line-color": "#6f50a0", "line-width": 5, "line-opacity": 0.82 }
-        }, "home-unclustered-point");
+        const islandMode = isElsieIslandMode();
+        if (!islandMode) {
+          const routed = currentRouteResult().coordinates || [];
+          const legTarget = getActiveTripTarget();
+          const legOrigin = state.lastPosition || activeOrigin();
+          const planned = [legOrigin, ...activeLegWaypoints(), legTarget].map((point) => [point.lon, point.lat]);
+          homeMap.addSource("elsie-active-route", {
+            type: "geojson",
+            data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: routed.length > 1 ? routed : planned } }
+          });
+          homeMap.addLayer({
+            id: "elsie-active-route-line",
+            type: "line",
+            source: "elsie-active-route",
+            paint: { "line-color": "#6f50a0", "line-width": 5, "line-opacity": 0.82 }
+          }, "home-unclustered-point");
+        }
         syncBreadcrumbLayers(homeMap);
         registerElsieIcons(homeMap).then(() => addElsieIconLayer(homeMap));
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
-        refreshActiveRoute();
+        if (!islandMode) refreshActiveRoute();
+        if (!islandMode) try {
+          if (!homeMap.getLayer("elsie-day2-preview-line")) {
+            const stops = data.route.coordinates;
+            const day2Points = [
+              { lat: stops.merrillville.lat, lon: stops.merrillville.lon },
+              ...(state.includeIndianaDunes && !state.completedStops["indiana-dunes"] ? [{ lat: stops.indianaDunes.lat, lon: stops.indianaDunes.lon }] : []),
+              { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon }
+            ];
+            const isDay2Now = currentTripLegId() === "day2";
+            homeMap.addSource("elsie-day2-preview", {
+              type: "geojson",
+              data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: day2Points.map((p) => [p.lon, p.lat]) } }
+            });
+            homeMap.addLayer({
+              id: "elsie-day2-preview-line",
+              type: "line",
+              source: "elsie-day2-preview",
+              paint: {
+                "line-color": "#8b6fc9",
+                "line-width": isDay2Now ? 5 : 3,
+                "line-opacity": isDay2Now ? 0.75 : 0.32
+              }
+            }, "elsie-active-route-line");
+          }
+        } catch { /* non-critical preview layer */ }
+        try {
+          if (!homeMap.getLayer("elsie-state-outlines")) {
+            homeMap.addLayer({
+              id: "elsie-state-outlines",
+              type: "line",
+              source: "openmaptiles",
+              "source-layer": "boundary",
+              filter: ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
+              paint: {
+                "line-color": "#4a3f6b",
+                "line-width": ["interpolate", ["linear"], ["zoom"], 3, 1.1, 6, 1.6, 10, 2.2],
+                "line-opacity": 0.75,
+                "line-dasharray": [2, 1]
+              }
+            }, "home-unclustered-point");
+          }
+        } catch { /* base style source layout may vary; safe to skip */ }
       }
       if (state.lastPosition) {
         homeMap.addSource("current-location", {
@@ -8202,7 +8324,11 @@
       }
       const first = attractions[0];
       const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
-      homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
+      if (isElsieIslandMode()) {
+        homeMap.jumpTo({ center: [-84.4948, 45.7465], zoom: 11.2 });
+      } else {
+        homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
+      }
       refreshUploadedStopsPanel();
       if (activeProfile !== "elsie") window.setTimeout(renderHomeDomMarkers, 120);
     });
