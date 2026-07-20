@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v45-haunted-all-paths";
+const CACHE_NAME = "elskatemm-trip-v46-ship-haunted-data";
 const CORE_ASSETS = [
   "/",
   "/index.html",
