@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v57-jules-marker-hero-size";
+const CACHE_NAME = "elskatemm-trip-v58-jules-emoji-everywhere";
 const CORE_ASSETS = [
   "/",
   "/index.html",

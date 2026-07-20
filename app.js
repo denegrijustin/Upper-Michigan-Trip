@@ -7276,7 +7276,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "jules-gps-car", "icon-size": 0.55, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "jules-gps-car", "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -8099,6 +8099,30 @@
       : isEmma ? (EMMA_ICON_LABELS[iconType] || "Worth the Detour")
       : isEliette ? (ELIETTE_ICON_LABELS[iconType] || "Worth the Detour")
       : (ELSIE_ICON_LABELS[iconType] || "Worth the Detour");
+    if (profile === "jules") {
+      const emojiRow = julesLookForEmojis({ title: item.title, why: item.summary || "", mission: item.why || "", theme: item.category || "", character: item.profiles?.jules || "" });
+      elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "280px", offset: 18, className: "elsie-marker-popup jules-popup" })
+        .setLngLat(coordinates)
+        .setHTML(`
+          <div class="elsie-popup-card jules-popup-card">
+            <div class="jules-popup-emoji" aria-hidden="true">${emojiRow.slice(0, 3).join(" ")}</div>
+            <strong>${escapeHtml(item.title)}</strong>
+            ${emojiRow.length > 3 ? `<div class="jules-lookfor" aria-label="Things to look for"><span class="jules-lookfor-eyes" aria-hidden="true">👀</span>${emojiRow.slice(3).map((e) => `<span class="jules-lookfor-item">${e}</span>`).join("")}</div>` : ""}
+            <div class="elsie-popup-actions jules-popup-actions">
+              <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}" aria-label="Save this stop">⭐</button>
+              <button type="button" data-visited-stop="${escapeHtml(item.title)}" aria-label="Mark visited">✅</button>
+              <a href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener" aria-label="Navigate">🗺️</a>
+            </div>
+            <details class="jules-adult-notes"><summary>Grown-up notes</summary>
+              <p>${escapeHtml(item.summary || "")}</p>
+              ${item.profiles?.jules ? `<p><strong>Jules angle (read aloud):</strong> ${escapeHtml(item.profiles.jules)}</p>` : ""}
+              ${item.profiles?.momdad || item.why ? `<p><strong>Mom &amp; Dad:</strong> ${escapeHtml(item.profiles?.momdad || item.why)}</p>` : ""}
+              <a class="external-link" href="${link}" target="_blank" rel="noopener">Official site</a>
+            </details>
+          </div>`)
+        .addTo(map);
+      return;
+    }
     let bodyHtml;
     if (isEliette) {
       const content = eliettePopupContent(item);
@@ -9428,7 +9452,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "jules-gps-car", "icon-size": 0.55, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "jules-gps-car", "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
