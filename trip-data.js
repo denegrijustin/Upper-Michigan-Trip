@@ -1,9 +1,9 @@
 window.TRIP_DATA = {
   dates: {
-    depart: "2026-07-24T08:00:00-05:00",
-    arriveIsland: "2026-07-25T17:00:00-04:00",
-    departIsland: "2026-08-01T09:00:00-04:00",
-    complete: "2026-08-02T21:00:00-05:00"
+    depart: "2026-07-31T08:00:00-05:00",
+    arriveIsland: "2026-08-01T17:00:00-04:00",
+    departIsland: "2026-08-08T09:00:00-04:00",
+    complete: "2026-08-09T01:00:00-05:00"
   },
   route: {
     totalOutboundMiles: 1065,
@@ -15,14 +15,17 @@ window.TRIP_DATA = {
       stLouis: { lat: 38.6270, lon: -90.1994 },
       indianapolis: { lat: 39.7684, lon: -86.1581 },
       southBend: { lat: 41.6764, lon: -86.2520 },
+      merrillville: { lat: 41.4828, lon: -87.3328 },
+      indianaDunes: { lat: 41.6332, lon: -87.0547 },
       grandRapids: { lat: 42.9634, lon: -85.6681 },
       grayling: { lat: 44.6614, lon: -84.7148 },
       cheboygan: { lat: 45.6469, lon: -84.4745 },
       islandApprox: { lat: 45.7465, lon: -84.4948 }
     },
     destinationTargets: {
-      southBend: { label: "South Bend dinner stop", lat: 41.6764, lon: -86.2520, plannedMiles: 585, plannedHours: 9 },
-      cheboygan: { label: "Plaunt ferry in Cheboygan", lat: 45.6469, lon: -84.4745, plannedMiles: 460 },
+      merrillville: { label: "Merrillville Overnight", lat: 41.4828, lon: -87.3328, plannedMiles: 585, plannedHours: 9, timeZone: "America/Chicago" },
+      indianaDunes: { label: "Indiana Dunes", lat: 41.6332, lon: -87.0547, plannedMiles: 27, plannedHours: 0.6, timeZone: "America/Chicago" },
+      cheboygan: { label: "Plaunt ferry in Cheboygan", lat: 45.6469, lon: -84.4745, plannedMiles: 365, plannedHours: 5.6, timeZone: "America/Detroit" },
       island: { label: "Bois Blanc Island home base", lat: 45.7465, lon: -84.4948, plannedMiles: 1065 },
       home: { label: "home in Olathe", lat: 38.8814, lon: -94.8191, plannedMiles: 1065 }
     },
@@ -31,7 +34,8 @@ window.TRIP_DATA = {
       { id: "columbia", label: "Columbia", lat: 38.9517, lon: -92.3341, type: "route" },
       { id: "st-louis", label: "St. Louis", lat: 38.6270, lon: -90.1994, type: "route" },
       { id: "indianapolis", label: "Indianapolis", lat: 39.7684, lon: -86.1581, type: "route" },
-      { id: "south-bend", label: "South Bend", lat: 41.6764, lon: -86.2520, type: "overnight" },
+      { id: "merrillville", label: "Merrillville Overnight", lat: 41.4828, lon: -87.3328, type: "overnight" },
+      { id: "indiana-dunes", label: "Indiana Dunes", lat: 41.6332, lon: -87.0547, type: "nature" },
       { id: "grand-rapids", label: "Grand Rapids", lat: 42.9634, lon: -85.6681, type: "route" },
       { id: "grayling", label: "Grayling", lat: 44.6614, lon: -84.7148, type: "route" },
       { id: "cheboygan", label: "Cheboygan", lat: 45.6469, lon: -84.4745, type: "ferry" },
@@ -200,7 +204,8 @@ window.TRIP_DATA = {
     ],
     stops: [
       { id: "olathe", name: "Olathe, Kansas", milesFromStart: 0, type: "start" },
-      { id: "south-bend", name: "South Bend dinner / overnight", milesFromStart: 575, type: "dinner" },
+      { id: "merrillville", name: "Merrillville Overnight", milesFromStart: 585, type: "overnight" },
+      { id: "indiana-dunes", name: "Indiana Dunes Visitor Center", milesFromStart: 612, type: "nature" },
       { id: "cheboygan", name: "Plaunt Transportation, Cheboygan", milesFromStart: 1035, type: "ferry" },
       { id: "island", name: "Bois Blanc Island", milesFromStart: 1065, type: "arrival" }
     ],
@@ -340,8 +345,8 @@ window.TRIP_DATA = {
     }
   ],
   days: [
-    { date: "2026-07-31", title: "Launch Day", mood: "Road-trip energy", outlook: "Track the road to South Bend, watch for real landmarks, and keep the dinner goal visible without crowding the screen.", accent: "#1f4f3a" },
-    { date: "2026-08-01", title: "Ferry and Arrival", mood: "South Bend to Cheboygan", outlook: "Morning road miles first, then Cheboygan timing, Plaunt ferry buffer, island orientation, first sunset and stars.", accent: "#236c8f" },
+    { date: "2026-07-31", title: "Launch Day", mood: "Road-trip energy", outlook: "Track the road to Merrillville and keep the overnight goal visible without crowding the screen.", accent: "#1f4f3a" },
+    { date: "2026-08-01", title: "Dunes, Ferry and Arrival", mood: "Merrillville to Cheboygan", outlook: "Indiana Dunes first when enabled, then Cheboygan timing, Plaunt ferry buffer, island orientation, first sunset and stars.", accent: "#236c8f" },
     { date: "2026-08-02", title: "Build Today's Adventure", mood: "Open island day", outlook: "No fixed plan. Vote on beaches, shops, local taste, slow exploring, or a low-energy backup.", accent: "#6c8a4b" },
     { date: "2026-08-03", title: "Stories and History", mood: "Great Lakes context", outlook: "Use history as a menu: ferry stories, island life, lighthouses, shipwrecks, and old routes.", accent: "#8b5e34" },
     { date: "2026-08-04", title: "Nature and Wildlife", mood: "Forest and shoreline", outlook: "Look for birds, small animals, rocks, water patterns, tracks, and quiet places.", accent: "#3f6f4f" },
@@ -558,10 +563,10 @@ window.TRIP_DATA = {
 
 window.TRIP_DATA.mapLinks = {
   styleUrl: "https://tiles.openfreemap.org/styles/liberty",
-  outboundUrl: "https://maps.apple.com/?saddr=1924%20E%20155th%20St%2C%20Olathe%2C%20KS&daddr=Bois%20Blanc%20Island%2C%20MI",
-  dayOneUrl: "https://maps.apple.com/?saddr=1924%20E%20155th%20St%2C%20Olathe%2C%20KS&daddr=South%20Bend%2C%20IN",
-  ferryDayUrl: "https://maps.apple.com/?saddr=South%20Bend%2C%20IN&daddr=Plaunt%20Transportation%2C%20412%20Water%20Street%2C%20Cheboygan%2C%20MI",
-  returnUrl: "https://maps.apple.com/?saddr=Bois%20Blanc%20Island%2C%20MI&daddr=1924%20E%20155th%20St%2C%20Olathe%2C%20KS"
+  outboundUrl: "https://www.google.com/maps/dir/?api=1&destination=Bois%20Blanc%20Island%2C%20MI&travelmode=driving",
+  dayOneUrl: "https://www.google.com/maps/dir/?api=1&destination=8293%20Louisiana%20St%2C%20Merrillville%2C%20IN%2046410&travelmode=driving",
+  ferryDayUrl: "https://www.google.com/maps/dir/?api=1&destination=Plaunt%20Transportation%2C%20Cheboygan%2C%20MI&waypoints=Indiana%20Dunes%20Visitor%20Center%2C%201215%20IN-49%2C%20Porter%2C%20IN%2046304&travelmode=driving",
+  returnUrl: "https://www.google.com/maps/dir/?api=1&destination=Olathe%2C%20KS&travelmode=driving"
 };
 
 window.TRIP_DATA.profilePlacePreferences = {
@@ -605,7 +610,9 @@ window.TRIP_DATA.profilePlacePreferences = {
 
 window.TRIP_DATA.weatherLocations = [
   { id: "olathe", name: "Olathe / home", lat: 38.8562, lon: -94.7878, role: "Start" },
-  { id: "southBend", name: "South Bend", lat: 41.6764, lon: -86.2520, role: "Day-one dinner" },
+  { id: "southBend", name: "South Bend", lat: 41.6764, lon: -86.2520, role: "Route context" },
+  { id: "merrillville", name: "Merrillville Overnight", lat: 41.4828, lon: -87.3328, role: "Day-one overnight" },
+  { id: "indianaDunes", name: "Indiana Dunes", lat: 41.6332, lon: -87.0547, role: "Day-two first stop" },
   { id: "cheboygan", name: "Cheboygan / Plaunt ferry", lat: 45.6469, lon: -84.4745, role: "Ferry mainland" },
   { id: "boisBlanc", name: "Bois Blanc Island", lat: 45.7465, lon: -84.4948, role: "Island" }
 ];

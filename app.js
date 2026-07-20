@@ -10,6 +10,9 @@
   let homeMap = null;
   let exploreMap = null;
   let mapLibreLoading = null;
+  let lastRouteOrigin = null;
+  let liveRouteResults = {};
+  let modalReturnFocus = null;
   const EMBEDDED_TRIP_STOPS = [
   {
     "id": "P1-001",
@@ -5857,6 +5860,11 @@
       journal: [],
       draftPhotos: [],
       visitedStops: {},
+      tripLeg: "day1",
+      includeIndianaDunes: true,
+      completedStops: {},
+      profileStopRatings: { elsie: {} },
+      profileCollections: { elsie: {} },
       pendingAnalyze: false,
       badges: {},
       weather: {},
@@ -5890,6 +5898,13 @@
     state.journal ||= [];
     state.draftPhotos ||= [];
     state.visitedStops ||= {};
+    state.completedStops ||= {};
+    state.profileStopRatings ||= { elsie: {} };
+    state.profileStopRatings.elsie ||= {};
+    state.profileCollections ||= { elsie: {} };
+    state.profileCollections.elsie ||= {};
+    delete state.routeResults;
+    if (typeof state.includeIndianaDunes !== "boolean") state.includeIndianaDunes = true;
     [state.captures, state.journal, state.draftPhotos].forEach((list) => {
       list.forEach((item) => {
         item.id ||= makeId("photo");
@@ -6078,7 +6093,7 @@
 
   function isStopSaved(stop) {
     const name = stop.title || stop.name;
-    return Object.values(state.shortlist || {}).some((item) => item.name === name);
+    return Object.values(state.shortlist || {}).some((item) => item.name === name && (activeProfile !== "elsie" || item.profile === "elsie"));
   }
 
   function isStopVisited(stop) {
@@ -6102,18 +6117,130 @@
   }
 
   function activeDestination() {
-    const day = selectedDayDate();
-    if (state.phase === "return" || day === "2026-08-08") return data.route.destinationTargets.home;
-    if (day === "2026-07-31") return data.route.destinationTargets.southBend;
-    if (day === "2026-08-01" && state.phase !== "island") return data.route.destinationTargets.cheboygan;
-    return data.route.destinationTargets.island;
+    return getActiveTripTarget();
   }
 
   function activeOrigin() {
     const day = selectedDayDate();
     if (state.phase === "return" || day === "2026-08-08") return data.route.coordinates.islandApprox;
-    if (day === "2026-08-01" && state.phase !== "island") return data.route.coordinates.southBend;
+    if (day === "2026-08-01" && state.phase !== "island") return data.route.coordinates.merrillville;
     return data.route.coordinates.start;
+  }
+
+  function routeResultKey(target = getActiveTripTarget()) {
+    return stopKey(target);
+  }
+
+  function plannedRouteResult(target = getActiveTripTarget()) {
+    const miles = Number(target.plannedMiles || 0);
+    const hours = Number(target.plannedHours || (miles ? miles / 58 : 0));
+    return {
+      distanceMeters: miles * 1609.344,
+      durationSeconds: hours * 3600,
+      trafficDurationSeconds: null,
+      coordinates: [],
+      calculatedAt: Date.now(),
+      source: "planned",
+      isLive: false,
+      isFallback: true
+    };
+  }
+
+  async function getActiveRoute({ origin, destination, waypoints = [], travelMode = "driving", force = false } = {}) {
+    const target = destination || getActiveTripTarget();
+    const from = origin || state.lastPosition || activeOrigin();
+    const key = routeResultKey(target);
+    const cached = liveRouteResults[key];
+    if (!force && cached && Date.now() - Number(cached.calculatedAt || 0) < 5 * 60 * 1000) return cached;
+    if (!navigator.onLine || document.visibilityState === "hidden") return cached || plannedRouteResult(target);
+    const points = [from, ...waypoints, target].map((point) => `${Number(point.lon).toFixed(6)},${Number(point.lat).toFixed(6)}`).join(";");
+    try {
+      const response = await fetch(`https://router.project-osrm.org/route/v1/${travelMode}/${points}?overview=full&geometries=geojson&steps=false`);
+      if (!response.ok) throw new Error("route unavailable");
+      const payload = await response.json();
+      const route = payload.routes?.[0];
+      if (!route) throw new Error("route missing");
+      const normalized = {
+        distanceMeters: route.distance,
+        durationSeconds: route.duration,
+        trafficDurationSeconds: null,
+        encodedPolyline: null,
+        coordinates: route.geometry?.coordinates || [],
+        calculatedAt: Date.now(),
+        source: "OSRM road route",
+        isLive: Boolean(state.lastPosition),
+        isFallback: false,
+        destination: { lat: target.lat, lon: target.lon, label: target.label }
+      };
+      lastRouteOrigin = { lat: from.lat, lon: from.lon };
+      liveRouteResults[key] = normalized;
+      state.initialLegDistanceMeters ||= normalized.distanceMeters;
+      saveState();
+      return normalized;
+    } catch {
+      if (cached) return { ...cached, isLive: false, source: "cached road route" };
+      return plannedRouteResult(target);
+    }
+  }
+
+  function currentRouteResult() {
+    return liveRouteResults[routeResultKey()] || plannedRouteResult();
+  }
+
+  function routeShouldRefresh(point) {
+    const route = liveRouteResults[routeResultKey()];
+    if (!route || Date.now() - Number(route.calculatedAt || 0) > 5 * 60 * 1000) return true;
+    return lastRouteOrigin && point && haversineMiles(lastRouteOrigin, point) >= 3;
+  }
+
+  function refreshActiveRoute(force = false) {
+    if (document.visibilityState === "hidden") return Promise.resolve(currentRouteResult());
+    return getActiveRoute({ force }).then((route) => {
+      if (route.distanceMeters) state.gpsMilesToActiveDestination = route.distanceMeters / 1609.344;
+      if (state.initialLegDistanceMeters && route.distanceMeters) {
+        const progress = clamp(1 - route.distanceMeters / state.initialLegDistanceMeters, 0, 1) * 100;
+        if (state.phase === "return") state.returnProgress = progress;
+        else if (state.phase === "outbound") state.progress = progress;
+      }
+      saveState();
+      const routeSource = homeMap?.getSource?.("elsie-active-route");
+      if (routeSource && route.coordinates?.length > 1) routeSource.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: route.coordinates } });
+      renderElsieRouteTracker();
+      return route;
+    });
+  }
+
+  function destinationTimeZone(target = getActiveTripTarget()) {
+    if (target === data.route.destinationTargets.cheboygan || target === data.route.destinationTargets.island) return "America/Detroit";
+    return "America/Chicago";
+  }
+
+  function routeArrivalText(route = currentRouteResult(), target = getActiveTripTarget()) {
+    if (!route?.durationSeconds) return "Arrival unavailable";
+    const arrival = new Date(Date.now() + route.durationSeconds * 1000);
+    const zone = destinationTimeZone(target);
+    const time = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit", timeZone: zone }).format(arrival);
+    return `Arrival about ${time} ${zone === "America/Detroit" ? "ET" : "CT"}`;
+  }
+
+  function googleMapsNavigationUrl(stop = getActiveTripTarget()) {
+    const params = new URLSearchParams({ api: "1", destination: `${stop.lat},${stop.lon}`, travelmode: "driving" });
+    if (stop === data.route.destinationTargets.cheboygan && state.includeIndianaDunes && !state.completedStops["indiana-dunes"]) {
+      const dunes = data.route.destinationTargets.indianaDunes;
+      params.set("waypoints", `${dunes.lat},${dunes.lon}`);
+    }
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
+  function getActiveTripTarget() {
+    const day = selectedDayDate();
+    if (state.phase === "return" || day === "2026-08-08" || state.tripLeg === "return") return data.route.destinationTargets.home;
+    if (state.phase === "island" || state.phase === "complete") return data.route.destinationTargets.island;
+    if (day === "2026-08-01" || state.tripLeg === "day2") {
+      if (state.includeIndianaDunes && !state.completedStops["indiana-dunes"]) return data.route.destinationTargets.indianaDunes;
+      return data.route.destinationTargets.cheboygan;
+    }
+    return data.route.destinationTargets.merrillville;
   }
 
   function isTravelDay(date = selectedDayDate()) {
@@ -6510,6 +6637,22 @@
     ["photo-memory", "Photo Memory", "Capture a trip photo and save it to the journal.", "photo|camera|scenic|view|lookout", 1, "#1f78a4", "camera"]
   ].map(([id, title, description, match, required, color, icon]) => ({ id, title, description, match, required, color, icon }));
 
+  function visibleAdventureBadges() {
+    if (activeProfile !== "elsie") return adventureBadges;
+    const mature = {
+      "roadside-oddity": ["Oddity Collector", "Find 3 genuinely unusual stops.", 3],
+      "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3],
+      "great-lakes": ["Lake Effect", "Explore 3 Great Lakes locations.", 3],
+      "lighthouse-explorer": ["Lighthouse Files", "Visit or save 3 lighthouse locations.", 3],
+      "sand-dune-explorer": ["Dunes Discovered", "Visit Indiana Dunes.", 1],
+      "island-explorer": ["Island Arrival", "Reach Bois Blanc Island.", 1]
+    };
+    return adventureBadges.filter((badge) => mature[badge.id]).map((badge) => {
+      const [title, description, required] = mature[badge.id];
+      return { ...badge, title, description, required };
+    });
+  }
+
   function relatedStopsForAdventureBadge(badge, limit = 12) {
     const pattern = new RegExp(badge.match, "i");
     return allAttractions().filter((item) => pattern.test(`${item.title} ${item.category} ${item.routeSegment} ${item.summary} ${item.why}`)).slice(0, limit);
@@ -6518,8 +6661,8 @@
   function adventureBadgeProgress(badge) {
     const related = relatedStopsForAdventureBadge(badge, 999);
     const relatedKeys = new Set(related.map(stopKey));
-    const saved = Object.values(state.shortlist || {}).filter((item) => related.some((stop) => stop.title === item.name || stop.name === item.name)).length;
-    const visited = Object.keys(state.visitedStops || {}).filter((key) => relatedKeys.has(key)).length;
+    const saved = Object.values(state.shortlist || {}).filter((item) => (activeProfile !== "elsie" || item.profile === "elsie") && related.some((stop) => stop.title === item.name || stop.name === item.name)).length;
+    const visited = Object.entries(state.visitedStops || {}).filter(([key, item]) => relatedKeys.has(key) && (activeProfile !== "elsie" || item.profile === "elsie")).length;
     const photoCount = badge.id === "photo-memory" ? (state.journal || []).length + (state.captures || []).length : 0;
     const count = Math.max(saved, visited, photoCount);
     const value = clamp(count, 0, badge.required);
@@ -6563,11 +6706,11 @@
   function renderTopBadgePreview() {
     const container = byId("topBadgePreview");
     if (!container) return;
-    const badges = adventureBadges.map((badge) => ({ ...badge, progress: adventureBadgeProgress(badge) }));
+    const badges = visibleAdventureBadges().map((badge) => ({ ...badge, progress: adventureBadgeProgress(badge) }));
     container.innerHTML = `
       <div class="adventure-badge-tray" aria-label="Trip badges">
         ${badges.map((badge) => `
-          <button type="button" class="adventure-badge ${badge.progress.earned ? "is-earned" : "is-progress"}" data-adventure-badge="${badge.id}" aria-label="${escapeHtml(badge.title)} badge, ${badge.progress.value} of ${badge.progress.total}">
+          <button type="button" class="adventure-badge ${badge.progress.earned ? "is-earned" : "is-progress"}" data-adventure-badge="${badge.id}" title="${escapeHtml(`${badge.title}: ${badge.progress.value}/${badge.progress.total}. ${badge.description}`)}" aria-label="${escapeHtml(badge.title)} badge, ${badge.progress.value} of ${badge.progress.total}">
             ${badgeDoodleSvg(badge, badge.progress)}
             <span>${escapeHtml(badge.title)}</span>
             <small>${badge.progress.value}/${badge.progress.total}</small>
@@ -6579,9 +6722,10 @@
   }
 
   function showAdventureBadgeDetail(badgeId) {
-    const badge = adventureBadges.find((item) => item.id === badgeId);
+    const badge = visibleAdventureBadges().find((item) => item.id === badgeId) || adventureBadges.find((item) => item.id === badgeId);
     if (!badge) return;
     const progress = adventureBadgeProgress(badge);
+    modalReturnFocus = document.activeElement;
     document.getElementById("badgeDetailOverlay")?.remove();
     const overlay = document.createElement("div");
     overlay.id = "badgeDetailOverlay";
@@ -6615,13 +6759,22 @@
       </div>
     `;
     document.body.appendChild(overlay);
+    document.body.classList.add("modal-open");
+    overlay.querySelector("button")?.focus();
   }
 
   function adventureBadgeHoverText(badgeId) {
-    const badge = adventureBadges.find((item) => item.id === badgeId);
+    const badge = visibleAdventureBadges().find((item) => item.id === badgeId) || adventureBadges.find((item) => item.id === badgeId);
     if (!badge) return "";
     const progress = adventureBadgeProgress(badge);
     return `${badge.title}: ${progress.value}/${progress.total}. ${badge.description}`;
+  }
+
+  function closeBadgeModal() {
+    document.getElementById("badgeDetailOverlay")?.remove();
+    document.body.classList.remove("modal-open");
+    if (modalReturnFocus?.focus) modalReturnFocus.focus();
+    modalReturnFocus = null;
   }
 
   function showBadgeDetail(badgeId) {
@@ -6665,6 +6818,9 @@
     awardBadge("trip-shortlist-starter");
     saveState();
     updateHomeGpsLayer();
+    const radar = byId("elsieRadar");
+    if (radar && activeProfile === "elsie") radar.outerHTML = renderElsieRadarMarkup();
+    if (activeProfile === "elsie") renderTopBadgePreview();
     renderBottomDrawer();
     if (["rewards", "memories"].includes(activePage)) renderProfile();
     setAction(`Saved to Trip Shortlist: ${item.name || item}.`);
@@ -6682,6 +6838,10 @@
       lat: stop.lat,
       lon: stop.lon
     };
+    if (/indiana dunes/i.test(stop.title || stop.name)) {
+      state.completedStops["indiana-dunes"] = true;
+      state.initialLegDistanceMeters = null;
+    }
     awardByTrigger("activity", { title: stop.title || stop.name });
     saveState();
     renderHomeMapPanel();
@@ -6963,25 +7123,19 @@
     lastGpsRender = now;
     const point = { lat: position.coords.latitude, lon: position.coords.longitude };
     const destination = activeDestination();
-    const origin = activeOrigin();
-    const directMilesToDestination = haversineMiles(point, destination);
-    const directRouteMiles = Math.max(1, haversineMiles(origin, destination));
-    const directMilesFromOrigin = haversineMiles(origin, point);
-    const percentToDestination = clamp((directMilesFromOrigin / directRouteMiles) * 100, 0, 100);
-    state.gpsMilesToActiveDestination = directMilesToDestination * 1.18;
+    const shouldRefreshRoute = routeShouldRefresh(point);
     state.lastPosition = { lat: point.lat, lon: point.lon, accuracy: position.coords.accuracy, updatedAt: new Date().toISOString() };
     state.gpsStatus = "Active";
     state.trackingStatus = `Active - ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
-    state.destinationStatus = `${Math.round(percentToDestination)}% to ${destination.label}`;
-    if (state.phase === "outbound") state.progress = percentToDestination;
-    if (state.phase === "return") state.returnProgress = percentToDestination;
+    state.destinationStatus = `${destination.label} · ${position.coords.accuracy > 100 ? "GPS signal is weak" : "GPS active"}`;
     renderHomeMapPanel();
     renderRouteMapPanel();
     renderExploreMapPanel();
     offerNearbyBadges(point);
     saveState();
     renderTripStatus();
-    refreshGpsWeatherIfNeeded();
+    if (activeProfile !== "elsie") refreshGpsWeatherIfNeeded();
+    if (shouldRefreshRoute) refreshActiveRoute();
   }
 
   function offerNearbyBadges(point) {
@@ -6997,6 +7151,10 @@
       render();
       return;
     }
+    if (watchId !== null) {
+      setAction("Live trip tracking is already active.");
+      return;
+    }
     state.gpsStatus = "Requesting";
     state.trackingStatus = "Requesting permission";
     saveState();
@@ -7007,7 +7165,7 @@
       watchId = null;
       saveState();
       render();
-    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
   }
 
   function stopLocation() {
@@ -7026,14 +7184,14 @@
         origin: { label: "Cheboygan", location: { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon } },
         destination: { label: "Olathe", location: { lat: stops.start.lat, lon: stops.start.lon } },
         waypoints: [
-          { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } }
+          { label: "Merrillville", location: { lat: stops.merrillville.lat, lon: stops.merrillville.lon } }
         ]
       };
     }
     if (selectedDayDate() === "2026-07-31") {
       return {
         origin: { label: "Olathe", location: { lat: stops.start.lat, lon: stops.start.lon } },
-        destination: { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } },
+        destination: { label: "Merrillville Overnight", location: { lat: stops.merrillville.lat, lon: stops.merrillville.lon } },
         waypoints: [
           { label: "Columbia", location: { lat: stops.columbia.lat, lon: stops.columbia.lon } },
           { label: "St. Louis", location: { lat: stops.stLouis.lat, lon: stops.stLouis.lon } },
@@ -7043,9 +7201,10 @@
     }
     if (selectedDayDate() === "2026-08-01") {
       return {
-        origin: { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } },
+        origin: { label: "Merrillville Overnight", location: { lat: stops.merrillville.lat, lon: stops.merrillville.lon } },
         destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon } },
         waypoints: [
+          ...(state.includeIndianaDunes && !state.completedStops["indiana-dunes"] ? [{ label: "Indiana Dunes", location: { lat: stops.indianaDunes.lat, lon: stops.indianaDunes.lon } }] : []),
           { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lon: stops.grandRapids.lon } },
           { label: "Grayling", location: { lat: stops.grayling.lat, lon: stops.grayling.lon } }
         ]
@@ -7055,7 +7214,7 @@
       origin: { label: "Olathe", location: { lat: stops.start.lat, lon: stops.start.lon } },
       destination: { label: "Plaunt ferry", location: { lat: stops.cheboygan.lat, lon: stops.cheboygan.lon } },
       waypoints: [
-        { label: "South Bend", location: { lat: stops.southBend.lat, lon: stops.southBend.lon } },
+        { label: "Merrillville", location: { lat: stops.merrillville.lat, lon: stops.merrillville.lon } },
         { label: "Grand Rapids", location: { lat: stops.grandRapids.lat, lon: stops.grandRapids.lon } }
       ]
     };
@@ -7082,21 +7241,104 @@
     drawRouteMap();
   }
 
+  function formatRouteDuration(seconds) {
+    const minutes = Math.max(0, Math.round(Number(seconds || 0) / 60));
+    if (minutes < 60) return `${minutes} min`;
+    return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+  }
+
+  function elsieHeaderCopy() {
+    const target = getActiveTripTarget();
+    if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
+    if (state.phase === "pretrip") return ["ELSIE'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"];
+    return [`${target.label.toUpperCase()} IS NEXT`, target === data.route.destinationTargets.indianaDunes ? "Dunes, wetlands, forest, then north to the ferry" : "Live route context without the clutter"];
+  }
+
+  function elsieRouteTrackerMarkup() {
+    const target = getActiveTripTarget();
+    const route = currentRouteResult();
+    const miles = route.distanceMeters ? Math.round(route.distanceMeters / 1609.344) : target.plannedMiles;
+    const progress = state.initialLegDistanceMeters && route.distanceMeters ? clamp((1 - route.distanceMeters / state.initialLegDistanceMeters) * 100, 0, 100) : progressForPhase();
+    const status = route.isFallback ? (route.source === "planned" ? "PLANNED" : "CACHED") : route.isLive ? "LIVE" : "ROAD ROUTE";
+    const updated = route.calculatedAt ? new Date(route.calculatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "not yet";
+    return `
+      <section id="elsieRouteTracker" class="elsie-route-tracker" aria-label="Elsie route and ETA">
+        <div class="elsie-route-heading"><span>NEXT: ${escapeHtml(target.label)}</span><b>${status}</b></div>
+        <div class="elsie-route-metrics" aria-live="polite"><strong>${formatRouteDuration(route.durationSeconds)}</strong><span>${Number(miles || 0).toLocaleString()} miles</span></div>
+        <p>${routeArrivalText(route, target)}</p>
+        <div class="elsie-progress" role="progressbar" aria-label="Active route progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}"><span style="width:${progress}%"></span></div>
+        <small>${escapeHtml(state.gpsStatus || "GPS off")} · ETA updated ${updated} · ${escapeHtml(route.source || "planned")}</small>
+        <div class="elsie-tracker-actions">
+          <button type="button" data-start-gps="true">Start Live Trip</button>
+          <button type="button" data-stop-gps>Stop Tracking</button>
+          <button type="button" data-refresh-route>Refresh ETA</button>
+          <a href="${googleMapsNavigationUrl(target)}" target="_blank" rel="noopener">Navigate</a>
+        </div>
+        ${selectedDayDate() === "2026-08-01" || state.tripLeg === "day2" ? `<label class="dunes-toggle"><input type="checkbox" data-include-dunes ${state.includeIndianaDunes ? "checked" : ""}> Include Indiana Dunes</label>` : ""}
+      </section>`;
+  }
+
+  function renderElsieRouteTracker() {
+    const current = byId("elsieRouteTracker");
+    if (!current || activeProfile !== "elsie") return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = elsieRouteTrackerMarkup();
+    current.replaceWith(wrapper.firstElementChild);
+  }
+
+  function elsieRadarLabel(item) {
+    const text = `${item.title} ${item.category} ${item.summary} ${item.why}`.toLowerCase();
+    if (/animal|wildlife|habitat|zoo|bird/.test(text)) return "ANIMAL WATCH";
+    if (/prison|fort|historic|history|shipwreck/.test(text)) return "STRANGE HISTORY";
+    if (/odd|weird|largest|unusual/.test(text)) return "WEIRD STOP";
+    if (/mystery|legend|underground|ghost/.test(text)) return "MYSTERY";
+    return /core|worth/i.test(item.tier || "") ? "WORTH THE DETOUR" : "BEST STORY";
+  }
+
+  function elsieRadarStops() {
+    const currentMiles = routeProgressMiles();
+    return topAttractionsForPanel(allAttractions().filter((item) => {
+      if (isStopVisited(item)) return false;
+      if (/wisconsin/i.test(`${item.routeSegment} ${item.place}`)) return false;
+      if (Number.isFinite(Number(item.milesFromStart)) && Number(item.milesFromStart) + 20 < currentMiles) return false;
+      if (!state.includeIndianaDunes && /indiana dunes/i.test(item.title)) return false;
+      return true;
+    }), "elsie").slice(0, 3);
+  }
+
+  function renderElsieRadarMarkup() {
+    const stops = elsieRadarStops();
+    return `
+      <aside id="elsieRadar" class="elsie-radar ${state.elsieRadarCollapsed ? "is-collapsed" : ""}" aria-label="Elsie's Radar">
+        <button type="button" class="elsie-radar-toggle" data-toggle-elsie-radar aria-expanded="${!state.elsieRadarCollapsed}"><span>ELSIE'S RADAR</span><b>${stops.length}</b></button>
+        <div class="elsie-radar-list">
+          ${stops.map((item) => `<article>
+            <small>${elsieRadarLabel(item)}</small><strong>${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.profiles?.elsie || item.summary || "A stop with a story worth retelling.")}</p>
+            <div><button type="button" data-preview-stop="${escapeHtml(item.title)}">Preview</button><button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button><a href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a></div>
+          </article>`).join("")}
+        </div>
+      </aside>`;
+  }
+
   function renderHomeMapPanel() {
     const container = byId("homeRouteMapPanel");
     if (!container) return;
     const attractions = allAttractions();
     const count = byId("mapStopCount");
     if (count) count.textContent = `${attractions.length} stops`;
+    const elsie = activeProfile === "elsie";
+    const [elsieTitle, elsieSubtitle] = elsieHeaderCopy();
     container.innerHTML = `
+      ${elsie ? `<div class="elsie-map-header"><p>${elsieTitle}</p><span>${elsieSubtitle}</span></div>${elsieRouteTrackerMarkup()}` : ""}
       <div id="homeClusterMap" class="home-cluster-map maplibre-canvas" role="application" aria-label="Explore map with ${attractions.length} uploaded trip stops">
         <div class="map-fallback">
           <strong>Loading explore map</strong>
           <p>${attractions.length} uploaded trip stops are ready. Clusters expand as you zoom in.</p>
         </div>
       </div>
-      <div id="homeDomMarkerLayer" class="home-dom-marker-layer" aria-label="Visible stop markers"></div>
-      ${renderUploadedStopsPanel(attractions)}
+      ${elsie ? "" : `<div id="homeDomMarkerLayer" class="home-dom-marker-layer" aria-label="Visible stop markers"></div>`}
+      ${elsie ? renderElsieRadarMarkup() : renderUploadedStopsPanel(attractions)}
       <div id="clusterDrawer" class="cluster-drawer" hidden></div>
     `;
     if (!window.maplibregl) {
@@ -7197,6 +7439,21 @@
         layout: { "text-field": ["get", "icon"], "text-size": 13, "text-allow-overlap": true },
         paint: { "text-color": "#fffdf7" }
       });
+      if (activeProfile === "elsie") {
+        const routed = currentRouteResult().coordinates || [];
+        const plan = routePlan();
+        const planned = [plan.origin, ...plan.waypoints, plan.destination].map((point) => [point.location.lon, point.location.lat]);
+        homeMap.addSource("elsie-active-route", {
+          type: "geojson",
+          data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: routed.length > 1 ? routed : planned } }
+        });
+        homeMap.addLayer({
+          id: "elsie-active-route-line",
+          type: "line",
+          source: "elsie-active-route",
+          paint: { "line-color": "#6f50a0", "line-width": 5, "line-opacity": 0.82 }
+        }, "home-unclustered-point");
+      }
       if (state.lastPosition) {
         homeMap.addSource("current-location", {
           type: "geojson",
@@ -7227,7 +7484,7 @@
         const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
         if (item) {
           showAttractionPreview(item);
-          showStopDetailDrawer(item);
+          if (activeProfile !== "elsie") showStopDetailDrawer(item);
         }
       });
       homeMap.on("mousemove", "home-unclustered-point", (event) => {
@@ -7238,14 +7495,16 @@
       homeMap.on("mouseleave", "home-unclustered-point", () => { homeMap.getCanvas().style.cursor = ""; });
       homeMap.on("moveend", refreshUploadedStopsPanel);
       homeMap.on("zoomend", refreshUploadedStopsPanel);
-      homeMap.on("move", renderHomeDomMarkers);
-      homeMap.on("zoom", renderHomeDomMarkers);
-      homeMap.on("resize", renderHomeDomMarkers);
+      if (activeProfile !== "elsie") {
+        homeMap.on("move", renderHomeDomMarkers);
+        homeMap.on("zoom", renderHomeDomMarkers);
+        homeMap.on("resize", renderHomeDomMarkers);
+      }
       const first = attractions[0];
       const bounds = attractions.reduce((next, item) => next.extend([item.lon, item.lat]), new maplibregl.LngLatBounds([first.lon, first.lat], [first.lon, first.lat]));
       homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
       refreshUploadedStopsPanel();
-      window.setTimeout(renderHomeDomMarkers, 120);
+      if (activeProfile !== "elsie") window.setTimeout(renderHomeDomMarkers, 120);
     });
   }
 
@@ -7544,6 +7803,27 @@
 
   function showAttractionPreview(item) {
     item = enrichStop(item);
+    if (activeProfile === "elsie") {
+      const preview = byId("homeAttractionPreview") || byId("exploreDetail");
+      if (!preview) return;
+      preview.hidden = false;
+      preview.innerHTML = `
+        <article class="attraction-preview-card elsie-preview-card">
+          <div>
+            <p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.tier)} · ${escapeHtml(item.estimatedStopTime)}</p>
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.summary || item.why || "")}</p>
+            <p><strong>Elsie's angle:</strong> ${escapeHtml(item.profiles?.elsie || "Look for the detail that changes the whole story.")}</p>
+            <small>${escapeHtml(stopDistanceLabel(item))} · ${escapeHtml(item.distanceOffRoute)}</small>
+            <div class="compact-actions">
+              <button type="button" data-stop-detail="${escapeHtml(item.title)}">Details</button>
+              <a class="external-link" href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a>
+              <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
+            </div>
+          </div>
+        </article>`;
+      return;
+    }
     const profile = currentProfile();
     const previewTargets = [byId("homeAttractionPreview"), byId("exploreDetail")].filter(Boolean);
     const markup = `
@@ -7577,6 +7857,30 @@
     const cluster = byId("clusterDrawer");
     if (cluster) cluster.hidden = true;
     const profile = currentProfile();
+    if (profile.id === "elsie") {
+      const key = stopKey(item);
+      const rating = state.profileStopRatings.elsie[key] || "";
+      const collections = state.profileCollections.elsie[key] || [];
+      const collectionChoices = ["Weird", "Historic", "Animal", "Best Story", "Would Visit"];
+      drawer.innerHTML = `
+        <section class="stop-detail-drawer elsie-detail-drawer" role="dialog" aria-modal="false" aria-labelledby="elsieStopTitle">
+          <div class="elsie-drawer-head"><div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.tier)}</p><h3 id="elsieStopTitle">${escapeHtml(item.title)}</h3></div><button type="button" data-close-stop-drawer aria-label="Close attraction details">Close</button></div>
+          <div class="elsie-detail-meta"><span>${escapeHtml(item.routeSegment || "Route")}</span><span>${escapeHtml(stopDistanceLabel(item))}</span><span>${escapeHtml(item.distanceOffRoute)}</span><span>${escapeHtml(item.estimatedStopTime)}</span></div>
+          <p>${escapeHtml(item.summary || "")}</p>
+          <p><strong>Why it matters:</strong> ${escapeHtml(item.why || item.summary || "")}</p>
+          <p><strong>Elsie's angle:</strong> ${escapeHtml(item.profiles?.elsie || "Look for the detail that changes the whole story.")}</p>
+          <p><strong>What to look for:</strong> ${escapeHtml(item.profiles?.elsie || item.summary || "")}</p>
+          <div class="compact-actions">
+            <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
+            <button type="button" data-visited-stop="${escapeHtml(item.title)}">${isStopVisited(item) ? "Visited" : "Mark visited"}</button>
+            <a class="external-link" href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a>
+            <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
+          </div>
+          <fieldset class="elsie-collections"><legend>Elsie's Collections</legend>${collectionChoices.map((choice) => `<label><input type="checkbox" data-elsie-collection="${escapeHtml(key)}" value="${choice}" ${collections.includes(choice) ? "checked" : ""}> ${choice}</label>`).join("")}</fieldset>
+          ${isStopVisited(item) ? `<fieldset class="elsie-rating"><legend>Worth the detour?</legend>${["Skip next time", "Interesting", "Actually great"].map((choice) => `<label><input type="radio" name="elsie-rating-${escapeHtml(key)}" data-elsie-rating="${escapeHtml(key)}" value="${choice}" ${rating === choice ? "checked" : ""}> ${choice}</label>`).join("")}</fieldset>` : ""}
+        </section>`;
+      return;
+    }
     drawer.innerHTML = `
       <details open class="stop-detail-drawer">
         <summary>
@@ -7652,7 +7956,7 @@
   function openAppleRoute(name) {
     const stop = attractionForName(name);
     if (!stop) return;
-    window.open(appleMapsUrl(stop), "_blank");
+    window.open(activeProfile === "elsie" ? googleMapsNavigationUrl(stop) : appleMapsUrl(stop), "_blank");
   }
 
   function loadMapLibre() {
@@ -7871,7 +8175,7 @@
         const item = allAttractions().find((entry) => entry.title === title);
         if (item) showAttractionPreview(item);
       });
-      attractions.forEach((item) => addExploreAttractionMarker(item));
+      if (activeProfile !== "elsie") attractions.forEach((item) => addExploreAttractionMarker(item));
       if (state.lastPosition) addExploreGpsMarker();
       const first = attractions[0];
       if (first) {
@@ -8806,12 +9110,36 @@
     const target = event.target.closest("button, a");
     if (!target) return;
     if (target.matches("[data-close-modal]")) {
-      document.getElementById("badgeDetailOverlay")?.remove();
+      closeBadgeModal();
       return;
     }
     if (target.matches("[data-close-cluster]")) {
       const drawer = byId("clusterDrawer");
       if (drawer) drawer.hidden = true;
+      return;
+    }
+    if (target.dataset.closeStopDrawer !== undefined) {
+      event.preventDefault();
+      const drawer = byId("bottomDrawer");
+      if (drawer) drawer.innerHTML = "";
+      return;
+    }
+    if (target.dataset.stopGps !== undefined) {
+      event.preventDefault();
+      stopLocation();
+      return;
+    }
+    if (target.dataset.refreshRoute !== undefined) {
+      event.preventDefault();
+      refreshActiveRoute(true);
+      return;
+    }
+    if (target.dataset.toggleElsieRadar !== undefined) {
+      event.preventDefault();
+      state.elsieRadarCollapsed = !state.elsieRadarCollapsed;
+      saveState();
+      const radar = byId("elsieRadar");
+      if (radar) radar.outerHTML = renderElsieRadarMarkup();
       return;
     }
     if (target.dataset.toggleUploadedStops !== undefined) {
@@ -9020,6 +9348,11 @@
     window.addEventListener("online", renderTripStatus);
     window.addEventListener("offline", renderTripStatus);
     document.addEventListener("click", handleAppTap);
+    document.addEventListener("click", (event) => {
+      if (event.target?.id === "badgeDetailOverlay") {
+        closeBadgeModal();
+      }
+    });
     document.addEventListener("mouseover", (event) => {
       const target = event.target.closest("[data-preview-stop]");
       if (!target || event.pointerType === "touch") return;
@@ -9042,6 +9375,49 @@
       if (target.dataset?.draftNote) updateDraftNoteById(target.dataset.draftNote, target.value);
       if (target.dataset?.journalNote) updateJournalNoteById(target.dataset.journalNote, target.value);
     });
+    document.addEventListener("change", (event) => {
+      const target = event.target;
+      if (target.matches("[data-include-dunes]")) {
+        state.includeIndianaDunes = target.checked;
+        state.initialLegDistanceMeters = null;
+        saveState();
+        render();
+        refreshActiveRoute(true);
+      }
+      if (target.matches("[data-elsie-rating]")) {
+        state.profileStopRatings.elsie[target.dataset.elsieRating] = target.value;
+        saveState();
+      }
+      if (target.matches("[data-elsie-collection]")) {
+        const key = target.dataset.elsieCollection;
+        const values = new Set(state.profileCollections.elsie[key] || []);
+        target.checked ? values.add(target.value) : values.delete(target.value);
+        state.profileCollections.elsie[key] = [...values];
+        saveState();
+      }
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && activeProfile === "elsie" && state.gpsStatus === "Active") refreshActiveRoute();
+    });
+    document.addEventListener("keydown", (event) => {
+      const modal = document.getElementById("badgeDetailOverlay");
+      if (event.key === "Tab" && modal) {
+        const focusable = [...modal.querySelectorAll("button, a[href], input, [tabindex]:not([tabindex='-1'])")].filter((item) => !item.disabled);
+        if (focusable.length) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+        return;
+      }
+      if (event.key !== "Escape") return;
+      closeBadgeModal();
+      if (activeProfile === "elsie") {
+        const drawer = byId("bottomDrawer");
+        if (drawer) drawer.innerHTML = "";
+      }
+    });
   }
 
   function registerServiceWorker() {
@@ -9051,6 +9427,15 @@
   function render() {
     parseHash();
     document.body.dataset.page = activePage;
+    document.body.dataset.profile = activeProfile;
+    if (activeProfile === "elsie") {
+      const [title, subtitle] = elsieHeaderCopy();
+      byId("topbarTitle").textContent = title;
+      byId("topbarMeta").textContent = subtitle;
+    } else {
+      byId("topbarTitle").textContent = "Family Trip";
+      byId("topbarMeta").textContent = `${currentProfile().name}'s view`;
+    }
     if (!state.hasChosenProfile) byId("splash").classList.remove("is-hidden");
     renderCountdowns();
     renderTripStatus();

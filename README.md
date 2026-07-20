@@ -16,7 +16,7 @@ Cloudflare-ready static road-trip companion for the family trip from Olathe, Kan
 - Family Vote choices: Yes, Maybe, Skip
 - Captured photo/video trip story with delete buttons and local size safeguards
 - Data-driven badge catalog with 60 starter badges, including 30+ route/place/milestone badges
-- Service worker cache bumped to `elskatemm-trip-v9`
+- Service worker cache bumped to `elskatemm-trip-v26-elsie`
 - Wrangler deployment using a generated `dist` folder
 
 ## File Structure
@@ -78,6 +78,16 @@ Future optional enhancement: National Weather Service alerts.
 The in-app map uses MapLibre and OpenFreeMap, so there is no map API key or billing setup. The map draws the planned trip route and adds the current GPS location when permission is enabled. Phone-map links are provided for turn-by-turn driving outside the app.
 
 GPS uses browser geolocation. If permission is denied, the app stays useful with route-phase context and source links.
+
+### Elsie route experience
+
+Elsie's route/explore view uses the existing clustered MapLibre attraction dataset with a compact route tracker, three-item Radar, profile-specific previews/details, mature badge language, ratings, and collections. Other profiles keep their existing presentation.
+
+The shared active route is now Olathe → Merrillville Overnight, followed by Merrillville → Indiana Dunes Visitor Center → Cheboygan ferry when the Indiana Dunes setting is enabled. The return target is Olathe. Private street addresses are not shown in the interface.
+
+Road distance and duration use the public OSRM routing service through a client-side normalization layer. No API key or environment variable is required. OSRM does not provide traffic-aware durations and its public demo service has no production SLA, so the tracker retains and clearly labels cached or planned estimates whenever routing is unavailable. Google Maps links handle full turn-by-turn navigation.
+
+Live route refreshes occur only after the user starts tracking and while the page is visible. The app stores only the latest position, not a location trail. Elsie's precise GPS point is sent only to OSRM when calculating the active road route.
 
 ## Ferry
 

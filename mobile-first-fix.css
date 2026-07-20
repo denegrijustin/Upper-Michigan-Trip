@@ -1098,6 +1098,126 @@ body[data-page="explore"] .route-map-home {
   position: relative;
 }
 
+body[data-profile="elsie"] .map-stage-head {
+  display: none;
+}
+
+body[data-profile="elsie"] .elsie-map-header {
+  position: absolute;
+  z-index: 9;
+  top: 92px;
+  left: 16px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 10px 14px;
+  color: #f8f4ff;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(135deg, rgba(24, 36, 50, .96), rgba(72, 55, 105, .94));
+  box-shadow: 0 18px 50px rgba(13, 22, 31, .24);
+}
+
+.elsie-map-header p,
+.elsie-map-header span { margin: 0; display: block; }
+.elsie-map-header p { font-size: .76rem; font-weight: 950; letter-spacing: .14em; }
+.elsie-map-header span { margin-top: 3px; font-size: .82rem; color: #ddd3f2; }
+
+body[data-profile="elsie"] .elsie-route-tracker {
+  position: absolute;
+  z-index: 9;
+  top: 146px;
+  left: 16px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 0 0 18px 18px;
+  color: #f9fbff;
+  background: rgba(18, 31, 42, .94);
+  box-shadow: 0 20px 56px rgba(12, 20, 27, .28);
+  backdrop-filter: blur(14px);
+}
+
+.elsie-route-heading,
+.elsie-route-metrics,
+.elsie-tracker-actions { display: flex; align-items: center; gap: 8px; }
+.elsie-route-heading { justify-content: space-between; font-size: .72rem; font-weight: 950; letter-spacing: .08em; }
+.elsie-route-heading b { padding: 4px 7px; border-radius: 999px; color: #1b3040; background: #cfe9de; font-size: .62rem; }
+.elsie-route-metrics { margin-top: 8px; }
+.elsie-route-metrics strong { font-size: 1.7rem; line-height: 1; }
+.elsie-route-metrics span { color: #c8d7df; font-weight: 800; }
+.elsie-route-tracker p { margin: 6px 0; color: #e8e2f4; }
+.elsie-route-tracker small { display: block; margin-top: 6px; color: #bacbd4; }
+.elsie-progress { height: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.18); }
+.elsie-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #82c7b0, #c1a9e8); }
+.elsie-tracker-actions { flex-wrap: wrap; margin-top: 10px; }
+.elsie-tracker-actions button,
+.elsie-tracker-actions a { min-height: 44px; display: inline-grid; place-items: center; padding: 0 11px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2); color: #fff; background: rgba(255,255,255,.09); font-size: .75rem; font-weight: 850; text-decoration: none; }
+.dunes-toggle { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: .78rem; font-weight: 800; }
+.dunes-toggle input { width: 20px; height: 20px; }
+
+body[data-profile="elsie"] .elsie-radar {
+  position: absolute;
+  z-index: 9;
+  top: 92px;
+  right: 16px;
+  width: min(330px, calc(100vw - 32px));
+  max-height: calc(100svh - 190px);
+  overflow: auto;
+  border: 1px solid rgba(25, 39, 50, .18);
+  border-radius: 18px;
+  background: rgba(255, 253, 247, .96);
+  box-shadow: 0 20px 58px rgba(14, 26, 35, .22);
+}
+body[data-profile="elsie"] .maplibregl-ctrl-top-left { top: 350px; }
+body[data-profile="elsie"] .maplibregl-ctrl-bottom-right { bottom: 82px; }
+.elsie-radar-toggle { width: 100%; min-height: 48px; display: flex; justify-content: space-between; align-items: center; border: 0; border-radius: 18px; padding: 0 14px; color: #efe8fb; background: #293b4b; font-size: .75rem; font-weight: 950; letter-spacing: .11em; }
+.elsie-radar-toggle b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: #293b4b; background: #d9c9ef; }
+.elsie-radar-list { display: grid; gap: 8px; padding: 10px; }
+.elsie-radar.is-collapsed { width: 170px; }
+.elsie-radar.is-collapsed .elsie-radar-list { display: none; }
+.elsie-radar article { padding: 11px; border: 1px solid rgba(25,39,50,.12); border-radius: 14px; background: #fff; }
+.elsie-radar article small { color: #6c4f94; font-size: .64rem; font-weight: 950; letter-spacing: .1em; }
+.elsie-radar article strong { display: block; margin-top: 3px; }
+.elsie-radar article p { margin: 5px 0 9px; color: #526069; font-size: .78rem; line-height: 1.35; }
+.elsie-radar article div { display: flex; flex-wrap: wrap; gap: 6px; }
+.elsie-radar article button,
+.elsie-radar article a { min-height: 44px; display: inline-grid; place-items: center; padding: 0 9px; border-radius: 10px; color: #273b49; background: #f4f0fa; border: 1px solid #ded3ed; font-size: .73rem; font-weight: 850; text-decoration: none; }
+
+body[data-profile="elsie"] .elsie-preview-card { grid-template-columns: 1fr; border-left: 5px solid #7357a0; }
+body[data-profile="elsie"] .elsie-detail-drawer { max-height: 76svh; overflow: auto; padding: 16px; }
+.elsie-drawer-head { position: sticky; top: -16px; z-index: 2; display: flex; justify-content: space-between; gap: 12px; align-items: start; margin: -16px -16px 12px; padding: 14px 16px; background: #fffdf7; border-bottom: 1px solid rgba(20,32,26,.12); }
+.elsie-drawer-head h3 { margin: 3px 0 0; }
+.elsie-detail-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.elsie-detail-meta span { padding: 6px 9px; border-radius: 99px; background: #eef2f4; font-size: .75rem; font-weight: 800; }
+.elsie-collections,
+.elsie-rating { margin-top: 14px; border: 1px solid rgba(20,32,26,.14); border-radius: 14px; padding: 10px; }
+.elsie-collections legend,
+.elsie-rating legend { padding: 0 6px; font-weight: 900; }
+.elsie-collections label,
+.elsie-rating label { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 3px; padding: 0 10px; border-radius: 999px; background: #f1edf7; font-size: .8rem; font-weight: 800; }
+.elsie-collections input,
+.elsie-rating input { width: 18px; height: 18px; }
+
+body.modal-open { overflow: hidden; }
+body[data-profile="elsie"] :focus-visible { outline: 3px solid #8e6fc0; outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  body[data-profile="elsie"] .elsie-map-header { top: 70px; left: 10px; width: calc(100vw - 20px); }
+  body[data-profile="elsie"] .elsie-route-tracker { top: 124px; left: 10px; width: calc(100vw - 20px); padding: 10px; }
+  .elsie-route-metrics strong { font-size: 1.35rem; }
+  .elsie-tracker-actions { display: grid; grid-template-columns: repeat(2, 1fr); }
+  body[data-profile="elsie"] .elsie-radar { top: auto; right: 10px; bottom: 66px; width: calc(100vw - 20px); max-height: 36svh; }
+  body[data-profile="elsie"] .elsie-radar:not(.is-collapsed) { left: 10px; }
+  body[data-profile="elsie"] .elsie-radar.is-collapsed { width: 164px; }
+  body[data-profile="elsie"] .map-preview-card { left: 10px; right: 10px; bottom: 66px; max-width: none; }
+  body[data-profile="elsie"] .bottom-drawer { max-height: 78svh; }
+  body[data-profile="elsie"] .maplibregl-ctrl-top-left { top: 420px; }
+  body[data-profile="elsie"] .maplibregl-ctrl-bottom-right { bottom: 58px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
 .home-dom-marker-layer {
   position: absolute;
   inset: 0;
