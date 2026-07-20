@@ -7325,14 +7325,30 @@
     }), "elsie").slice(0, 3);
   }
 
+  function b64encode(str) {
+    try { return window.btoa(unescape(encodeURIComponent(str))); }
+    catch { return window.btoa(str); }
+  }
+
+  function elsieMiniBadgeIcon(badge, progress) {
+    const svg = badgeDoodleSvg(badge, progress);
+    const src = `data:image/svg+xml;base64,${b64encode(svg)}`;
+    return `<img src="${src}" alt="${escapeHtml(badge.title)}${progress.earned ? " (earned)" : ""}" class="elsie-mini-badge ${progress.earned ? "is-earned" : ""}">`;
+  }
+
   function renderElsieRadarMarkup() {
     const picks = elsieRadarStops();
-    const badges = elsieBadgeSummary();
+    const summary = elsieBadgeSummary();
+    const trailIcon = `<span class="elsie-mini-badge elsie-mini-badge-emoji ${summary.trail.earned ? "is-earned" : ""}">👣</span>`;
+    const icons = summary.items.map(({ badge, progress }) => elsieMiniBadgeIcon(badge, progress)).join("") + trailIcon;
     return `
       <div id="elsieRadar" class="elsie-float-bottom" aria-label="Elsie quick controls">
         <button type="button" class="elsie-chip" data-elsie-sheet="picks">Elsie's Picks · ${picks.length}</button>
-        <button type="button" class="elsie-chip" data-elsie-sheet="badges">Badges ${badges.earned}/${badges.total}</button>
-      </div>`;
+      </div>
+      <button type="button" class="elsie-badge-tracker" data-elsie-sheet="badges" aria-label="Badges ${summary.earned} of ${summary.total} earned">
+        <span class="elsie-badge-tracker-icons">${icons}</span>
+        <span class="elsie-badge-tracker-count">${summary.earned}/${summary.total}</span>
+      </button>`;
   }
 
 
@@ -7358,7 +7374,8 @@
     if (/wildlife|zoo|wetland|bird|habitat|animal|refuge|aquarium/.test(text)) return "animal-watch";
     if (/fort|battle|\bwar\b|outlaw|frontier|historic|history|heritage/.test(text)) return "strange-history";
     if (/waterfall|falls|dune|lighthouse|bridge|overlook|scenic|vista|shoreline|canyon/.test(text)) return "anime-vibe";
-    return "";
+    if (/museum|market|farm|food|restaurant|cafe|orchard|fudge|donut|sport|stadium|capitol|state|park|preserve|library/.test(text)) return "weird-stop";
+    return "mystery";
   }
 
   function elsieIconSvg(type) {
@@ -7404,14 +7421,10 @@
       filter: ["all", ["!", ["has", "point_count"]], ["!=", ["get", "elsieIcon"], ""]],
       layout: {
         "icon-image": ["get", "elsieIcon"],
-        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.42, 8, 0.5, 11, 0.58],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
         "icon-allow-overlap": true
       }
     });
-    try {
-      map.setFilter("home-unclustered-point", ["all", ["!", ["has", "point_count"]], ["==", ["get", "elsieIcon"], ""]]);
-      map.setFilter("home-unclustered-icon", ["all", ["!", ["has", "point_count"]], ["==", ["get", "elsieIcon"], ""]]);
-    } catch {}
     map.on("click", "elsie-artwork", (event) => {
       const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
       if (item) showAttractionPreview(item);
