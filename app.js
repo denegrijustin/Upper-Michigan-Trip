@@ -6729,6 +6729,28 @@
         return { ...badge, title, description, required };
       });
     }
+    if (activeProfile === "eliette") {
+      const elietteSet = {
+        "roadside-oddity": ["Tiny Treasure Hunter", "Find 3 stops with a small detail worth remembering.", 3],
+        "museum-explorer": ["Detail Detective", "Open, save, or visit museum and story stops.", 3],
+        "great-lakes": ["Lake Effect", "Explore 3 Great Lakes locations.", 3],
+        "lighthouse-explorer": ["Lighthouse Files", "Visit or save lighthouse locations.", 2],
+        "sand-dune-explorer": ["Dunes Discovered", "Visit Indiana Dunes.", 1],
+        "island-explorer": ["Island Arrival", "Reach Bois Blanc Island.", 1],
+        "mitten-state": ["Route Reader", "Trace the trip from the palm to the tip of Michigan.", 3],
+        "photo-memory": ["Snapshot Hunter", "Capture a trip photo and save it to the journal.", 1],
+        "nature-explorer": ["Pretty & Wild", "Collect parks, gardens, trails, and wildlife stops.", 4],
+        "waterfall-hunter": ["Falls Finder", "Find a falls or rushing-water stop.", 1],
+        "historic-fort": ["Story Keeper", "Save 3 places with a story worth retelling.", 3],
+        "dark-sky-observer": ["Night Signal", "Use the sky and stargazing layer during the trip.", 1],
+        "mackinac-bridge": ["Bridge Crossing", "Find the bridge and Straits stories that connect the peninsulas.", 1],
+        "state-capitol": ["Capitol Story", "Connect the route to a capitol or government story.", 1]
+      };
+      return adventureBadges.filter((badge) => elietteSet[badge.id]).map((badge) => {
+        const [title, description, required] = elietteSet[badge.id];
+        return { ...badge, title, description, required };
+      });
+    }
     const mature = {
       "roadside-oddity": ["Oddity Collector", "Find 3 genuinely unusual stops.", 3],
       "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3],
@@ -7354,20 +7376,23 @@
     const target = getActiveTripTarget();
     const isKatrina = activeProfile === "katrina";
     const isEmma = activeProfile === "emma";
+    const isEliette = activeProfile === "eliette";
     if (isElsieIslandMode()) {
       if (isKatrina) return ["EXPLORE BOIS BLANC", "History, hidden facts, and island mysteries"];
       if (isEmma) return ["EXPLORE BOIS BLANC", "How island life works: ferry, store, beach, and games"];
+      if (isEliette) return ["EXPLORE BOIS BLANC", "Tiny treasures, shiny rocks, and hidden details"];
       return ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
     }
     if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
     if (state.phase === "pretrip") {
-      const name = isKatrina ? "KATRINA'S" : isEmma ? "EMMA'S" : "ELSIE'S";
+      const name = isKatrina ? "KATRINA'S" : isEmma ? "EMMA'S" : isEliette ? "ELIETTE'S" : "ELSIE'S";
       return [`${name} ROUTE`, "Merrillville first, Indiana Dunes next, then the ferry"];
     }
     const subtitle = target === data.route.destinationTargets.indianaDunes
       ? "Dunes, wetlands, forest, then north to the ferry"
       : isKatrina ? "Smart facts and quiz-the-car energy along the way"
       : isEmma ? "Real life, sports, and why-people-go-here energy"
+      : isEliette ? "Cool facts, hidden details, and the occasional gross truth"
       : "Live route context without the clutter";
     return [`${target.label.toUpperCase()} IS NEXT`, subtitle];
   }
@@ -7456,7 +7481,7 @@
 
   /* ===================== ELSIE MAP EXPERIENCE ===================== */
 
-  const MAP_PROFILES = ["elsie", "katrina", "emma"];
+  const MAP_PROFILES = ["elsie", "katrina", "emma", "eliette"];
   function isMapProfile(p = activeProfile) {
     return MAP_PROFILES.includes(p);
   }
@@ -7563,21 +7588,51 @@
     }
   }
 
+  const ELIETTE_ICON_OVERRIDES = {};
+  const ELIETTE_ICON_TYPES = ["gem", "magnifier", "craft", "trinket", "butterfly"];
+
+  function getElietteIconType(stop) {
+    if (!stop) return "";
+    const override = ELIETTE_ICON_OVERRIDES[stop.id] || ELIETTE_ICON_OVERRIDES[stop.title];
+    if (override) return override;
+    const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""} ${stop.why || ""} ${stop.profiles?.eliette || ""}`.toLowerCase();
+    if (/rock|stone|geolog|mineral|gem|crystal|agate|fossil|glass/.test(text)) return "gem";
+    if (/craft|handmade|art|studio|quilt|weav|pottery|maker/.test(text)) return "craft";
+    if (/shop|store|souvenir|market|gift|bookstore|antique|trading post|boutique|outlet/.test(text)) return "trinket";
+    if (/garden|butterfly|nature|wildlife|park|preserve|dune|forest|trail|scenic|falls/.test(text)) return "butterfly";
+    return "magnifier";
+  }
+
+  function elietteIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    switch (type) {
+      case "gem": return base("#274156", `<path d="M22 24h20l6 8-16 18-16-18z" fill="#8fd6e8" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M22 24l10 8 10-8M16 32h32M32 32v18" stroke="#141414" stroke-width="2" fill="none"/><path d="M46 14l1.4 3.2 3.2 1.4-3.2 1.4L46 23.4l-1.4-3.4-3.2-1.4 3.2-1.4z" fill="#ffe25c"/>`);
+      case "magnifier": return base("#5b4aa0", `<circle cx="28" cy="28" r="11" fill="#f4efff" stroke="#141414" stroke-width="3.5"/><circle cx="28" cy="28" r="6.5" fill="none" stroke="#b79ef2" stroke-width="2"/><path d="M36.5 36.5L47 47" stroke="#141414" stroke-width="5" stroke-linecap="round"/><circle cx="24.5" cy="24.5" r="1.8" fill="#fffdf7"/>`);
+      case "craft": return base("#a8536b", `<path d="M20 18l16 22M36 18L20 40" stroke="#141414" stroke-width="3.4" stroke-linecap="round"/><circle cx="18" cy="44" r="4.4" fill="#f7c9d8" stroke="#141414" stroke-width="2.6"/><circle cx="30" cy="44" r="4.4" fill="#f7c9d8" stroke="#141414" stroke-width="2.6"/><path d="M40 24q6 2 6 8t-6 8" fill="none" stroke="#ffe25c" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="3 3"/><circle cx="47" cy="42" r="2.6" fill="#ffe25c" stroke="#141414" stroke-width="1.8"/>`);
+      case "trinket": return base("#7c5d3a", `<rect x="18" y="28" width="28" height="17" rx="3" fill="#e9cf9f" stroke="#141414" stroke-width="3"/><path d="M18 30a14 8 0 0 1 28 0" fill="#d8b475" stroke="#141414" stroke-width="3"/><rect x="29" y="26" width="6" height="8" rx="1.6" fill="#ffe25c" stroke="#141414" stroke-width="2.2"/><path d="M23 37h4M37 37h4" stroke="#141414" stroke-width="1.6"/><path d="M48 18l1.2 2.8 2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2z" fill="#fffdf7"/>`);
+      case "butterfly": return base("#3b6647", `<path d="M32 22v22" stroke="#141414" stroke-width="3.4" stroke-linecap="round"/><path d="M30 20q-2-5-6-4" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M34 20q2-5 6-4" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M30 27c-8-8-18-4-15 4 2 6 10 6 15 2zM34 27c8-8 18-4 15 4-2 6-10 6-15 2z" fill="#f4a8c8" stroke="#141414" stroke-width="2.6"/><path d="M30 36c-6-2-12 1-10 6 1.6 4 8 3 10-1zM34 36c6-2 12 1 10 6-1.6 4-8 3-10-1z" fill="#ffd9a8" stroke="#141414" stroke-width="2.6"/>`);
+      default: return base("#5b4aa0", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
+    }
+  }
+
   function mapIconType(stop, profile = activeProfile) {
     if (profile === "katrina") return getKatrinaIconType(stop);
     if (profile === "emma") return getEmmaIconType(stop);
+    if (profile === "eliette") return getElietteIconType(stop);
     return getElsieIconType(stop);
   }
 
   function mapIconSvg(type, profile = activeProfile) {
     if (profile === "katrina") return katrinaIconSvg(type);
     if (profile === "emma") return emmaIconSvg(type);
+    if (profile === "eliette") return elietteIconSvg(type);
     return elsieIconSvg(type);
   }
 
   function mapIconTypes(profile = activeProfile) {
     if (profile === "katrina") return KATRINA_ICON_TYPES;
     if (profile === "emma") return EMMA_ICON_TYPES;
+    if (profile === "eliette") return ELIETTE_ICON_TYPES;
     return ELSIE_ICON_TYPES;
   }
 
@@ -7849,6 +7904,42 @@
     return { whyGo, funFact, discovery, momDad, joke };
   }
 
+  const ELIETTE_GROSS_FUNNY = {
+    "P1-009": "Gross but true: pickles pulled out of the wrecked steamboat were still sealed after 130 years underground — and reportedly still edible. People have tasted them.",
+    "P1-006": "Gross but true: WWI soldiers shared their trenches with rats the size of cats and itchy lice — museums like this one don't hide that part.",
+    "P1-021": "Creepy but true: the old prison's dungeon cells had no light at all — tour guides turn off the lamps so you can feel one second of it.",
+    "P1-023": "Funny but true: the Arch sways up to 18 inches in wind ON PURPOSE — and the tram pods to the top are tiny 1960s egg capsules that creak the whole way.",
+    "P1-024": "Funny but true: there's a full school bus hanging off the roof, and the 10-story slide leaves your legs shaking like jelly.",
+    "P1-027": "Gross but true: archaeologists learn the most from ancient trash pits and toilets — a lot of what we know about Cahokia came out of what people threw away.",
+    "P1-032": "Funny but true: the dune sand squeaks and 'sings' when you drag your feet — everyone looks ridiculous doing it and everyone does it anyway.",
+    "P2-009": "Funny but true: it's Christmas here 361 days a year — employees hear the same carols all summer long.",
+    "P2-010": "Gross but true: old-growth pines ooze sticky sap that loggers called 'pitch' — it glued their clothes together and never washed out.",
+    "P2-015": "Gross but true: archaeologists here have spent decades digging up 1700s privies — old toilets — because that's where the best artifacts hide.",
+    "P2-016": "Funny but true: this whole lighthouse got retired because a BRIDGE with lights showed up next door and stole its job.",
+    "P2-017": "Wild but true: the bridge deck can swing up to 35 feet sideways in high wind — completely on purpose, completely safe, completely terrifying to think about.",
+    "P2-025": "Funny but true: in winter, islanders skip the ferry and drive across the frozen lake on an ice road marked with old Christmas trees frozen upright.",
+    "P2-026": "Funny but true: the island got electricity in 1964 — before that, homework happened by lantern.",
+    "P2-032": "Gross but true: Mackinac Island has no cars but around 500 horses — which together produce literal TONS of manure every day. Someone's whole job is scooping it.",
+    "P2-033": "Gross but true: soldiers at the fort got one bath a week at best, and their wool uniforms were never really washed. The 1800s smelled.",
+    "P3-001": "Wild but true: fish sometimes ride through the locks with the ships — a free 21-foot elevator between two Great Lakes.",
+    "P3-002": "Funny but true: the waterfall is root-beer colored with tan foam on top — it genuinely looks like a giant root beer float, but it's just tree tannins.",
+    "P3-003": "Eerie but true: the lake is so cold and deep that shipwrecks down there barely decay — some wrecks over a century old still look nearly new."
+  };
+
+  function eliettePopupContent(item) {
+    const seed = item.id || item.title || "stop";
+    const coolFact = item.why || item.summary || "";
+    const detailPromptBank = [
+      "Look closer: find one tiny detail here nobody else in the family will notice.",
+      "Look closer: what's the smallest interesting object you can spot at this place?",
+      "Look closer: find something handmade, something shiny, or something older than Grandma.",
+      "Look closer: if you could keep ONE small thing from here (legally!), what would it be?"
+    ];
+    const detailPrompt = item.profiles?.eliette || detailPromptBank[stableIndex(`${seed}-detail`, detailPromptBank.length)];
+    const grossFunny = ELIETTE_GROSS_FUNNY[item.id] || "";
+    return { coolFact, detailPrompt, grossFunny };
+  }
+
   function openElsieMarkerPopup(map, rawItem, coordinates) {
     const item = enrichStop(rawItem);
     const haunted = hauntedMatchForStop(item);
@@ -7863,11 +7954,21 @@
     if (elsieMarkerPopup) elsieMarkerPopup.remove();
     const isKatrina = profile === "katrina";
     const isEmma = profile === "emma";
+    const isEliette = profile === "eliette";
+    const ELIETTE_ICON_LABELS = { "gem": "Shiny Find", "magnifier": "Hidden Detail", "craft": "Handmade", "trinket": "Treasure & Nicknacks", "butterfly": "Pretty & Wild" };
     const label = isKatrina ? (KATRINA_ICON_LABELS[iconType] || "Worth the Detour")
       : isEmma ? (EMMA_ICON_LABELS[iconType] || "Worth the Detour")
+      : isEliette ? (ELIETTE_ICON_LABELS[iconType] || "Worth the Detour")
       : (ELSIE_ICON_LABELS[iconType] || "Worth the Detour");
     let bodyHtml;
-    if (isEmma) {
+    if (isEliette) {
+      const content = eliettePopupContent(item);
+      bodyHtml = `
+        <p>${escapeHtml(item.summary || "")}</p>
+        ${content.coolFact ? `<p class="elsie-popup-angle">✨ <strong>Cool fact to know:</strong> ${escapeHtml(content.coolFact)}</p>` : ""}
+        <p class="elsie-popup-angle">🔎 ${escapeHtml(content.detailPrompt)}</p>
+        ${content.grossFunny ? `<p class="elsie-popup-angle">😝 ${escapeHtml(content.grossFunny)}</p>` : ""}`;
+    } else if (isEmma) {
       const content = emmaPopupContent(item);
       bodyHtml = `
         <p><strong>Why do people go here?</strong> ${escapeHtml(content.whyGo)}</p>
@@ -9410,8 +9511,8 @@
       const rating = state.profileStopRatings[profile.id][key] || "";
       const collections = state.profileCollections[profile.id][key] || [];
       const collectionChoices = ["Weird", "Historic", "Animal", "Best Story", "Would Visit"];
-      const angleLabel = profile.id === "katrina" ? "Katrina's angle" : profile.id === "emma" ? "Emma's angle" : "Elsie's angle";
-      const angleText = profile.id === "katrina" ? katrinaPopupContent(item).whyAngle : profile.id === "emma" ? emmaPopupContent(item).whyGo : item.profiles?.elsie;
+      const angleLabel = profile.id === "katrina" ? "Katrina's angle" : profile.id === "emma" ? "Emma's angle" : profile.id === "eliette" ? "Eliette's angle" : "Elsie's angle";
+      const angleText = profile.id === "katrina" ? katrinaPopupContent(item).whyAngle : profile.id === "emma" ? emmaPopupContent(item).whyGo : profile.id === "eliette" ? eliettePopupContent(item).detailPrompt : item.profiles?.elsie;
       drawer.innerHTML = `
         <section class="stop-detail-drawer elsie-detail-drawer" role="dialog" aria-modal="false" aria-labelledby="elsieStopTitle">
           <div class="elsie-drawer-head"><div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.tier)}</p><h3 id="elsieStopTitle">${escapeHtml(item.title)}</h3></div><button type="button" data-close-stop-drawer aria-label="Close attraction details">Close</button></div>
