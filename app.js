@@ -5862,8 +5862,8 @@
       tripLeg: "day1",
       includeIndianaDunes: true,
       completedStops: {},
-      profileStopRatings: { elsie: {} },
-      profileCollections: { elsie: {} },
+      profileStopRatings: { elsie: {}, katrina: {} },
+      profileCollections: { elsie: {}, katrina: {} },
       pendingAnalyze: false,
       badges: {},
       weather: {},
@@ -5906,10 +5906,12 @@
     state.draftPhotos ||= [];
     state.visitedStops ||= {};
     state.completedStops ||= {};
-    state.profileStopRatings ||= { elsie: {} };
+    state.profileStopRatings ||= { elsie: {}, katrina: {} };
     state.profileStopRatings.elsie ||= {};
-    state.profileCollections ||= { elsie: {} };
+    state.profileStopRatings.katrina ||= {};
+    state.profileCollections ||= { elsie: {}, katrina: {} };
     state.profileCollections.elsie ||= {};
+    state.profileCollections.katrina ||= {};
     delete state.routeResults;
     if (typeof state.includeIndianaDunes !== "boolean") state.includeIndianaDunes = true;
     [state.captures, state.journal, state.draftPhotos].forEach((list) => {
@@ -6106,7 +6108,7 @@
 
   function isStopSaved(stop) {
     const name = stop.title || stop.name;
-    return Object.values(state.shortlist || {}).some((item) => item.name === name && (activeProfile !== "elsie" || item.profile === "elsie"));
+    return Object.values(state.shortlist || {}).some((item) => item.name === name && (!isMapProfile() || item.profile === activeProfile));
   }
 
   function isStopVisited(stop) {
@@ -6682,7 +6684,29 @@
   ].map(([id, title, description, match, required, color, icon]) => ({ id, title, description, match, required, color, icon }));
 
   function visibleAdventureBadges() {
-    if (activeProfile !== "elsie") return adventureBadges;
+    if (!isMapProfile()) return adventureBadges;
+    if (activeProfile === "katrina") {
+      const katrinaSet = {
+        "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3],
+        "state-capitol": ["Capitol Story", "Connect the route to a capitol or government story.", 1],
+        "mackinac-bridge": ["Bridge Crossing", "Find the bridge and Straits stories that connect the peninsulas.", 1],
+        "museum-explorer": ["Fact Collector", "Open, save, or visit museum stops.", 3],
+        "mitten-state": ["Route Reader", "Trace the trip from the palm to the tip of Michigan.", 3],
+        "lighthouse-explorer": ["Lighthouse Files", "Visit or save 3 lighthouse locations.", 2],
+        "great-lakes": ["Lake Effect", "Explore 3 Great Lakes locations.", 3],
+        "dark-sky-observer": ["Night Signal", "Use the sky and stargazing layer during the trip.", 1],
+        "photo-memory": ["Snapshot Hunter", "Capture a trip photo and save it to the journal.", 1],
+        "roadside-oddity": ["Quirky Find", "Find 3 genuinely unusual stops with a good story.", 3],
+        "island-explorer": ["Island Arrival", "Reach Bois Blanc Island.", 1],
+        "sand-dune-explorer": ["Dunes Discovered", "Visit Indiana Dunes.", 1],
+        "waterfall-hunter": ["Falls Finder", "Find a falls or rushing-water stop.", 1],
+        "nature-explorer": ["Wild Places", "Collect parks, preserves, trails, and wildlife stops.", 4]
+      };
+      return adventureBadges.filter((badge) => katrinaSet[badge.id]).map((badge) => {
+        const [title, description, required] = katrinaSet[badge.id];
+        return { ...badge, title, description, required };
+      });
+    }
     const mature = {
       "roadside-oddity": ["Oddity Collector", "Find 3 genuinely unusual stops.", 3],
       "historic-fort": ["Story Hunter", "Save 3 places with a story worth retelling.", 3],
@@ -6713,8 +6737,8 @@
   function adventureBadgeProgress(badge) {
     const related = relatedStopsForAdventureBadge(badge, 999);
     const relatedKeys = new Set(related.map(stopKey));
-    const saved = Object.values(state.shortlist || {}).filter((item) => (activeProfile !== "elsie" || item.profile === "elsie") && related.some((stop) => stop.title === item.name || stop.name === item.name)).length;
-    const visited = Object.entries(state.visitedStops || {}).filter(([key, item]) => relatedKeys.has(key) && (activeProfile !== "elsie" || item.profile === "elsie")).length;
+    const saved = Object.values(state.shortlist || {}).filter((item) => (!isMapProfile() || item.profile === activeProfile) && related.some((stop) => stop.title === item.name || stop.name === item.name)).length;
+    const visited = Object.entries(state.visitedStops || {}).filter(([key, item]) => relatedKeys.has(key) && (!isMapProfile() || item.profile === activeProfile)).length;
     const photoCount = badge.id === "photo-memory" ? (state.journal || []).length + (state.captures || []).length : 0;
     const count = Math.max(saved, visited, photoCount);
     const value = clamp(count, 0, badge.required);
@@ -6871,8 +6895,8 @@
     saveState();
     updateHomeGpsLayer();
     const radar = byId("elsieRadar");
-    if (radar && activeProfile === "elsie") radar.outerHTML = renderElsieRadarMarkup();
-    if (activeProfile === "elsie") renderTopBadgePreview();
+    if (radar && isMapProfile()) radar.outerHTML = renderElsieRadarMarkup();
+    if (isMapProfile()) renderTopBadgePreview();
     renderBottomDrawer();
     if (["rewards", "memories"].includes(activePage)) renderProfile();
     setAction(`Saved to Trip Shortlist: ${item.name || item}.`);
@@ -7191,7 +7215,7 @@
     offerNearbyBadges(point);
     saveState();
     renderTripStatus();
-    if (activeProfile !== "elsie") refreshGpsWeatherIfNeeded();
+    if (!isMapProfile()) refreshGpsWeatherIfNeeded();
     if (shouldRefreshRoute) refreshActiveRoute();
   }
 
@@ -7306,10 +7330,11 @@
 
   function elsieHeaderCopy() {
     const target = getActiveTripTarget();
-    if (isElsieIslandMode()) return ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
+    const isKatrina = activeProfile === "katrina";
+    if (isElsieIslandMode()) return isKatrina ? ["EXPLORE BOIS BLANC", "History, hidden facts, and island mysteries"] : ["EXPLORE BOIS BLANC", "Landmarks, wildlife, and island life"];
     if (state.phase === "return" || state.tripLeg === "return") return ["HOMEWARD", "One long road back to Olathe"];
-    if (state.phase === "pretrip") return ["ELSIE'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"];
-    return [`${target.label.toUpperCase()} IS NEXT`, target === data.route.destinationTargets.indianaDunes ? "Dunes, wetlands, forest, then north to the ferry" : "Live route context without the clutter"];
+    if (state.phase === "pretrip") return isKatrina ? ["KATRINA'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"] : ["ELSIE'S ROUTE", "Merrillville first, Indiana Dunes next, then the ferry"];
+    return [`${target.label.toUpperCase()} IS NEXT`, target === data.route.destinationTargets.indianaDunes ? "Dunes, wetlands, forest, then north to the ferry" : (isKatrina ? "Smart facts and quiz-the-car energy along the way" : "Live route context without the clutter")];
   }
 
   function elsieRouteTrackerMarkup() {
@@ -7337,7 +7362,7 @@
 
   function renderElsieRouteTracker() {
     const current = byId("elsieRouteTracker");
-    if (!current || activeProfile !== "elsie") return;
+    if (!current || !isMapProfile()) return;
     const wrapper = document.createElement("div");
     wrapper.innerHTML = elsieRouteTrackerMarkup();
     current.replaceWith(wrapper.firstElementChild);
@@ -7396,6 +7421,11 @@
 
   /* ===================== ELSIE MAP EXPERIENCE ===================== */
 
+  const MAP_PROFILES = ["elsie", "katrina"];
+  function isMapProfile(p = activeProfile) {
+    return MAP_PROFILES.includes(p);
+  }
+
   const ELSIE_ICON_OVERRIDES = {
     // "stop-id": "spooky"
   };
@@ -7420,6 +7450,24 @@
     return "mystery";
   }
 
+  const KATRINA_ICON_OVERRIDES = {
+    // "stop-id": "star"
+  };
+
+  const KATRINA_ICON_TYPES = ["creature", "star", "cactus", "catdog", "treeflower"];
+
+  function getKatrinaIconType(stop) {
+    if (!stop) return "";
+    const override = KATRINA_ICON_OVERRIDES[stop.id] || KATRINA_ICON_OVERRIDES[stop.title];
+    if (override) return override;
+    const text = `${stop.title || ""} ${stop.category || ""} ${stop.summary || ""} ${stop.why || ""} ${stop.profiles?.katrina || ""}`.toLowerCase();
+    if (/dark sky|astronom|observator|stargaz|planetari|night sky|\bstar\b/.test(text)) return "star";
+    if (/wildlife|zoo|wetland|bird|habitat|refuge|aquarium|nature center|reptile/.test(text)) return "creature";
+    if (/farm|petting|stable|ranch|\bdog\b|\bcat\b|kennel|barn/.test(text)) return "catdog";
+    if (/park|garden|arboretum|forest|nature|trail|preserve|orchard|dune|meadow/.test(text)) return "treeflower";
+    return "cactus";
+  }
+
   function elsieIconSvg(type) {
     const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
     switch (type) {
@@ -7436,11 +7484,36 @@
     }
   }
 
+  function katrinaIconSvg(type) {
+    const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
+    switch (type) {
+      case "creature": return base("#e8c78a", `<circle cx="32" cy="34" r="10" fill="#fff2d9" stroke="#141414" stroke-width="3"/><path d="M23 24 L27 30 M41 24 L37 30" stroke="#141414" stroke-width="3" stroke-linecap="round"/><circle cx="28" cy="33" r="1.8" fill="#141414"/><circle cx="36" cy="33" r="1.8" fill="#141414"/><path d="M29 39q3 3 6 0" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M32 44v6" stroke="#141414" stroke-width="3" stroke-linecap="round"/>`);
+      case "star": return base("#2a3a6b", `<path d="M32 14l5 11 12 1.5-9 8 2.5 12L32 40l-10.5 6.5L24 34l-9-8 12-1.5z" fill="#ffe25c" stroke="#141414" stroke-width="2.5"/><circle cx="46" cy="20" r="1.8" fill="#fff"/><circle cx="19" cy="42" r="1.8" fill="#fff"/>`);
+      case "cactus": return base("#dff0d8", `<rect x="27" y="24" width="10" height="24" rx="5" fill="#4d8b52" stroke="#141414" stroke-width="3"/><path d="M27 32h-6a4 4 0 0 0-4 4v4" stroke="#141414" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M17 40v-4a4 4 0 0 1 4-4" stroke="#4d8b52" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M37 28h6a4 4 0 0 1 4 4v4" stroke="#141414" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M47 36v-4a4 4 0 0 0-4-4" stroke="#4d8b52" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M22 20l3 4M42 20l-3 4M32 16v5" stroke="#e0517a" stroke-width="2.5" stroke-linecap="round"/><rect x="22" y="48" width="20" height="6" rx="2" fill="#c65c35" stroke="#141414" stroke-width="2.5"/>`);
+      case "catdog": return base("#f2d9b8", `<path d="M22 26l4 8M42 26l-4 8" stroke="#141414" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="36" r="11" fill="#fbeedd" stroke="#141414" stroke-width="3"/><circle cx="27" cy="34" r="1.8" fill="#141414"/><circle cx="37" cy="34" r="1.8" fill="#141414"/><path d="M32 38l-2 2h4z" fill="#141414"/><path d="M28 42q4 2.5 8 0" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/>`);
+      case "treeflower": return base("#dcecd2", `<path d="M32 46V30" stroke="#7c5d3a" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="22" r="10" fill="#5dae5a" stroke="#141414" stroke-width="3"/><circle cx="22" cy="28" r="7" fill="#79c46f" stroke="#141414" stroke-width="2.5"/><circle cx="42" cy="28" r="7" fill="#79c46f" stroke="#141414" stroke-width="2.5"/><circle cx="18" cy="46" r="4" fill="#ff9fc6" stroke="#141414" stroke-width="2"/><circle cx="46" cy="47" r="4" fill="#ffe25c" stroke="#141414" stroke-width="2"/>`);
+      default: return base("#c65c35", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
+    }
+  }
+
+  function mapIconType(stop, profile = activeProfile) {
+    return profile === "katrina" ? getKatrinaIconType(stop) : getElsieIconType(stop);
+  }
+
+  function mapIconSvg(type, profile = activeProfile) {
+    return profile === "katrina" ? katrinaIconSvg(type) : elsieIconSvg(type);
+  }
+
+  function mapIconTypes(profile = activeProfile) {
+    return profile === "katrina" ? KATRINA_ICON_TYPES : ELSIE_ICON_TYPES;
+  }
+
   let elsieIconsRegistered = false;
   function registerElsieIcons(map) {
     if (!map) return Promise.resolve();
-    const jobs = ELSIE_ICON_TYPES.map((type) => new Promise((resolve) => {
-      const name = `elsie-${type}`;
+    const profile = activeProfile;
+    const jobs = mapIconTypes(profile).map((type) => new Promise((resolve) => {
+      const name = `${profile}-${type}`;
       if (map.hasImage && map.hasImage(name)) return resolve();
       const image = new Image(64, 64);
       image.onload = () => {
@@ -7448,12 +7521,13 @@
         resolve();
       };
       image.onerror = () => resolve();
-      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(elsieIconSvg(type))}`;
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(mapIconSvg(type, profile))}`;
     }));
     return Promise.all(jobs).then(() => { elsieIconsRegistered = true; });
   }
 
   function elsieStopsFeatureCollection() {
+    const profile = activeProfile;
     return {
       type: "FeatureCollection",
       features: allAttractions().map((item) => ({
@@ -7461,7 +7535,7 @@
         properties: {
           id: item.id,
           title: item.title,
-          elsieIcon: `elsie-${getElsieIconType(item) || "mystery"}`
+          elsieIcon: `${profile}-${mapIconType(item, profile) || mapIconTypes(profile)[0]}`
         },
         geometry: { type: "Point", coordinates: [item.lon, item.lat] }
       }))
@@ -7506,20 +7580,66 @@
 
   let elsieMarkerPopup = null;
 
+  const KATRINA_ICON_LABELS = {
+    "creature": "Small Creature",
+    "star": "Fun Star",
+    "cactus": "Hidden Gem",
+    "catdog": "Cats & Dogs",
+    "treeflower": "Trees & Flowers"
+  };
+
+  function stableIndex(seed, mod) {
+    let hash = 0;
+    const text = String(seed || "stop");
+    for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+    return mod > 0 ? hash % mod : 0;
+  }
+
+  function katrinaPopupContent(item) {
+    const katrinaProfile = data.profiles.find((p) => p.id === "katrina");
+    const prompts = katrinaProfile?.prompts || [];
+    const seed = item.id || item.title || "stop";
+    const historicalFiction = prompts.length ? prompts[stableIndex(seed, prompts.length)] : "What would it feel like to be here 100 years ago?";
+    const whyAngle = item.profiles?.katrina || item.why || "";
+    const hiddenFact = item.why && item.why !== whyAngle ? item.why : (item.summary || "");
+    const quizPrompts = [
+      `Quiz the car: what year do you think this got its start?`,
+      `Quiz the car: why do you think this ended up right here?`,
+      `Quiz the car: what's one detail here nobody else will notice?`
+    ];
+    const quiz = quizPrompts[stableIndex(`${seed}-quiz`, quizPrompts.length)];
+    return { whyAngle, hiddenFact, historicalFiction, quiz };
+  }
+
   function openElsieMarkerPopup(map, rawItem, coordinates) {
     const item = enrichStop(rawItem);
-    const iconType = getElsieIconType(item);
-    const label = ELSIE_ICON_LABELS[iconType] || "Worth the Detour";
+    const profile = activeProfile;
+    const iconType = mapIconType(item, profile);
     const link = item.learn_more || item.official_website || sourceLinkForPlace(item);
     if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    const isKatrina = profile === "katrina";
+    const label = isKatrina ? (KATRINA_ICON_LABELS[iconType] || "Worth the Detour") : (ELSIE_ICON_LABELS[iconType] || "Worth the Detour");
+    let bodyHtml;
+    if (isKatrina) {
+      const content = katrinaPopupContent(item);
+      bodyHtml = `
+        <p>${escapeHtml(item.summary || item.why || "")}</p>
+        ${content.whyAngle ? `<p class="elsie-popup-angle"><strong>Why here?</strong> ${escapeHtml(content.whyAngle)}</p>` : ""}
+        ${content.hiddenFact ? `<p class="elsie-popup-angle"><strong>Hidden fact:</strong> ${escapeHtml(content.hiddenFact)}</p>` : ""}
+        <p class="elsie-popup-angle"><strong>Historical fiction:</strong> ${escapeHtml(content.historicalFiction)}</p>
+        <p class="elsie-popup-angle"><strong>${escapeHtml(content.quiz)}</strong></p>`;
+    } else {
+      bodyHtml = `
+        <p>${escapeHtml(item.summary || item.why || "")}</p>
+        ${item.profiles?.elsie ? `<p class="elsie-popup-angle">${escapeHtml(item.profiles.elsie)}</p>` : ""}`;
+    }
     elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "260px", offset: 18, className: "elsie-marker-popup" })
       .setLngLat(coordinates)
       .setHTML(`
         <div class="elsie-popup-card">
           <small>${escapeHtml(label)}</small>
           <strong>${escapeHtml(item.title)}</strong>
-          <p>${escapeHtml(item.summary || item.why || "")}</p>
-          ${item.profiles?.elsie ? `<p class="elsie-popup-angle">${escapeHtml(item.profiles.elsie)}</p>` : ""}
+          ${bodyHtml}
           <div class="elsie-popup-actions">
             <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
             <button type="button" data-visited-stop="${escapeHtml(item.title)}">${isStopVisited(item) ? "Visited" : "Mark visited"}</button>
@@ -7581,7 +7701,7 @@
   }
 
   function applyRadarLayer(map = homeMap) {
-    if (!map || activeProfile !== "elsie") return;
+    if (!map || !isMapProfile()) return;
     const frame = currentRadarFrame();
     if (!frame) return;
     const apply = () => {
@@ -7646,7 +7766,7 @@
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       stopRadarAnimation();
-    } else if (state.radarEnabled && activeProfile === "elsie") {
+    } else if (state.radarEnabled && isMapProfile()) {
       fetchRadarMeta().then(() => {
         applyRadarLayer();
         startRadarAnimation();
@@ -7665,7 +7785,7 @@
 
   function syncRadarStationLayer(map = homeMap) {
     if (!map) return;
-    const visible = activeProfile === "elsie" && state.radarStationsVisible;
+    const visible = isMapProfile() && state.radarStationsVisible;
     if (!visible) {
       try { if (map.getLayer("elsie-radar-stations")) map.setLayoutProperty("elsie-radar-stations", "visibility", "none"); } catch {}
       return;
@@ -7717,7 +7837,7 @@
       tripLeg: currentTripLegId(),
       reason,
       accuracy: Number.isFinite(accuracy) ? Math.round(accuracy) : null,
-      profile: "elsie",
+      profile: activeProfile,
       label: label || ""
     });
     pruneBreadcrumbs();
@@ -7772,7 +7892,7 @@
 
   function syncBreadcrumbLayers(map = homeMap) {
     if (!map || !map.getStyle) return;
-    const visible = activeProfile === "elsie" && state.breadcrumbVisible && state.breadcrumbTrail.length > 0;
+    const visible = isMapProfile() && state.breadcrumbVisible && state.breadcrumbTrail.length > 0;
     const geo = getBreadcrumbGeoJson();
     try {
       if (!map.getSource("elsie-breadcrumb-line")) {
@@ -7831,7 +7951,7 @@
   let elsieSheetLastFocus = null;
 
   function openElsieSheet(type, payload) {
-    if (activeProfile !== "elsie") return;
+    if (!isMapProfile()) return;
     const sheet = byId("elsieSheet");
     const scrim = byId("elsieSheetScrim");
     if (!sheet) return;
@@ -7971,7 +8091,7 @@
   }
 
   function isElsieIslandMode() {
-    return activeProfile === "elsie" && (state.phase === "island" || state.phase === "complete");
+    return isMapProfile() && (state.phase === "island" || state.phase === "complete");
   }
 
   function elsieShortLabel(label) {
@@ -7990,10 +8110,10 @@
   }
 
   function elsieIslandActivities() {
-    const elsieProfile = data.profiles.find((p) => p.id === "elsie");
-    const board = (data.activityBoard.elsie || []).filter((item) => ["Island", "Nature", "Great Lakes"].includes(item.type));
-    const interests = elsieProfile?.islandInterests || [];
-    const completed = new Set(state.completed.filter((item) => item.profile === "elsie").map((item) => item.activityTitle));
+    const profile = data.profiles.find((p) => p.id === activeProfile);
+    const board = (data.activityBoard[activeProfile] || []).filter((item) => ["Island", "Nature", "Great Lakes"].includes(item.type));
+    const interests = profile?.islandInterests || [];
+    const completed = new Set(state.completed.filter((item) => item.profile === activeProfile).map((item) => item.activityTitle));
     return { board: board.filter((item) => !completed.has(item.title)), interests };
   }
 
@@ -8085,12 +8205,12 @@
     const attractions = allAttractions();
     const count = byId("mapStopCount");
     if (count) count.textContent = `${attractions.length} stops`;
-    const elsie = activeProfile === "elsie";
+    const elsie = isMapProfile();
     const [elsieTitle, elsieSubtitle] = elsieHeaderCopy();
     document.body.classList.toggle("elsie-map-active", elsie);
     container.innerHTML = elsie ? `
       <div class="elsie-map-shell">
-        <div id="homeClusterMap" class="home-cluster-map maplibre-canvas elsie-map-canvas" role="application" aria-label="Elsie's route map with ${attractions.length} trip stops">
+        <div id="homeClusterMap" class="home-cluster-map maplibre-canvas elsie-map-canvas" role="application" aria-label="${currentProfile().name}'s route map with ${attractions.length} trip stops">
           <div class="map-fallback">
             <strong>Loading Elsie's map</strong>
             <p>${attractions.length} trip stops are ready.</p>
@@ -8217,7 +8337,7 @@
         layout: { "text-field": ["get", "icon"], "text-size": 13, "text-allow-overlap": true },
         paint: { "text-color": "#fffdf7" }
       });
-      if (activeProfile === "elsie") {
+      if (isMapProfile()) {
         const islandMode = isElsieIslandMode();
         if (!islandMode) {
           const routed = currentRouteResult().coordinates || [];
@@ -8323,7 +8443,7 @@
         const item = attractionForIdOrTitle(event.features[0].properties.id, event.features[0].properties.title);
         if (item) {
           showAttractionPreview(item);
-          if (activeProfile !== "elsie") showStopDetailDrawer(item);
+          if (!isMapProfile()) showStopDetailDrawer(item);
         }
       });
       homeMap.on("mousemove", "home-unclustered-point", (event) => {
@@ -8334,7 +8454,7 @@
       homeMap.on("mouseleave", "home-unclustered-point", () => { homeMap.getCanvas().style.cursor = ""; });
       homeMap.on("moveend", refreshUploadedStopsPanel);
       homeMap.on("zoomend", refreshUploadedStopsPanel);
-      if (activeProfile !== "elsie") {
+      if (!isMapProfile()) {
         homeMap.on("move", renderHomeDomMarkers);
         homeMap.on("zoom", renderHomeDomMarkers);
         homeMap.on("resize", renderHomeDomMarkers);
@@ -8347,7 +8467,7 @@
         homeMap.fitBounds(bounds, { padding: { top: 92, bottom: 86, left: 42, right: 42 }, maxZoom: 5.8, duration: 0 });
       }
       refreshUploadedStopsPanel();
-      if (activeProfile !== "elsie") window.setTimeout(renderHomeDomMarkers, 120);
+      if (!isMapProfile()) window.setTimeout(renderHomeDomMarkers, 120);
     });
   }
 
@@ -8646,7 +8766,7 @@
 
   function showAttractionPreview(item) {
     item = enrichStop(item);
-    if (activeProfile === "elsie") {
+    if (isMapProfile()) {
       const preview = byId("homeAttractionPreview") || byId("exploreDetail");
       if (!preview) return;
       preview.hidden = false;
@@ -8700,26 +8820,28 @@
     const cluster = byId("clusterDrawer");
     if (cluster) cluster.hidden = true;
     const profile = currentProfile();
-    if (profile.id === "elsie") {
+    if (isMapProfile(profile.id)) {
       const key = stopKey(item);
-      const rating = state.profileStopRatings.elsie[key] || "";
-      const collections = state.profileCollections.elsie[key] || [];
+      const rating = state.profileStopRatings[profile.id][key] || "";
+      const collections = state.profileCollections[profile.id][key] || [];
       const collectionChoices = ["Weird", "Historic", "Animal", "Best Story", "Would Visit"];
+      const angleLabel = profile.id === "katrina" ? "Katrina's angle" : "Elsie's angle";
+      const angleText = profile.id === "katrina" ? katrinaPopupContent(item).whyAngle : item.profiles?.elsie;
       drawer.innerHTML = `
         <section class="stop-detail-drawer elsie-detail-drawer" role="dialog" aria-modal="false" aria-labelledby="elsieStopTitle">
           <div class="elsie-drawer-head"><div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.tier)}</p><h3 id="elsieStopTitle">${escapeHtml(item.title)}</h3></div><button type="button" data-close-stop-drawer aria-label="Close attraction details">Close</button></div>
           <div class="elsie-detail-meta"><span>${escapeHtml(item.routeSegment || "Route")}</span><span>${escapeHtml(stopDistanceLabel(item))}</span><span>${escapeHtml(item.distanceOffRoute)}</span><span>${escapeHtml(item.estimatedStopTime)}</span></div>
           <p>${escapeHtml(item.summary || "")}</p>
           <p><strong>Why it matters:</strong> ${escapeHtml(item.why || item.summary || "")}</p>
-          <p><strong>Elsie's angle:</strong> ${escapeHtml(item.profiles?.elsie || "Look for the detail that changes the whole story.")}</p>
-          <p><strong>What to look for:</strong> ${escapeHtml(item.profiles?.elsie || item.summary || "")}</p>
+          <p><strong>${escapeHtml(angleLabel)}:</strong> ${escapeHtml(angleText || "Look for the detail that changes the whole story.")}</p>
+          <p><strong>What to look for:</strong> ${escapeHtml(angleText || item.summary || "")}</p>
           <div class="compact-actions">
             <button type="button" data-shortlist="${escapeHtml(item.title)}" data-category="${escapeHtml(item.category)}" data-url="${sourceLinkForPlace(item)}">${isStopSaved(item) ? "Saved" : "Save"}</button>
             <button type="button" data-visited-stop="${escapeHtml(item.title)}">${isStopVisited(item) ? "Visited" : "Mark visited"}</button>
             <a class="external-link" href="${googleMapsNavigationUrl(item)}" target="_blank" rel="noopener">Navigate</a>
             <a class="external-link" href="${sourceLinkForPlace(item)}" target="_blank" rel="noopener">Learn More</a>
           </div>
-          <fieldset class="elsie-collections"><legend>Elsie's Collections</legend>${collectionChoices.map((choice) => `<label><input type="checkbox" data-elsie-collection="${escapeHtml(key)}" value="${choice}" ${collections.includes(choice) ? "checked" : ""}> ${choice}</label>`).join("")}</fieldset>
+          <fieldset class="elsie-collections"><legend>${escapeHtml(profile.name)}'s Collections</legend>${collectionChoices.map((choice) => `<label><input type="checkbox" data-elsie-collection="${escapeHtml(key)}" value="${choice}" ${collections.includes(choice) ? "checked" : ""}> ${choice}</label>`).join("")}</fieldset>
           ${isStopVisited(item) ? `<fieldset class="elsie-rating"><legend>Worth the detour?</legend>${["Skip next time", "Interesting", "Actually great"].map((choice) => `<label><input type="radio" name="elsie-rating-${escapeHtml(key)}" data-elsie-rating="${escapeHtml(key)}" value="${choice}" ${rating === choice ? "checked" : ""}> ${choice}</label>`).join("")}</fieldset>` : ""}
         </section>`;
       return;
@@ -8799,7 +8921,7 @@
   function openAppleRoute(name) {
     const stop = attractionForName(name);
     if (!stop) return;
-    window.open(activeProfile === "elsie" ? googleMapsNavigationUrl(stop) : appleMapsUrl(stop), "_blank");
+    window.open(isMapProfile() ? googleMapsNavigationUrl(stop) : appleMapsUrl(stop), "_blank");
   }
 
   function loadMapLibre() {
@@ -8945,8 +9067,7 @@
           segment: item.routeSegment,
           tier: item.tier,
           stopTime: item.estimatedStopTime,
-          icon: item.icon,
-          elsieIcon: activeProfile === "elsie" && getElsieIconType(item) ? `elsie-${getElsieIconType(item)}` : ""
+          icon: item.icon
         },
         geometry: { type: "Point", coordinates: [item.lon, item.lat] }
       }))
@@ -9019,7 +9140,7 @@
         const item = allAttractions().find((entry) => entry.title === title);
         if (item) showAttractionPreview(item);
       });
-      if (activeProfile !== "elsie") attractions.forEach((item) => addExploreAttractionMarker(item));
+      if (!isMapProfile()) attractions.forEach((item) => addExploreAttractionMarker(item));
       if (state.lastPosition) addExploreGpsMarker();
       const first = attractions[0];
       if (first) {
@@ -10228,20 +10349,22 @@
         render();
         refreshActiveRoute(true);
       }
-      if (target.matches("[data-elsie-rating]")) {
-        state.profileStopRatings.elsie[target.dataset.elsieRating] = target.value;
+      if (target.matches("[data-elsie-rating]") && isMapProfile()) {
+        state.profileStopRatings[activeProfile] ||= {};
+        state.profileStopRatings[activeProfile][target.dataset.elsieRating] = target.value;
         saveState();
       }
-      if (target.matches("[data-elsie-collection]")) {
+      if (target.matches("[data-elsie-collection]") && isMapProfile()) {
         const key = target.dataset.elsieCollection;
-        const values = new Set(state.profileCollections.elsie[key] || []);
+        state.profileCollections[activeProfile] ||= {};
+        const values = new Set(state.profileCollections[activeProfile][key] || []);
         target.checked ? values.add(target.value) : values.delete(target.value);
-        state.profileCollections.elsie[key] = [...values];
+        state.profileCollections[activeProfile][key] = [...values];
         saveState();
       }
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && activeProfile === "elsie" && state.gpsStatus === "Active") refreshActiveRoute();
+      if (document.visibilityState === "visible" && isMapProfile() && state.gpsStatus === "Active") refreshActiveRoute();
     });
     document.addEventListener("keydown", (event) => {
       const modal = document.getElementById("badgeDetailOverlay");
@@ -10257,7 +10380,7 @@
       }
       if (event.key !== "Escape") return;
       closeBadgeModal();
-      if (activeProfile === "elsie") {
+      if (isMapProfile()) {
         const drawer = byId("bottomDrawer");
         if (drawer) drawer.innerHTML = "";
       }
@@ -10285,7 +10408,7 @@
     parseHash();
     document.body.dataset.page = activePage;
     document.body.dataset.profile = activeProfile;
-    if (activeProfile === "elsie") {
+    if (isMapProfile()) {
       const [title, subtitle] = elsieHeaderCopy();
       byId("topbarTitle").textContent = title;
       byId("topbarMeta").textContent = subtitle;
