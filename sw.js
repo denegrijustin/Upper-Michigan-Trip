@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v72-emma-agent-marker";
+const CACHE_NAME = "elskatemm-trip-v73-emma-thumbsup-marker";
 const CORE_ASSETS = [
   "/",
   "/index.html",
