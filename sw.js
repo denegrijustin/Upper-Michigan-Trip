@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v66-eliette-jeep-marker";
+const CACHE_NAME = "elskatemm-trip-v67-eliette-full-fact-coverage";
 const CORE_ASSETS = [
   "/",
   "/index.html",
