@@ -7284,6 +7284,16 @@
               layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
+        } else if (activeProfile === "eliette") {
+          registerElietteGpsImage(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "eliette-gps-jeep", "icon-size": 0.3, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
         } else if (FAMILY_LOCATOR_PROFILES.includes(activeProfile)) {
           registerFamilyGpsImage(homeMap).then(() => {
             if (!homeMap || homeMap.getLayer("current-location-dot")) return;
@@ -8486,6 +8496,19 @@
 
   const FAMILY_LOCATOR_PROFILES = ["elsie", "katrina", "emma"];
 
+  function registerElietteGpsImage(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("eliette-gps-jeep"))) return resolve();
+      const image = new Image(240, 240);
+      image.onload = () => {
+        try { if (!map.hasImage("eliette-gps-jeep")) map.addImage("eliette-gps-jeep", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/eliette-gps-jeep.png";
+    });
+  }
+
   function registerFamilyGpsImage(map) {
     return new Promise((resolve) => {
       if (!map || (map.hasImage && map.hasImage("family-gps-marker"))) return resolve();
@@ -9638,6 +9661,16 @@
               type: "symbol",
               source: "current-location",
               layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
+        } else if (activeProfile === "eliette") {
+          registerElietteGpsImage(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "eliette-gps-jeep", "icon-size": 0.3, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (FAMILY_LOCATOR_PROFILES.includes(activeProfile)) {
