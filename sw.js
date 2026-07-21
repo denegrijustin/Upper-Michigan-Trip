@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v70-elsie-photo-marker";
+const CACHE_NAME = "elskatemm-trip-v71-elsie-photo-rotation-fix";
 const CORE_ASSETS = [
   "/",
   "/index.html",
