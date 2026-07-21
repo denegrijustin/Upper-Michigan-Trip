@@ -23,7 +23,7 @@ window.TRIP_DATA = {
       islandApprox: { lat: 45.7465, lon: -84.4948 }
     },
     destinationTargets: {
-      merrillville: { label: "Merrillville Overnight", lat: 41.4828, lon: -87.3328, plannedMiles: 585, plannedHours: 9, timeZone: "America/Chicago" },
+      merrillville: { label: "Merrillville Overnight", lat: 41.4828, lon: -87.3328, plannedMiles: 522, plannedHours: 8.75, timeZone: "America/Chicago" },
       indianaDunes: { label: "Indiana Dunes", lat: 41.6332, lon: -87.0547, plannedMiles: 27, plannedHours: 0.6, timeZone: "America/Chicago" },
       cheboygan: { label: "Plaunt ferry in Cheboygan", lat: 45.6469, lon: -84.4745, plannedMiles: 365, plannedHours: 5.6, timeZone: "America/Detroit" },
       island: { label: "Bois Blanc Island home base", lat: 45.7465, lon: -84.4948, plannedMiles: 1065 },
@@ -204,10 +204,10 @@ window.TRIP_DATA = {
     ],
     stops: [
       { id: "olathe", name: "Olathe, Kansas", milesFromStart: 0, type: "start" },
-      { id: "merrillville", name: "Merrillville Overnight", milesFromStart: 585, type: "overnight" },
-      { id: "indiana-dunes", name: "Indiana Dunes Visitor Center", milesFromStart: 612, type: "nature" },
-      { id: "cheboygan", name: "Plaunt Transportation, Cheboygan", milesFromStart: 1035, type: "ferry" },
-      { id: "island", name: "Bois Blanc Island", milesFromStart: 1065, type: "arrival" }
+      { id: "merrillville", name: "Merrillville Overnight", milesFromStart: 522, type: "overnight" },
+      { id: "indiana-dunes", name: "Indiana Dunes Visitor Center", milesFromStart: 549, type: "nature" },
+      { id: "cheboygan", name: "Plaunt Transportation, Cheboygan", milesFromStart: 972, type: "ferry" },
+      { id: "island", name: "Bois Blanc Island", milesFromStart: 1002, type: "arrival" }
     ],
     restStops: [
       { date: "2026-07-31", name: "Columbia, MO travel-center window", segment: "I-70 east of Kansas City", milesFromStart: 150, timing: "About 2.5 hours after departure", confidence: "High", needs: ["Bathroom now", "Gas now", "Food now"], note: "Good first reset: clean-restroom chains, fuel, breakfast/snack choices, and no pressure on South Bend dinner." },

@@ -6238,8 +6238,7 @@
     }
     return [
       { lat: stops.columbia.lat, lon: stops.columbia.lon },
-      { lat: stops.stLouis.lat, lon: stops.stLouis.lon },
-      { lat: stops.indianapolis.lat, lon: stops.indianapolis.lon }
+      { lat: stops.stLouis.lat, lon: stops.stLouis.lon }
     ];
   }
 
@@ -7424,8 +7423,7 @@
         destination: { label: "Merrillville Overnight", location: { lat: stops.merrillville.lat, lon: stops.merrillville.lon } },
         waypoints: [
           { label: "Columbia", location: { lat: stops.columbia.lat, lon: stops.columbia.lon } },
-          { label: "St. Louis", location: { lat: stops.stLouis.lat, lon: stops.stLouis.lon } },
-          { label: "Indianapolis", location: { lat: stops.indianapolis.lat, lon: stops.indianapolis.lon } }
+          { label: "St. Louis", location: { lat: stops.stLouis.lat, lon: stops.stLouis.lon } }
         ]
       };
     }
