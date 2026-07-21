@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v64-family-locator-marker";
+const CACHE_NAME = "elskatemm-trip-v65-smaller-family-marker";
 const CORE_ASSETS = [
   "/",
   "/index.html",

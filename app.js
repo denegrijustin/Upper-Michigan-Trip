@@ -7291,7 +7291,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "family-gps-marker", "icon-size": 0.5, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "family-gps-marker", "icon-size": 0.26, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -9647,7 +9647,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "family-gps-marker", "icon-size": 0.5, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "family-gps-marker", "icon-size": 0.26, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
