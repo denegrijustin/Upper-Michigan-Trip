@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "mkdir -p dist && cp index.html styles.css mobile-first-fix.css app.js trip-data.js trip-stops.js haunted-stops.js emma-stops.js katrina-stops.js jules-stops.js jules-gps.png jules-gps-f1.png family-gps-marker.png eliette-gps-jeep.png elsie-gps-photo.png manifest.json sw.js icon.svg README.md dist/",
+    "build": "mkdir -p dist && cp index.html styles.css mobile-first-fix.css app.js trip-data.js trip-stops.js haunted-stops.js emma-stops.js katrina-stops.js jules-stops.js jules-gps.png jules-gps-f1.png family-gps-marker.png eliette-gps-jeep.png elsie-gps-photo.png emma-gps-agent.png manifest.json sw.js icon.svg README.md dist/",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {

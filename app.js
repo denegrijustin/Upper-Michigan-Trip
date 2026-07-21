@@ -7284,6 +7284,16 @@
               layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
+        } else if (activeProfile === "emma") {
+          registerEmmaGpsAgent(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "emma-gps-agent", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
         } else if (activeProfile === "elsie") {
           registerElsieGpsPhoto(homeMap).then(() => {
             if (!homeMap || homeMap.getLayer("current-location-dot")) return;
@@ -9002,7 +9012,20 @@
     map.on("mouseleave", "jules-route-layer", () => { map.getCanvas().style.cursor = ""; });
   }
 
-  const FAMILY_LOCATOR_PROFILES = ["katrina", "emma"];
+  const FAMILY_LOCATOR_PROFILES = ["katrina"];
+
+  function registerEmmaGpsAgent(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("emma-gps-agent"))) return resolve();
+      const image = new Image(240, 240);
+      image.onload = () => {
+        try { if (!map.hasImage("emma-gps-agent")) map.addImage("emma-gps-agent", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/emma-gps-agent.png";
+    });
+  }
 
   function registerElsieGpsPhoto(map) {
     return new Promise((resolve) => {
@@ -10182,6 +10205,16 @@
               type: "symbol",
               source: "current-location",
               layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
+        } else if (activeProfile === "emma") {
+          registerEmmaGpsAgent(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "emma-gps-agent", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "elsie") {
