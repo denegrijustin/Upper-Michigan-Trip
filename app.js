@@ -7284,6 +7284,16 @@
               layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
+        } else if (FAMILY_LOCATOR_PROFILES.includes(activeProfile)) {
+          registerFamilyGpsImage(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "family-gps-marker", "icon-size": 0.5, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
         } else {
           homeMap.addLayer({
             id: "current-location-dot",
@@ -8474,6 +8484,21 @@
     map.on("mouseleave", "jules-route-layer", () => { map.getCanvas().style.cursor = ""; });
   }
 
+  const FAMILY_LOCATOR_PROFILES = ["elsie", "katrina", "emma"];
+
+  function registerFamilyGpsImage(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("family-gps-marker"))) return resolve();
+      const image = new Image(240, 240);
+      image.onload = () => {
+        try { if (!map.hasImage("family-gps-marker")) map.addImage("family-gps-marker", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/family-gps-marker.png";
+    });
+  }
+
   const JULES_MARKER_IMAGES = { sonic: { file: "/jules-gps.png", name: "jules-gps-car-sonic" }, f1: { file: "/jules-gps-f1.png", name: "jules-gps-car-f1" } };
 
   function julesGpsImageName() {
@@ -9613,6 +9638,16 @@
               type: "symbol",
               source: "current-location",
               layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
+        } else if (FAMILY_LOCATOR_PROFILES.includes(activeProfile)) {
+          registerFamilyGpsImage(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "family-gps-marker", "icon-size": 0.5, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {

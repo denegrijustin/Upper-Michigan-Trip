@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v63-circle-marker-dark-mode";
+const CACHE_NAME = "elskatemm-trip-v64-family-locator-marker";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   "/jules-stops.js",
   "/jules-gps.png",
   "/jules-gps-f1.png",
+  "/family-gps-marker.png",
   "/manifest.json",
   "/icon.svg"
 ];
@@ -35,7 +36,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
   const appShell = ["/", "/index.html"].includes(url.pathname);
-  const staticAsset = ["/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/trip-stops.js", "/haunted-stops.js", "/emma-stops.js", "/katrina-stops.js", "/jules-stops.js", "/jules-gps.png", "/jules-gps-f1.png", "/manifest.json", "/icon.svg"].includes(url.pathname);
+  const staticAsset = ["/styles.css", "/mobile-first-fix.css", "/app.js", "/trip-data.js", "/trip-stops.js", "/haunted-stops.js", "/emma-stops.js", "/katrina-stops.js", "/jules-stops.js", "/jules-gps.png", "/jules-gps-f1.png", "/family-gps-marker.png", "/manifest.json", "/icon.svg"].includes(url.pathname);
   if (appShell) {
     event.respondWith(
       fetch(event.request)
