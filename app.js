@@ -9608,6 +9608,58 @@
     toast._hideTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 6000);
   }
 
+  /* ---------- Easter egg near Columbia ---------- */
+
+  const EASTER_EGG_COORDS = { lat: 38.9633, lon: -92.3502 };
+  const EASTER_EGG_LINKS = {
+    elsie: "https://youtu.be/dhZTNgAs4Fc?is=5WV7NHEhQ8wqOMDc",
+    katrina: "https://youtu.be/au3-hk-pXsM?is=PyLH66oyPf-ZEyp6",
+    emma: "https://youtu.be/MtN1YnoL46Q?is=PkU2XWg_cpZ6zNE_",
+    eliette: "https://youtu.be/nUsrYVxrDwI?is=GGbWF9jCwwxdAXhv",
+    jules: "https://www.miniplay.com/game/sonic-the-hedgehog-sega/play"
+  };
+
+  function registerEasterEggIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-golden-egg"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-golden-egg")) map.addImage("elsie-golden-egg", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/golden-egg.png";
+    });
+  }
+
+  function addEasterEggLayer(map) {
+    if (!map || map.getLayer("elsie-easter-egg")) return;
+    const link = EASTER_EGG_LINKS[activeProfile];
+    if (!link) return;
+    if (!map.getSource("elsie-easter-egg-point")) {
+      map.addSource("elsie-easter-egg-point", {
+        type: "geojson",
+        data: { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [EASTER_EGG_COORDS.lon, EASTER_EGG_COORDS.lat] } }
+      });
+    }
+    map.addLayer({
+      id: "elsie-easter-egg",
+      type: "symbol",
+      source: "elsie-easter-egg-point",
+      layout: {
+        "icon-image": "elsie-golden-egg",
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.14, 8, 0.22, 12, 0.3],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "elsie-easter-egg", () => {
+      window.open(EASTER_EGG_LINKS[activeProfile], "_blank");
+    });
+    map.on("mouseenter", "elsie-easter-egg", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "elsie-easter-egg", () => { map.getCanvas().style.cursor = ""; });
+  }
+
   function applyWildfireLayer(map = homeMap) {
     if (!map) return;
     if (!state.wildfiresEnabled) {
@@ -10437,6 +10489,7 @@
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
         if (state.smokeEnabled) applySmokeLayer(homeMap);
+        if (EASTER_EGG_LINKS[activeProfile]) registerEasterEggIcon(homeMap).then(() => addEasterEggLayer(homeMap));
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
