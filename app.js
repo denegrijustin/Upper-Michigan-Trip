@@ -5865,6 +5865,7 @@
       gpsAutoOn: true,
       julesMarkerStyle: "sonic",
       mapTheme: "light",
+      smokeEnabled: false,
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5912,6 +5913,7 @@
     if (typeof state.gpsAutoOn !== "boolean") state.gpsAutoOn = true;
     if (state.julesMarkerStyle !== "sonic" && state.julesMarkerStyle !== "f1") state.julesMarkerStyle = "sonic";
     if (state.mapTheme !== "light" && state.mapTheme !== "dark") state.mapTheme = "light";
+    if (typeof state.smokeEnabled !== "boolean") state.smokeEnabled = false;
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -9473,6 +9475,37 @@
       .addTo(map);
   }
 
+  /* ---------- Smoke / haze layer (NASA GIBS Aerosol Optical Depth) ---------- */
+
+  function smokeTileDate() {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - 1); // yesterday: same-day satellite data is often not yet processed
+    return d.toISOString().slice(0, 10);
+  }
+
+  function applySmokeLayer(map = homeMap) {
+    if (!map) return;
+    try {
+      if (state.smokeEnabled) {
+        if (!map.getSource("elsie-smoke")) {
+          map.addSource("elsie-smoke", {
+            type: "raster",
+            tiles: [`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_Aerosol/default/${smokeTileDate()}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`],
+            tileSize: 256,
+            maxzoom: 6,
+            attribution: "Aerosol/smoke data \u00a9 NASA GIBS / MODIS"
+          });
+        }
+        if (!map.getLayer("elsie-smoke-layer")) {
+          map.addLayer({ id: "elsie-smoke-layer", type: "raster", source: "elsie-smoke", paint: { "raster-opacity": 0.55 } });
+        }
+      } else {
+        if (map.getLayer("elsie-smoke-layer")) map.removeLayer("elsie-smoke-layer");
+        if (map.getSource("elsie-smoke")) map.removeSource("elsie-smoke");
+      }
+    } catch { /* non-critical overlay */ }
+  }
+
   /* ---------- Weather radar (RainViewer) ---------- */
 
   const elsieWeatherRadar = { host: "https://tilecache.rainviewer.com", frames: [], lastFetch: 0, frameIndex: 0, animTimer: null };
@@ -10046,6 +10079,7 @@
           <button type="button" class="elsie-map-fab" data-elsie-sheet="breadcrumb" aria-haspopup="dialog" aria-label="Sasquatch trail controls">👣</button>
           <button type="button" class="elsie-map-fab elsie-gps-fab" data-gps-locate aria-label="Find my location">📍</button>
           <button type="button" class="elsie-map-fab elsie-theme-fab" data-map-theme-toggle aria-label="Switch map to ${state.mapTheme === "dark" ? "light" : "dark"} mode">${state.mapTheme === "dark" ? "☀️" : "🌙"}</button>
+          <button type="button" class="elsie-map-fab elsie-smoke-fab ${state.smokeEnabled ? "is-on" : ""}" data-smoke-toggle aria-pressed="${state.smokeEnabled}" aria-label="Smoke and haze layer ${state.smokeEnabled ? "on" : "off"}">🌫️</button>
         </div>
         ${renderElsieRadarMarkup()}
         <div id="elsieSheetScrim" class="elsie-sheet-scrim" hidden></div>
@@ -10190,6 +10224,7 @@
         });
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
+        if (state.smokeEnabled) applySmokeLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
@@ -12195,6 +12230,18 @@
       saveState();
       if (homeMap) { homeMap.remove(); homeMap = null; }
       renderHomeMapPanel();
+      return;
+    }
+    if (target.dataset.smokeToggle !== undefined) {
+      event.preventDefault();
+      state.smokeEnabled = !state.smokeEnabled;
+      saveState();
+      applySmokeLayer(homeMap);
+      const fab = target.closest(".elsie-smoke-fab");
+      if (fab) {
+        fab.classList.toggle("is-on", state.smokeEnabled);
+        fab.setAttribute("aria-pressed", String(state.smokeEnabled));
+      }
       return;
     }
     if (target.dataset.julesMarkerToggle !== undefined) {

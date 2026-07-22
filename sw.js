@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v79-shared-55-eliette-facts";
+const CACHE_NAME = "elskatemm-trip-v80-smoke-haze-layer";
 const CORE_ASSETS = [
   "/",
   "/index.html",
