@@ -9595,77 +9595,55 @@
     if (!map) return;
     if (!state.wildfiresEnabled) {
       try {
-        if (map.getLayer("elsie-wildfire-clusters")) map.removeLayer("elsie-wildfire-clusters");
-        if (map.getLayer("elsie-wildfire-cluster-count")) map.removeLayer("elsie-wildfire-cluster-count");
         if (map.getLayer("elsie-wildfire-points")) map.removeLayer("elsie-wildfire-points");
         if (map.getSource("elsie-wildfires")) map.removeSource("elsie-wildfires");
-      } catch { /* non-critical */ }
+      } catch (error) { console.error("Wildfire layer removal error:", error); }
       return;
     }
     const fab = document.querySelector(".elsie-fire-fab");
-    if (fab) { fab.textContent = "⏳"; fab.removeAttribute("data-fire-count"); }
+    if (fab) { fab.textContent = "\u23f3"; fab.removeAttribute("data-fire-count"); }
     fetchWildfireFeatures().then((features) => {
+      const pointFeatures = features.filter((f) => f.geometry && f.geometry.type === "Point" && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length === 2 && Number.isFinite(f.geometry.coordinates[0]) && Number.isFinite(f.geometry.coordinates[1]));
       if (fab) {
-        fab.textContent = "🔥";
-        fab.setAttribute("data-fire-count", String(features.length));
-        fab.title = features.length === 0
+        fab.textContent = "\ud83d\udd25";
+        fab.setAttribute("data-fire-count", String(pointFeatures.length));
+        fab.title = pointFeatures.length === 0
           ? (wildfireLastError ? `Couldn't load wildfire data (${wildfireLastError})` : "No active wildfires returned right now")
-          : `${features.length} active wildfires loaded — zoom out to see them, most are in the western US/Canada`;
+          : `${pointFeatures.length} active wildfires loaded \u2014 zoom out to see them, most are in the western US/Canada`;
       }
       if (!homeMap || !state.wildfiresEnabled) return;
       const activeMap = homeMap;
-      registerWildfireIcon(activeMap).then(() => {
-      if (!homeMap || !state.wildfiresEnabled) return;
       try {
-        const collection = { type: "FeatureCollection", features };
-        if (!activeMap.getSource("elsie-wildfires")) {
-          activeMap.addSource("elsie-wildfires", { type: "geojson", data: collection, cluster: true, clusterMaxZoom: 8, clusterRadius: 40 });
-        } else {
+        const collection = { type: "FeatureCollection", features: pointFeatures };
+        if (activeMap.getSource("elsie-wildfires")) {
           activeMap.getSource("elsie-wildfires").setData(collection);
+          return;
         }
-        if (!activeMap.getLayer("elsie-wildfire-clusters")) {
-          activeMap.addLayer({
-            id: "elsie-wildfire-clusters",
-            type: "circle",
-            source: "elsie-wildfires",
-            filter: ["has", "point_count"],
-            paint: { "circle-color": "#c1440e", "circle-radius": ["step", ["get", "point_count"], 14, 10, 18, 25, 23], "circle-stroke-width": 2, "circle-stroke-color": "#fffdf7" }
-          });
-          activeMap.addLayer({
-            id: "elsie-wildfire-cluster-count",
-            type: "symbol",
-            source: "elsie-wildfires",
-            filter: ["has", "point_count"],
-            layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12 },
-            paint: { "text-color": "#fffdf7" }
-          });
-          activeMap.addLayer({
-            id: "elsie-wildfire-points",
-            type: "symbol",
-            source: "elsie-wildfires",
-            filter: ["!", ["has", "point_count"]],
-            layout: { "icon-image": "elsie-wildfire-icon", "icon-size": 0.4, "icon-allow-overlap": true, "icon-ignore-placement": true }
-          });
-          activeMap.on("click", "elsie-wildfire-points", (event) => {
-            const feature = event.features && event.features[0];
-            if (!feature) return;
-            openWildfirePopup(activeMap, feature.properties, feature.geometry.coordinates);
-          });
-          activeMap.on("click", "elsie-wildfire-clusters", (event) => {
-            const feature = event.features && event.features[0];
-            if (!feature) return;
-            const source = activeMap.getSource("elsie-wildfires");
-            if (!source || !source.getClusterExpansionZoom) return;
-            source.getClusterExpansionZoom(feature.properties.cluster_id, (error, zoom) => {
-              if (error) return;
-              activeMap.easeTo({ center: feature.geometry.coordinates, zoom });
-            });
-          });
-          activeMap.on("mouseenter", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = "pointer"; });
-          activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
-        }
-      } catch { /* non-critical overlay */ }
-      });
+        activeMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
+        activeMap.addLayer({
+          id: "elsie-wildfire-points",
+          type: "circle",
+          source: "elsie-wildfires",
+          paint: {
+            "circle-color": "#ff6a1a",
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 2, 4, 6, 7, 10, 11],
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#7a1f00"
+          }
+        });
+        activeMap.on("click", "elsie-wildfire-points", (event) => {
+          const feature = event.features && event.features[0];
+          if (!feature) return;
+          openWildfirePopup(activeMap, feature.properties, feature.geometry.coordinates);
+        });
+        activeMap.on("mouseenter", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = "pointer"; });
+        activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
+      } catch (error) {
+        console.error("Wildfire layer render error:", error);
+        const message = `Wildfire layer failed to render: ${error && error.message ? error.message : error}`;
+        if (fab) fab.title = message;
+        window.alert(message);
+      }
     });
   }
 
