@@ -9660,6 +9660,50 @@
     map.on("mouseleave", "elsie-easter-egg", () => { map.getCanvas().style.cursor = ""; });
   }
 
+  /* ---------- NASA Hubble Easter egg ---------- */
+
+  const NASA_EGG_COORD = { lat: 42.2917, lon: -85.5872 };
+  const NASA_EGG_LINK = "https://science.nasa.gov/mission/hubble/multimedia/online-activities/the-lost-universe/";
+
+  function registerNasaEggIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-nasa-badge"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-nasa-badge")) map.addImage("elsie-nasa-badge", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/nasa-badge.png";
+    });
+  }
+
+  function addNasaEggLayer(map) {
+    if (!map || map.getLayer("elsie-nasa-egg")) return;
+    if (!map.getSource("elsie-nasa-egg-point")) {
+      map.addSource("elsie-nasa-egg-point", {
+        type: "geojson",
+        data: { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [NASA_EGG_COORD.lon, NASA_EGG_COORD.lat] } }
+      });
+    }
+    map.addLayer({
+      id: "elsie-nasa-egg",
+      type: "symbol",
+      source: "elsie-nasa-egg-point",
+      layout: {
+        "icon-image": "elsie-nasa-badge",
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.16, 8, 0.24, 12, 0.32],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    });
+    map.on("click", "elsie-nasa-egg", () => {
+      window.open(NASA_EGG_LINK, "_blank");
+    });
+    map.on("mouseenter", "elsie-nasa-egg", () => { map.getCanvas().style.cursor = "pointer"; });
+    map.on("mouseleave", "elsie-nasa-egg", () => { map.getCanvas().style.cursor = ""; });
+  }
+
   function applyWildfireLayer(map = homeMap) {
     if (!map) return;
     if (!state.wildfiresEnabled) {
@@ -10490,6 +10534,7 @@
         syncRadarStationLayer(homeMap);
         if (state.smokeEnabled) applySmokeLayer(homeMap);
         if (EASTER_EGG_LINKS[activeProfile]) registerEasterEggIcon(homeMap).then(() => addEasterEggLayer(homeMap));
+        registerNasaEggIcon(homeMap).then(() => addNasaEggLayer(homeMap));
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
