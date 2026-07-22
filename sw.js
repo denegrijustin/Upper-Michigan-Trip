@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v96-golden-egg-bigger";
+const CACHE_NAME = "elskatemm-trip-v97-eggs-standard-size";
 const CORE_ASSETS = [
   "/",
   "/index.html",

@@ -9648,7 +9648,7 @@
       source: "elsie-easter-egg-point",
       layout: {
         "icon-image": "elsie-golden-egg",
-        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.28, 8, 0.4, 12, 0.5],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
         "icon-allow-overlap": true,
         "icon-ignore-placement": true
       }
@@ -9692,7 +9692,7 @@
       source: "elsie-nasa-egg-point",
       layout: {
         "icon-image": "elsie-nasa-badge",
-        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.16, 8, 0.24, 12, 0.32],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
         "icon-allow-overlap": true,
         "icon-ignore-placement": true
       }
