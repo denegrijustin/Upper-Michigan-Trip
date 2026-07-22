@@ -9540,37 +9540,51 @@
 
   let wildfireLastError = null;
 
+  let wildfireCountryBreakdown = null;
+
   function fetchWildfireFeatures() {
     if (wildfireFeaturesCache) return Promise.resolve(wildfireFeaturesCache);
     if (wildfireFetchPromise) return wildfireFetchPromise;
     const usUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/USA_Wildfires_v1/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=2000";
     const caUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
     wildfireFetchPromise = Promise.allSettled([
-      fetch(usUrl).then((r) => { if (!r.ok) throw new Error(`US HTTP ${r.status}`); return r.json(); }),
-      fetch(caUrl).then((r) => { if (!r.ok) throw new Error(`CA HTTP ${r.status}`); return r.json(); })
+      fetch(usUrl).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch(caUrl).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
     ]).then(([usResult, caResult]) => {
-      const errors = [];
-      if (usResult.status === "rejected") { errors.push(`US: ${usResult.reason?.message || usResult.reason}`); console.error("Wildfire US fetch failed:", usResult.reason); }
-      if (caResult.status === "rejected") { errors.push(`CA: ${caResult.reason?.message || caResult.reason}`); console.error("Wildfire CA fetch failed:", caResult.reason); }
-      const usData = usResult.status === "fulfilled" ? usResult.value : { features: [] };
-      const caData = caResult.status === "fulfilled" ? caResult.value : { features: [] };
+      const usOk = usResult.status === "fulfilled";
+      const caOk = caResult.status === "fulfilled";
+      if (!usOk) console.error("Wildfire US fetch failed:", usResult.reason);
+      if (!caOk) console.error("Wildfire CA fetch failed:", caResult.reason);
+      const usData = usOk ? usResult.value : { features: [] };
+      const caData = caOk ? caResult.value : { features: [] };
       const features = [];
+      let usCount = 0, caCount = 0;
       (usData.features || []).forEach((f) => {
         if (!f.geometry || !f.geometry.coordinates) return;
         const info = normalizeUsFireFeature(f);
         features.push({ type: "Feature", properties: info, geometry: f.geometry });
+        usCount++;
       });
       (caData.features || []).forEach((f) => {
         if (!f.geometry || !f.geometry.coordinates) return;
         const info = normalizeCaFireFeature(f);
         features.push({ type: "Feature", properties: info, geometry: f.geometry });
+        caCount++;
       });
-      wildfireLastError = errors.length === 2 ? errors.join(" | ") : (features.length === 0 && errors.length ? errors.join(" | ") : null);
+      wildfireCountryBreakdown = {
+        us: usOk ? `${usCount} loaded` : `failed (${usResult.reason?.message || usResult.reason})`,
+        ca: caOk ? `${caCount} loaded` : `failed (${caResult.reason?.message || caResult.reason})`
+      };
+      const errors = [];
+      if (!usOk) errors.push(`US: ${usResult.reason?.message || usResult.reason}`);
+      if (!caOk) errors.push(`CA: ${caResult.reason?.message || caResult.reason}`);
+      wildfireLastError = errors.length ? errors.join(" | ") : null;
       wildfireFeaturesCache = features;
       wildfireFetchPromise = null;
       return features;
     }).catch((error) => {
       wildfireLastError = error?.message || String(error);
+      wildfireCountryBreakdown = { us: "unknown", ca: "unknown" };
       wildfireFetchPromise = null;
       return [];
     });
@@ -9672,7 +9686,8 @@
         });
         currentMap.on("mouseenter", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = "pointer"; });
         currentMap.on("mouseleave", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = ""; });
-        showWildfireToast(`\ud83d\udd25 Wildfire markers placed on the map (${pointFeatures.length})`);
+        const breakdown = wildfireCountryBreakdown ? ` \u2014 US: ${wildfireCountryBreakdown.us} | CA: ${wildfireCountryBreakdown.ca}` : "";
+        showWildfireToast(`\ud83d\udd25 ${pointFeatures.length} wildfire markers placed${breakdown}`);
       } catch (error) {
         console.error("Wildfire layer render error:", error);
         const message = `Wildfire render error: ${error && error.message ? error.message : error}`;
