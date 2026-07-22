@@ -9525,15 +9525,20 @@
     return { name, start, containment, country: "CA" };
   }
 
+  let wildfireLastError = null;
+
   function fetchWildfireFeatures() {
     if (wildfireFeaturesCache) return Promise.resolve(wildfireFeaturesCache);
     if (wildfireFetchPromise) return wildfireFetchPromise;
     const usUrl = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=1000";
     const caUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
     wildfireFetchPromise = Promise.allSettled([
-      fetch(usUrl).then((r) => r.ok ? r.json() : { features: [] }).catch(() => ({ features: [] })),
-      fetch(caUrl).then((r) => r.ok ? r.json() : { features: [] }).catch(() => ({ features: [] }))
+      fetch(usUrl).then((r) => { if (!r.ok) throw new Error(`US HTTP ${r.status}`); return r.json(); }),
+      fetch(caUrl).then((r) => { if (!r.ok) throw new Error(`CA HTTP ${r.status}`); return r.json(); })
     ]).then(([usResult, caResult]) => {
+      const errors = [];
+      if (usResult.status === "rejected") { errors.push(`US: ${usResult.reason?.message || usResult.reason}`); console.error("Wildfire US fetch failed:", usResult.reason); }
+      if (caResult.status === "rejected") { errors.push(`CA: ${caResult.reason?.message || caResult.reason}`); console.error("Wildfire CA fetch failed:", caResult.reason); }
       const usData = usResult.status === "fulfilled" ? usResult.value : { features: [] };
       const caData = caResult.status === "fulfilled" ? caResult.value : { features: [] };
       const features = [];
@@ -9547,8 +9552,14 @@
         const info = normalizeCaFireFeature(f);
         features.push({ type: "Feature", properties: info, geometry: f.geometry });
       });
+      wildfireLastError = errors.length === 2 ? errors.join(" | ") : (features.length === 0 && errors.length ? errors.join(" | ") : null);
       wildfireFeaturesCache = features;
+      wildfireFetchPromise = null;
       return features;
+    }).catch((error) => {
+      wildfireLastError = error?.message || String(error);
+      wildfireFetchPromise = null;
+      return [];
     });
     return wildfireFetchPromise;
   }
@@ -9578,7 +9589,15 @@
       } catch { /* non-critical */ }
       return;
     }
+    const fab = document.querySelector(".elsie-fire-fab");
+    if (fab) fab.textContent = "⏳";
     fetchWildfireFeatures().then((features) => {
+      if (fab) fab.textContent = "🔥";
+      if (features.length === 0) {
+        window.alert(wildfireLastError
+          ? `Couldn't load wildfire data (${wildfireLastError}). This is often the data source blocking browser requests — try again later.`
+          : "No active wildfires returned right now. Try toggling again in a moment.");
+      }
       if (!homeMap || !state.wildfiresEnabled) return;
       const activeMap = homeMap;
       try {
