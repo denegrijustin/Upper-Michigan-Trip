@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v92-wildfire-ca-cors-proxy";
+const CACHE_NAME = "elskatemm-trip-v93-canada-static-wildfires";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -11,6 +11,7 @@ const CORE_ASSETS = [
   "/emma-stops.js",
   "/katrina-stops.js",
   "/jules-stops.js",
+  "/canada-wildfires.js",
   "/jules-gps.png",
   "/jules-gps-f1.png",
   "/family-gps-marker.png",

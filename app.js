@@ -9527,15 +9527,18 @@
     return { name, start, containment, country: "US" };
   }
 
-  function normalizeCaFireFeature(feature) {
-    const p = feature.properties || {};
-    const rawName = firstDefined(p, ["firename", "FIRENAME", "fire_name", "name"]);
-    const number = firstDefined(p, ["fireid", "FIREID", "fire_number"]);
-    const name = rawName || (number ? `Fire ${number}` : "Unnamed fire");
-    const start = formatFireDate(firstDefined(p, ["startdate", "STARTDATE", "rep_date", "date"]));
-    const stage = firstDefined(p, ["stage_of_control", "STAGE_OF_CONTROL", "stageofcontrol"]);
-    const containment = stage ? (CANADA_STAGE_LABELS[String(stage).toUpperCase()] || String(stage)) : "Not reported";
-    return { name, start, containment, country: "CA" };
+  function canadaStaticFeatures() {
+    const list = Array.isArray(window.CANADA_WILDFIRES) ? window.CANADA_WILDFIRES : [];
+    return list.map((fire) => ({
+      type: "Feature",
+      properties: {
+        name: fire.name,
+        start: `Last updated ${formatFireDate(fire.lastUpdated)}`,
+        containment: `${fire.status} \u00b7 ${Math.round(fire.hectares).toLocaleString()} hectares`,
+        country: "CA"
+      },
+      geometry: { type: "Point", coordinates: [fire.lon, fire.lat] }
+    }));
   }
 
   let wildfireLastError = null;
@@ -9546,50 +9549,33 @@
     if (wildfireFeaturesCache) return Promise.resolve(wildfireFeaturesCache);
     if (wildfireFetchPromise) return wildfireFetchPromise;
     const usUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/USA_Wildfires_v1/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=2000";
-    const caDirectUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
-    const caUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(caDirectUrl)}`;
-    wildfireFetchPromise = Promise.allSettled([
-      fetch(usUrl).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-      fetch(caUrl).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-    ]).then(([usResult, caResult]) => {
-      const usOk = usResult.status === "fulfilled";
-      const caOk = caResult.status === "fulfilled";
-      if (!usOk) console.error("Wildfire US fetch failed:", usResult.reason);
-      if (!caOk) console.error("Wildfire CA fetch failed:", caResult.reason);
-      const usData = usOk ? usResult.value : { features: [] };
-      const caData = caOk ? caResult.value : { features: [] };
-      if (caOk) console.log("Wildfire CA raw response keys:", Object.keys(caData || {}), "| features array length:", (caData.features || []).length, "| sample:", JSON.stringify((caData.features || [])[0]).slice(0, 400));
-      const caRawCount = (caData.features || []).length;
+    wildfireFetchPromise = fetch(usUrl).then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }).then((usData) => {
       const features = [];
-      let usCount = 0, caCount = 0;
+      let usCount = 0;
       (usData.features || []).forEach((f) => {
         if (!f.geometry || !f.geometry.coordinates) return;
         const info = normalizeUsFireFeature(f);
         features.push({ type: "Feature", properties: info, geometry: f.geometry });
         usCount++;
       });
-      (caData.features || []).forEach((f) => {
-        if (!f.geometry || !f.geometry.coordinates) return;
-        const info = normalizeCaFireFeature(f);
-        features.push({ type: "Feature", properties: info, geometry: f.geometry });
-        caCount++;
-      });
-      wildfireCountryBreakdown = {
-        us: usOk ? `${usCount} loaded` : `failed (${usResult.reason?.message || usResult.reason})`,
-        ca: caOk ? `${caCount}/${caRawCount} raw` : `failed (${caResult.reason?.message || caResult.reason})`
-      };
-      const errors = [];
-      if (!usOk) errors.push(`US: ${usResult.reason?.message || usResult.reason}`);
-      if (!caOk) errors.push(`CA: ${caResult.reason?.message || caResult.reason}`);
-      wildfireLastError = errors.length ? errors.join(" | ") : null;
+      const caFeatures = canadaStaticFeatures();
+      features.push(...caFeatures);
+      wildfireCountryBreakdown = { us: `${usCount} loaded`, ca: `${caFeatures.length} loaded (bundled list, as of Jul 22 2026)` };
+      wildfireLastError = null;
       wildfireFeaturesCache = features;
       wildfireFetchPromise = null;
       return features;
     }).catch((error) => {
-      wildfireLastError = error?.message || String(error);
-      wildfireCountryBreakdown = { us: "unknown", ca: "unknown" };
+      console.error("Wildfire US fetch failed:", error);
+      const caFeatures = canadaStaticFeatures();
+      wildfireCountryBreakdown = { us: `failed (${error?.message || error})`, ca: `${caFeatures.length} loaded (bundled list, as of Jul 22 2026)` };
+      wildfireLastError = `US: ${error?.message || error}`;
+      wildfireFeaturesCache = caFeatures;
       wildfireFetchPromise = null;
-      return [];
+      return caFeatures;
     });
     return wildfireFetchPromise;
   }
