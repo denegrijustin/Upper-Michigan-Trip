@@ -9648,7 +9648,7 @@
       source: "elsie-easter-egg-point",
       layout: {
         "icon-image": "elsie-golden-egg",
-        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.14, 8, 0.22, 12, 0.3],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 4, 0.28, 8, 0.4, 12, 0.5],
         "icon-allow-overlap": true,
         "icon-ignore-placement": true
       }
