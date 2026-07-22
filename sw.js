@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v90-wildfire-country-breakdown";
+const CACHE_NAME = "elskatemm-trip-v91-wildfire-ca-raw-count-diagnostic";
 const CORE_ASSETS = [
   "/",
   "/index.html",

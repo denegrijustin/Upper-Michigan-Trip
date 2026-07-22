@@ -9557,6 +9557,8 @@
       if (!caOk) console.error("Wildfire CA fetch failed:", caResult.reason);
       const usData = usOk ? usResult.value : { features: [] };
       const caData = caOk ? caResult.value : { features: [] };
+      if (caOk) console.log("Wildfire CA raw response keys:", Object.keys(caData || {}), "| features array length:", (caData.features || []).length, "| sample:", JSON.stringify((caData.features || [])[0]).slice(0, 400));
+      const caRawCount = (caData.features || []).length;
       const features = [];
       let usCount = 0, caCount = 0;
       (usData.features || []).forEach((f) => {
@@ -9573,7 +9575,7 @@
       });
       wildfireCountryBreakdown = {
         us: usOk ? `${usCount} loaded` : `failed (${usResult.reason?.message || usResult.reason})`,
-        ca: caOk ? `${caCount} loaded` : `failed (${caResult.reason?.message || caResult.reason})`
+        ca: caOk ? `${caCount}/${caRawCount} raw` : `failed (${caResult.reason?.message || caResult.reason})`
       };
       const errors = [];
       if (!usOk) errors.push(`US: ${usResult.reason?.message || usResult.reason}`);
