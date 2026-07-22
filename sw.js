@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v91-wildfire-ca-raw-count-diagnostic";
+const CACHE_NAME = "elskatemm-trip-v92-wildfire-ca-cors-proxy";
 const CORE_ASSETS = [
   "/",
   "/index.html",

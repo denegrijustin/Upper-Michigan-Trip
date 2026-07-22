@@ -9546,7 +9546,8 @@
     if (wildfireFeaturesCache) return Promise.resolve(wildfireFeaturesCache);
     if (wildfireFetchPromise) return wildfireFetchPromise;
     const usUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/USA_Wildfires_v1/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=2000";
-    const caUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
+    const caDirectUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
+    const caUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(caDirectUrl)}`;
     wildfireFetchPromise = Promise.allSettled([
       fetch(usUrl).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
       fetch(caUrl).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
