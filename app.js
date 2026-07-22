@@ -9616,8 +9616,7 @@
     }
     const fab = document.querySelector(".elsie-fire-fab");
     if (fab) { fab.textContent = "\u23f3"; fab.removeAttribute("data-fire-count"); }
-    const iconReady = homeMap ? registerWildfireIcon(homeMap) : Promise.resolve();
-    Promise.all([fetchWildfireFeatures(), iconReady]).then(([features]) => {
+    fetchWildfireFeatures().then((features) => {
       const pointFeatures = features.map((f) => {
         if (!f.geometry) return null;
         if (f.geometry.type === "Point" && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length === 2) {
@@ -9645,45 +9644,41 @@
           showWildfireToast(`\ud83d\udd25 ${pointFeatures.length} active wildfires loaded`);
         }
       }
-      if (!homeMap || !state.wildfiresEnabled) return;
-      registerWildfireIcon(homeMap).then(() => {
-        // Re-read homeMap fresh: it may have been rebuilt while the icon was loading.
-        const currentMap = homeMap;
-        if (!currentMap || !state.wildfiresEnabled) return;
-        try {
-          const collection = { type: "FeatureCollection", features: pointFeatures };
-          if (currentMap.getSource("elsie-wildfires")) {
-            currentMap.getSource("elsie-wildfires").setData(collection);
-            return;
-          }
-          if (currentMap.getLayer("elsie-wildfire-points")) return;
-          currentMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
-          currentMap.addLayer({
-            id: "elsie-wildfire-points",
-            type: "symbol",
-            source: "elsie-wildfires",
-            layout: {
-              "icon-image": "elsie-wildfire-icon",
-              "icon-size": ["interpolate", ["linear"], ["zoom"], 2, 0.18, 6, 0.27, 10, 0.4],
-              "icon-allow-overlap": true,
-              "icon-ignore-placement": true
-            }
-          });
-          currentMap.on("click", "elsie-wildfire-points", (event) => {
-            const feature = event.features && event.features[0];
-            if (!feature) return;
-            openWildfirePopup(currentMap, feature.properties, feature.geometry.coordinates);
-          });
-          currentMap.on("mouseenter", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = "pointer"; });
-          currentMap.on("mouseleave", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = ""; });
-          showWildfireToast(`\ud83d\udd25 Wildfire markers placed on the map (${pointFeatures.length})`);
-        } catch (error) {
-          console.error("Wildfire layer render error:", error);
-          const message = `Wildfire render error: ${error && error.message ? error.message : error}`;
-          if (fab) fab.title = message;
-          showWildfireToast(message);
+      const currentMap = homeMap;
+      if (!currentMap || !state.wildfiresEnabled) return;
+      try {
+        const collection = { type: "FeatureCollection", features: pointFeatures };
+        if (currentMap.getSource("elsie-wildfires")) {
+          currentMap.getSource("elsie-wildfires").setData(collection);
+          return;
         }
-      });
+        if (currentMap.getLayer("elsie-wildfire-points")) return;
+        currentMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
+        currentMap.addLayer({
+          id: "elsie-wildfire-points",
+          type: "circle",
+          source: "elsie-wildfires",
+          paint: {
+            "circle-color": "#ff6a1a",
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 2, 4, 6, 7, 10, 11],
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#7a1f00"
+          }
+        });
+        currentMap.on("click", "elsie-wildfire-points", (event) => {
+          const feature = event.features && event.features[0];
+          if (!feature) return;
+          openWildfirePopup(currentMap, feature.properties, feature.geometry.coordinates);
+        });
+        currentMap.on("mouseenter", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = "pointer"; });
+        currentMap.on("mouseleave", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = ""; });
+        showWildfireToast(`\ud83d\udd25 Wildfire markers placed on the map (${pointFeatures.length})`);
+      } catch (error) {
+        console.error("Wildfire layer render error:", error);
+        const message = `Wildfire render error: ${error && error.message ? error.message : error}`;
+        if (fab) fab.title = message;
+        showWildfireToast(message);
+      }
     });
   }
 
@@ -10438,7 +10433,6 @@
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
         if (state.smokeEnabled) applySmokeLayer(homeMap);
-        registerWildfireIcon(homeMap);
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
