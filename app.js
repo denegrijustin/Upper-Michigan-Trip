@@ -9603,7 +9603,19 @@
     const fab = document.querySelector(".elsie-fire-fab");
     if (fab) { fab.textContent = "\u23f3"; fab.removeAttribute("data-fire-count"); }
     fetchWildfireFeatures().then((features) => {
-      const pointFeatures = features.filter((f) => f.geometry && f.geometry.type === "Point" && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length === 2 && Number.isFinite(f.geometry.coordinates[0]) && Number.isFinite(f.geometry.coordinates[1]));
+      const pointFeatures = features.map((f) => {
+        if (!f.geometry) return null;
+        if (f.geometry.type === "Point" && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length === 2) {
+          return f;
+        }
+        if (f.geometry.type === "MultiPoint" && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length > 0) {
+          const first = f.geometry.coordinates[0];
+          if (Array.isArray(first) && first.length === 2) {
+            return { ...f, geometry: { type: "Point", coordinates: first } };
+          }
+        }
+        return null;
+      }).filter((f) => f && Number.isFinite(f.geometry.coordinates[0]) && Number.isFinite(f.geometry.coordinates[1]));
       if (fab) {
         fab.textContent = "\ud83d\udd25";
         fab.setAttribute("data-fire-count", String(pointFeatures.length));
@@ -9613,37 +9625,40 @@
       }
       if (!homeMap || !state.wildfiresEnabled) return;
       const activeMap = homeMap;
-      try {
-        const collection = { type: "FeatureCollection", features: pointFeatures };
-        if (activeMap.getSource("elsie-wildfires")) {
-          activeMap.getSource("elsie-wildfires").setData(collection);
-          return;
-        }
-        activeMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
-        activeMap.addLayer({
-          id: "elsie-wildfire-points",
-          type: "circle",
-          source: "elsie-wildfires",
-          paint: {
-            "circle-color": "#ff6a1a",
-            "circle-radius": ["interpolate", ["linear"], ["zoom"], 2, 4, 6, 7, 10, 11],
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#7a1f00"
+      registerWildfireIcon(activeMap).then(() => {
+        if (!homeMap || !state.wildfiresEnabled) return;
+        try {
+          const collection = { type: "FeatureCollection", features: pointFeatures };
+          if (activeMap.getSource("elsie-wildfires")) {
+            activeMap.getSource("elsie-wildfires").setData(collection);
+            return;
           }
-        });
-        activeMap.on("click", "elsie-wildfire-points", (event) => {
-          const feature = event.features && event.features[0];
-          if (!feature) return;
-          openWildfirePopup(activeMap, feature.properties, feature.geometry.coordinates);
-        });
-        activeMap.on("mouseenter", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = "pointer"; });
-        activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
-      } catch (error) {
-        console.error("Wildfire layer render error:", error);
-        const message = `Wildfire layer failed to render: ${error && error.message ? error.message : error}`;
-        if (fab) fab.title = message;
-        window.alert(message);
-      }
+          activeMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
+          activeMap.addLayer({
+            id: "elsie-wildfire-points",
+            type: "symbol",
+            source: "elsie-wildfires",
+            layout: {
+              "icon-image": "elsie-wildfire-icon",
+              "icon-size": ["interpolate", ["linear"], ["zoom"], 2, 0.18, 6, 0.27, 10, 0.4],
+              "icon-allow-overlap": true,
+              "icon-ignore-placement": true
+            }
+          });
+          activeMap.on("click", "elsie-wildfire-points", (event) => {
+            const feature = event.features && event.features[0];
+            if (!feature) return;
+            openWildfirePopup(activeMap, feature.properties, feature.geometry.coordinates);
+          });
+          activeMap.on("mouseenter", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = "pointer"; });
+          activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
+        } catch (error) {
+          console.error("Wildfire layer render error:", error);
+          const message = `Wildfire layer failed to render: ${error && error.message ? error.message : error}`;
+          if (fab) fab.title = message;
+          window.alert(message);
+        }
+      });
     });
   }
 
