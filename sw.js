@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v86-wildfire-icon-multipoint-fix";
+const CACHE_NAME = "elskatemm-trip-v87-wildfire-toast-diagnostics";
 const CORE_ASSETS = [
   "/",
   "/index.html",

@@ -9591,6 +9591,20 @@
       .addTo(map);
   }
 
+  function showWildfireToast(message) {
+    let toast = byId("elsieWildfireToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "elsieWildfireToast";
+      toast.className = "elsie-wildfire-toast";
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add("is-visible");
+    window.clearTimeout(toast._hideTimer);
+    toast._hideTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 6000);
+  }
+
   function applyWildfireLayer(map = homeMap) {
     if (!map) return;
     if (!state.wildfiresEnabled) {
@@ -9619,9 +9633,16 @@
       if (fab) {
         fab.textContent = "\ud83d\udd25";
         fab.setAttribute("data-fire-count", String(pointFeatures.length));
-        fab.title = pointFeatures.length === 0
-          ? (wildfireLastError ? `Couldn't load wildfire data (${wildfireLastError})` : "No active wildfires returned right now")
-          : `${pointFeatures.length} active wildfires loaded \u2014 zoom out to see them, most are in the western US/Canada`;
+        if (pointFeatures.length === 0) {
+          const message = wildfireLastError
+            ? `Wildfires: couldn't load data (${wildfireLastError})`
+            : "Wildfires: zero fires returned from both sources.";
+          fab.title = message;
+          showWildfireToast(message);
+        } else {
+          fab.title = `${pointFeatures.length} active wildfires loaded \u2014 zoom out to see them, most are in the western US/Canada`;
+          showWildfireToast(`\ud83d\udd25 ${pointFeatures.length} active wildfires loaded`);
+        }
       }
       if (!homeMap || !state.wildfiresEnabled) return;
       const activeMap = homeMap;
@@ -9654,8 +9675,9 @@
           activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
         } catch (error) {
           console.error("Wildfire layer render error:", error);
-          const message = `Wildfire layer failed to render: ${error && error.message ? error.message : error}`;
+          const message = `Wildfire render error: ${error && error.message ? error.message : error}`;
           if (fab) fab.title = message;
+          showWildfireToast(message);
           window.alert(message);
         }
       });
