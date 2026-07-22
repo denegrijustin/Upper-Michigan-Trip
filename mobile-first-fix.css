@@ -2290,3 +2290,26 @@ body.elsie-map-active #bottomDrawer { display: none; }
 }
 .jules-lookfor-eyes { font-size: 1.4rem; }
 .jules-lookfor-item { font-size: 1.9rem; line-height: 1.15; }
+
+/* Wildfire fab: visible count badge */
+.elsie-fire-fab { position: relative; }
+.elsie-fire-fab[data-fire-count]::after {
+  content: attr(data-fire-count);
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #c1440e;
+  color: #fffdf7;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 1.5px solid #fffdf7;
+}
+.elsie-fire-fab[data-fire-count="0"]::after {
+  background: #8a8a8a;
+}

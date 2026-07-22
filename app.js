@@ -9530,7 +9530,7 @@
   function fetchWildfireFeatures() {
     if (wildfireFeaturesCache) return Promise.resolve(wildfireFeaturesCache);
     if (wildfireFetchPromise) return wildfireFetchPromise;
-    const usUrl = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=1000";
+    const usUrl = "https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/USA_Wildfires_v1/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=2000";
     const caUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
     wildfireFetchPromise = Promise.allSettled([
       fetch(usUrl).then((r) => { if (!r.ok) throw new Error(`US HTTP ${r.status}`); return r.json(); }),
@@ -9590,13 +9590,14 @@
       return;
     }
     const fab = document.querySelector(".elsie-fire-fab");
-    if (fab) fab.textContent = "⏳";
+    if (fab) { fab.textContent = "⏳"; fab.removeAttribute("data-fire-count"); }
     fetchWildfireFeatures().then((features) => {
-      if (fab) fab.textContent = "🔥";
-      if (features.length === 0) {
-        window.alert(wildfireLastError
-          ? `Couldn't load wildfire data (${wildfireLastError}). This is often the data source blocking browser requests — try again later.`
-          : "No active wildfires returned right now. Try toggling again in a moment.");
+      if (fab) {
+        fab.textContent = "🔥";
+        fab.setAttribute("data-fire-count", String(features.length));
+        fab.title = features.length === 0
+          ? (wildfireLastError ? `Couldn't load wildfire data (${wildfireLastError})` : "No active wildfires returned right now")
+          : `${features.length} active wildfires loaded — zoom out to see them, most are in the western US/Canada`;
       }
       if (!homeMap || !state.wildfiresEnabled) return;
       const activeMap = homeMap;

@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v82-wildfire-diagnostics";
+const CACHE_NAME = "elskatemm-trip-v83-wildfire-esri-feed-badge";
 const CORE_ASSETS = [
   "/",
   "/index.html",
