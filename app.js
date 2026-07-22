@@ -9616,7 +9616,8 @@
     }
     const fab = document.querySelector(".elsie-fire-fab");
     if (fab) { fab.textContent = "\u23f3"; fab.removeAttribute("data-fire-count"); }
-    fetchWildfireFeatures().then((features) => {
+    const iconReady = homeMap ? registerWildfireIcon(homeMap) : Promise.resolve();
+    Promise.all([fetchWildfireFeatures(), iconReady]).then(([features]) => {
       const pointFeatures = features.map((f) => {
         if (!f.geometry) return null;
         if (f.geometry.type === "Point" && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length === 2) {
@@ -9645,17 +9646,19 @@
         }
       }
       if (!homeMap || !state.wildfiresEnabled) return;
-      const activeMap = homeMap;
-      registerWildfireIcon(activeMap).then(() => {
-        if (!homeMap || !state.wildfiresEnabled) return;
+      registerWildfireIcon(homeMap).then(() => {
+        // Re-read homeMap fresh: it may have been rebuilt while the icon was loading.
+        const currentMap = homeMap;
+        if (!currentMap || !state.wildfiresEnabled) return;
         try {
           const collection = { type: "FeatureCollection", features: pointFeatures };
-          if (activeMap.getSource("elsie-wildfires")) {
-            activeMap.getSource("elsie-wildfires").setData(collection);
+          if (currentMap.getSource("elsie-wildfires")) {
+            currentMap.getSource("elsie-wildfires").setData(collection);
             return;
           }
-          activeMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
-          activeMap.addLayer({
+          if (currentMap.getLayer("elsie-wildfire-points")) return;
+          currentMap.addSource("elsie-wildfires", { type: "geojson", data: collection });
+          currentMap.addLayer({
             id: "elsie-wildfire-points",
             type: "symbol",
             source: "elsie-wildfires",
@@ -9666,19 +9669,19 @@
               "icon-ignore-placement": true
             }
           });
-          activeMap.on("click", "elsie-wildfire-points", (event) => {
+          currentMap.on("click", "elsie-wildfire-points", (event) => {
             const feature = event.features && event.features[0];
             if (!feature) return;
-            openWildfirePopup(activeMap, feature.properties, feature.geometry.coordinates);
+            openWildfirePopup(currentMap, feature.properties, feature.geometry.coordinates);
           });
-          activeMap.on("mouseenter", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = "pointer"; });
-          activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
+          currentMap.on("mouseenter", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = "pointer"; });
+          currentMap.on("mouseleave", "elsie-wildfire-points", () => { currentMap.getCanvas().style.cursor = ""; });
+          showWildfireToast(`\ud83d\udd25 Wildfire markers placed on the map (${pointFeatures.length})`);
         } catch (error) {
           console.error("Wildfire layer render error:", error);
           const message = `Wildfire render error: ${error && error.message ? error.message : error}`;
           if (fab) fab.title = message;
           showWildfireToast(message);
-          window.alert(message);
         }
       });
     });
@@ -10435,6 +10438,7 @@
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
         if (state.smokeEnabled) applySmokeLayer(homeMap);
+        registerWildfireIcon(homeMap);
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
