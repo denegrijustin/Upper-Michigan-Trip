@@ -5866,6 +5866,7 @@
       julesMarkerStyle: "sonic",
       mapTheme: "light",
       smokeEnabled: false,
+      wildfiresEnabled: false,
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5914,6 +5915,7 @@
     if (state.julesMarkerStyle !== "sonic" && state.julesMarkerStyle !== "f1") state.julesMarkerStyle = "sonic";
     if (state.mapTheme !== "light" && state.mapTheme !== "dark") state.mapTheme = "light";
     if (typeof state.smokeEnabled !== "boolean") state.smokeEnabled = false;
+    if (typeof state.wildfiresEnabled !== "boolean") state.wildfiresEnabled = false;
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -9475,6 +9477,162 @@
       .addTo(map);
   }
 
+  /* ---------- Active wildfires (US NIFC/WFIGS + Canada CWFIS) ---------- */
+
+  let wildfireFeaturesCache = null;
+  let wildfireFetchPromise = null;
+
+  const CANADA_STAGE_LABELS = {
+    "OUT": "Out / Extinguished",
+    "BH": "Being Held",
+    "UC": "Under Control",
+    "OC": "Out of Control",
+    "MO": "Monitored"
+  };
+
+  function firstDefined(obj, keys) {
+    for (const k of keys) {
+      if (obj && obj[k] !== undefined && obj[k] !== null && obj[k] !== "") return obj[k];
+    }
+    return null;
+  }
+
+  function formatFireDate(value) {
+    if (!value) return "Not reported";
+    const num = Number(value);
+    const date = Number.isFinite(num) && num > 1e11 ? new Date(num) : new Date(value);
+    if (isNaN(date.getTime())) return "Not reported";
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function normalizeUsFireFeature(feature) {
+    const p = feature.properties || {};
+    const name = firstDefined(p, ["IncidentName", "poly_IncidentName"]) || "Unnamed fire";
+    const start = formatFireDate(firstDefined(p, ["FireDiscoveryDateTime", "poly_CreateDate"]));
+    const contained = firstDefined(p, ["PercentContained", "poly_PercentContained"]);
+    const containment = contained === null ? "Not reported" : `${contained}% contained`;
+    return { name, start, containment, country: "US" };
+  }
+
+  function normalizeCaFireFeature(feature) {
+    const p = feature.properties || {};
+    const rawName = firstDefined(p, ["firename", "FIRENAME", "fire_name", "name"]);
+    const number = firstDefined(p, ["fireid", "FIREID", "fire_number"]);
+    const name = rawName || (number ? `Fire ${number}` : "Unnamed fire");
+    const start = formatFireDate(firstDefined(p, ["startdate", "STARTDATE", "rep_date", "date"]));
+    const stage = firstDefined(p, ["stage_of_control", "STAGE_OF_CONTROL", "stageofcontrol"]);
+    const containment = stage ? (CANADA_STAGE_LABELS[String(stage).toUpperCase()] || String(stage)) : "Not reported";
+    return { name, start, containment, country: "CA" };
+  }
+
+  function fetchWildfireFeatures() {
+    if (wildfireFeaturesCache) return Promise.resolve(wildfireFeaturesCache);
+    if (wildfireFetchPromise) return wildfireFetchPromise;
+    const usUrl = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentTypeCategory%3D%27WF%27&outFields=IncidentName,FireDiscoveryDateTime,PercentContained&f=geojson&resultRecordCount=1000";
+    const caUrl = "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=public:activefires&outputFormat=application/json";
+    wildfireFetchPromise = Promise.allSettled([
+      fetch(usUrl).then((r) => r.ok ? r.json() : { features: [] }).catch(() => ({ features: [] })),
+      fetch(caUrl).then((r) => r.ok ? r.json() : { features: [] }).catch(() => ({ features: [] }))
+    ]).then(([usResult, caResult]) => {
+      const usData = usResult.status === "fulfilled" ? usResult.value : { features: [] };
+      const caData = caResult.status === "fulfilled" ? caResult.value : { features: [] };
+      const features = [];
+      (usData.features || []).forEach((f) => {
+        if (!f.geometry || !f.geometry.coordinates) return;
+        const info = normalizeUsFireFeature(f);
+        features.push({ type: "Feature", properties: info, geometry: f.geometry });
+      });
+      (caData.features || []).forEach((f) => {
+        if (!f.geometry || !f.geometry.coordinates) return;
+        const info = normalizeCaFireFeature(f);
+        features.push({ type: "Feature", properties: info, geometry: f.geometry });
+      });
+      wildfireFeaturesCache = features;
+      return features;
+    });
+    return wildfireFetchPromise;
+  }
+
+  function openWildfirePopup(map, properties, coordinates) {
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "260px", offset: 14, className: "elsie-marker-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>🔥 Active Wildfire (${escapeHtml(properties.country === "CA" ? "Canada" : "US")})</small>
+          <strong>${escapeHtml(properties.name)}</strong>
+          <p class="elsie-popup-angle"><strong>Start date:</strong> ${escapeHtml(properties.start)}</p>
+          <p class="elsie-popup-angle"><strong>Containment:</strong> ${escapeHtml(properties.containment)}</p>
+        </div>`)
+      .addTo(map);
+  }
+
+  function applyWildfireLayer(map = homeMap) {
+    if (!map) return;
+    if (!state.wildfiresEnabled) {
+      try {
+        if (map.getLayer("elsie-wildfire-clusters")) map.removeLayer("elsie-wildfire-clusters");
+        if (map.getLayer("elsie-wildfire-cluster-count")) map.removeLayer("elsie-wildfire-cluster-count");
+        if (map.getLayer("elsie-wildfire-points")) map.removeLayer("elsie-wildfire-points");
+        if (map.getSource("elsie-wildfires")) map.removeSource("elsie-wildfires");
+      } catch { /* non-critical */ }
+      return;
+    }
+    fetchWildfireFeatures().then((features) => {
+      if (!homeMap || !state.wildfiresEnabled) return;
+      const activeMap = homeMap;
+      try {
+        const collection = { type: "FeatureCollection", features };
+        if (!activeMap.getSource("elsie-wildfires")) {
+          activeMap.addSource("elsie-wildfires", { type: "geojson", data: collection, cluster: true, clusterMaxZoom: 8, clusterRadius: 40 });
+        } else {
+          activeMap.getSource("elsie-wildfires").setData(collection);
+        }
+        if (!activeMap.getLayer("elsie-wildfire-clusters")) {
+          activeMap.addLayer({
+            id: "elsie-wildfire-clusters",
+            type: "circle",
+            source: "elsie-wildfires",
+            filter: ["has", "point_count"],
+            paint: { "circle-color": "#c1440e", "circle-radius": ["step", ["get", "point_count"], 14, 10, 18, 25, 23], "circle-stroke-width": 2, "circle-stroke-color": "#fffdf7" }
+          });
+          activeMap.addLayer({
+            id: "elsie-wildfire-cluster-count",
+            type: "symbol",
+            source: "elsie-wildfires",
+            filter: ["has", "point_count"],
+            layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12 },
+            paint: { "text-color": "#fffdf7" }
+          });
+          activeMap.addLayer({
+            id: "elsie-wildfire-points",
+            type: "symbol",
+            source: "elsie-wildfires",
+            filter: ["!", ["has", "point_count"]],
+            layout: { "text-field": "🔥", "text-size": 20, "text-allow-overlap": true, "text-ignore-placement": true }
+          });
+          activeMap.on("click", "elsie-wildfire-points", (event) => {
+            const feature = event.features && event.features[0];
+            if (!feature) return;
+            openWildfirePopup(activeMap, feature.properties, feature.geometry.coordinates);
+          });
+          activeMap.on("click", "elsie-wildfire-clusters", (event) => {
+            const feature = event.features && event.features[0];
+            if (!feature) return;
+            const source = activeMap.getSource("elsie-wildfires");
+            if (!source || !source.getClusterExpansionZoom) return;
+            source.getClusterExpansionZoom(feature.properties.cluster_id, (error, zoom) => {
+              if (error) return;
+              activeMap.easeTo({ center: feature.geometry.coordinates, zoom });
+            });
+          });
+          activeMap.on("mouseenter", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = "pointer"; });
+          activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
+        }
+      } catch { /* non-critical overlay */ }
+    });
+  }
+
   /* ---------- Smoke / haze layer (NASA GIBS Aerosol Optical Depth) ---------- */
 
   function smokeTileDate() {
@@ -10079,7 +10237,8 @@
           <button type="button" class="elsie-map-fab" data-elsie-sheet="breadcrumb" aria-haspopup="dialog" aria-label="Sasquatch trail controls">👣</button>
           <button type="button" class="elsie-map-fab elsie-gps-fab" data-gps-locate aria-label="Find my location">📍</button>
           <button type="button" class="elsie-map-fab elsie-theme-fab" data-map-theme-toggle aria-label="Switch map to ${state.mapTheme === "dark" ? "light" : "dark"} mode">${state.mapTheme === "dark" ? "☀️" : "🌙"}</button>
-          <button type="button" class="elsie-map-fab elsie-smoke-fab ${state.smokeEnabled ? "is-on" : ""}" data-smoke-toggle aria-pressed="${state.smokeEnabled}" aria-label="Smoke and haze layer ${state.smokeEnabled ? "on" : "off"}">🌫️</button>
+          <button type="button" class="elsie-map-fab elsie-smoke-fab ${state.smokeEnabled ? "is-on" : ""}" data-smoke-toggle aria-pressed="${state.smokeEnabled}" aria-label="Smoke and haze layer ${state.smokeEnabled ? "on" : "off"}">💨</button>
+          <button type="button" class="elsie-map-fab elsie-fire-fab ${state.wildfiresEnabled ? "is-on" : ""}" data-wildfire-toggle aria-pressed="${state.wildfiresEnabled}" aria-label="Active wildfires layer ${state.wildfiresEnabled ? "on" : "off"}">🔥</button>
         </div>
         ${renderElsieRadarMarkup()}
         <div id="elsieSheetScrim" class="elsie-sheet-scrim" hidden></div>
@@ -10225,6 +10384,7 @@
         if (state.radarEnabled) fetchRadarMeta().then(() => { applyRadarLayer(homeMap); startRadarAnimation(); });
         syncRadarStationLayer(homeMap);
         if (state.smokeEnabled) applySmokeLayer(homeMap);
+        if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
@@ -12230,6 +12390,18 @@
       saveState();
       if (homeMap) { homeMap.remove(); homeMap = null; }
       renderHomeMapPanel();
+      return;
+    }
+    if (target.dataset.wildfireToggle !== undefined) {
+      event.preventDefault();
+      state.wildfiresEnabled = !state.wildfiresEnabled;
+      saveState();
+      applyWildfireLayer(homeMap);
+      const fab = target.closest(".elsie-fire-fab");
+      if (fab) {
+        fab.classList.toggle("is-on", state.wildfiresEnabled);
+        fab.setAttribute("aria-pressed", String(state.wildfiresEnabled));
+      }
       return;
     }
     if (target.dataset.smokeToggle !== undefined) {
