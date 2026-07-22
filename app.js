@@ -9479,6 +9479,19 @@
 
   /* ---------- Active wildfires (US NIFC/WFIGS + Canada CWFIS) ---------- */
 
+  function registerWildfireIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-wildfire-icon"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-wildfire-icon")) map.addImage("elsie-wildfire-icon", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/wildfire-marker.png";
+    });
+  }
+
   let wildfireFeaturesCache = null;
   let wildfireFetchPromise = null;
 
@@ -9601,6 +9614,8 @@
       }
       if (!homeMap || !state.wildfiresEnabled) return;
       const activeMap = homeMap;
+      registerWildfireIcon(activeMap).then(() => {
+      if (!homeMap || !state.wildfiresEnabled) return;
       try {
         const collection = { type: "FeatureCollection", features };
         if (!activeMap.getSource("elsie-wildfires")) {
@@ -9629,7 +9644,7 @@
             type: "symbol",
             source: "elsie-wildfires",
             filter: ["!", ["has", "point_count"]],
-            layout: { "text-field": "🔥", "text-size": 20, "text-allow-overlap": true, "text-ignore-placement": true }
+            layout: { "icon-image": "elsie-wildfire-icon", "icon-size": 0.4, "icon-allow-overlap": true, "icon-ignore-placement": true }
           });
           activeMap.on("click", "elsie-wildfire-points", (event) => {
             const feature = event.features && event.features[0];
@@ -9650,6 +9665,7 @@
           activeMap.on("mouseleave", "elsie-wildfire-points", () => { activeMap.getCanvas().style.cursor = ""; });
         }
       } catch { /* non-critical overlay */ }
+      });
     });
   }
 
