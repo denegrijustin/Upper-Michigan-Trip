@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v113-jules-two-new-games";
+const CACHE_NAME = "elskatemm-trip-v114-fix-games-sheet-scroll-jump";
 const CORE_ASSETS = [
   "/",
   "/index.html",

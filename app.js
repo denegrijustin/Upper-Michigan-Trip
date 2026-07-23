@@ -11221,12 +11221,18 @@
     const sheet = byId("elsieSheet");
     const scrim = byId("elsieSheetScrim");
     if (!sheet) return;
+    const isFreshOpen = sheet.hidden || state.activeElsieSheet !== type;
+    const previousScrollTop = sheet.scrollTop;
     state.activeElsieSheet = type;
-    elsieSheetLastFocus = document.activeElement;
+    if (isFreshOpen) elsieSheetLastFocus = document.activeElement;
     sheet.innerHTML = renderElsieSheetContent(type, payload);
     sheet.hidden = false;
     if (scrim) scrim.hidden = false;
-    sheet.querySelector("button, a, input")?.focus?.();
+    if (isFreshOpen) {
+      sheet.querySelector("button, a, input")?.focus?.();
+    } else {
+      sheet.scrollTop = previousScrollTop;
+    }
   }
 
   function closeElsieSheet() {
