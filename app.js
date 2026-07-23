@@ -9489,8 +9489,8 @@
           <p class="elsie-sheet-meta">${escapeHtml(stop.city)}, ${escapeHtml(stop.state)}${detour ? ` · ${escapeHtml(detour)}` : ""}${time ? ` · ${escapeHtml(time)}` : ""}${stop.stormEra ? ` · ${escapeHtml(stop.stormEra)}` : ""}</p>
           <p>${escapeHtml(stop.summary)}</p>
           <p><strong>The history:</strong> ${escapeHtml(stop.history)}</p>
-          <p class="elsie-popup-angle"><strong>Why it fits you:</strong> ${escapeHtml(stop.why)}</p>
-          <p class="elsie-popup-angle"><strong>Your mission:</strong> ${escapeHtml(stop.mission)}</p>
+          ${stop.why ? `<p class="elsie-popup-angle"><strong>Why it fits you:</strong> ${escapeHtml(stop.why)}</p>` : ""}
+          ${stop.mission ? `<p class="elsie-popup-angle"><strong>Your mission:</strong> ${escapeHtml(stop.mission)}</p>` : ""}
           <p class="elsie-popup-angle"><strong>Mom &amp; Dad would say:</strong> ${escapeHtml(stop.momDad)}</p>
           ${stop.access ? `<p class="elsie-popup-angle">⚠️ ${escapeHtml(stop.access)}</p>` : ""}
           <div class="elsie-popup-links">
