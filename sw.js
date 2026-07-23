@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v108-emma-venues-history-college-conf";
+const CACHE_NAME = "elskatemm-trip-v109-national-parks-layer";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -16,6 +16,7 @@ const CORE_ASSETS = [
   "/nasa-badge.png",
   "/momdad-gps-photo.png",
   "/italian-heritage-icon.png",
+  "/national-park-icon.png",
   "/jules-gps.png",
   "/jules-gps-f1.png",
   "/family-gps-marker.png",

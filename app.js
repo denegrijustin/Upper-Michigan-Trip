@@ -10040,6 +10040,106 @@
     });
   }
 
+  /* ---------- National Parks layer ---------- */
+
+  const NATIONAL_PARK_STOPS = [
+    {
+      id: "NP-001",
+      title: "Gateway Arch National Park",
+      city: "St. Louis",
+      state: "MO",
+      lat: 38.6247,
+      lon: -90.1848,
+      summary: "The smallest National Park by land area in the whole system, built around the 630-foot Gateway Arch — the tallest man-made monument in the Western Hemisphere, and exactly as wide as it is tall.",
+      question: "This park is only 91 acres — the smallest in the entire National Park system. What do you think makes a place worth protecting as a National Park, if it isn't the size?",
+      elsieSpooky: "The Old Cathedral sits right next to the Arch, on the exact site of the city's original 1770s French cemetery — meaning this shiny, modern national park was built directly on top of one of St. Louis's oldest burial grounds."
+    },
+    {
+      id: "NP-002",
+      title: "Indiana Dunes National Park",
+      city: "Porter",
+      state: "IN",
+      lat: 41.6533,
+      lon: -87.0524,
+      summary: "A national park made of 15 miles of Lake Michigan shoreline and towering sand dunes, formed over thousands of years by retreating glaciers and wind.",
+      question: "This park sits right next to steel mills and power plants — one of the only national parks bordering heavy industry. Should a national park have to be completely wild and untouched, or can protected land and industry exist side by side?",
+      elsieSpooky: "In 2013, a moving dune here swallowed a 6-year-old boy into a hidden hole that opened up beneath him — he was buried for over three hours before rescuers got him out alive. Scientists still don't fully understand how or why the hole formed."
+    }
+  ];
+
+  function registerNationalParkIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-national-park"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-national-park")) map.addImage("elsie-national-park", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/national-park-icon.png";
+    });
+  }
+
+  function openNationalParkPopup(map, stopId, coordinates) {
+    const park = NATIONAL_PARK_STOPS.find((p) => p.id === stopId);
+    if (!park) return;
+    const spooky = activeProfile === "elsie" && park.elsieSpooky
+      ? `<p class="elsie-popup-angle"><strong>Spooky fact:</strong> ${escapeHtml(park.elsieSpooky)}</p>`
+      : "";
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 16, className: "elsie-marker-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>\u26f0\ufe0f National Park</small>
+          <strong>${escapeHtml(park.title)}</strong>
+          <p>${escapeHtml(park.summary)}</p>
+          <p class="elsie-popup-angle"><strong>Think about it:</strong> ${escapeHtml(park.question)}</p>
+          ${spooky}
+        </div>`)
+      .addTo(map);
+  }
+
+  function applyNationalParkLayer(map = homeMap) {
+    if (!map) return;
+    registerNationalParkIcon(map).then(() => {
+      const currentMap = homeMap;
+      if (!currentMap) return;
+      try {
+        if (currentMap.getLayer("elsie-national-park-layer")) return;
+        const collection = {
+          type: "FeatureCollection",
+          features: NATIONAL_PARK_STOPS.map((p) => ({
+            type: "Feature",
+            properties: { id: p.id },
+            geometry: { type: "Point", coordinates: [p.lon, p.lat] }
+          }))
+        };
+        currentMap.addSource("elsie-national-park-source", { type: "geojson", data: collection });
+        currentMap.addLayer({
+          id: "elsie-national-park-layer",
+          type: "symbol",
+          source: "elsie-national-park-source",
+          layout: {
+            "icon-image": "elsie-national-park",
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true
+          }
+        });
+        currentMap.on("click", "elsie-national-park-layer", (event) => {
+          const feature = event.features && event.features[0];
+          if (!feature) return;
+          openNationalParkPopup(currentMap, feature.properties.id, feature.geometry.coordinates);
+        });
+        currentMap.on("mouseenter", "elsie-national-park-layer", () => { currentMap.getCanvas().style.cursor = "pointer"; });
+        currentMap.on("mouseleave", "elsie-national-park-layer", () => { currentMap.getCanvas().style.cursor = ""; });
+      } catch (error) {
+        console.error("National park layer render error:", error);
+      }
+    });
+  }
+
   function applySmokeLayer(map = homeMap) {
     if (!map) return;
     try {
@@ -10787,6 +10887,7 @@
         registerNasaEggIcon(homeMap).then(() => addNasaEggLayer(homeMap));
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         applyItalianHeritageLayer(homeMap);
+        applyNationalParkLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
