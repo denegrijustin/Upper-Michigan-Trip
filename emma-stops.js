@@ -2781,7 +2781,7 @@ window.EMMA_STOPS = [
   },
   {
     "id": "E-125",
-    "title": "PHX Arena",
+    "title": "Mortgage Matchup Center",
     "city": "Phoenix",
     "state": "AZ",
     "lat": 33.4457,
@@ -2791,14 +2791,14 @@ window.EMMA_STOPS = [
     "secondary": "",
     "detourMiles": "0",
     "stopMinutes": "20",
-    "summary": "Home of the Phoenix Suns, Phoenix Mercury (NBA/WNBA).",
+    "summary": "Home of the Phoenix Suns (NBA) and Phoenix Mercury (WNBA).",
     "why": "A real professional NBA/WNBA home venue — one of the major-league stops across the whole country.",
     "mission": "Spot the team colors and logo somewhere around the venue.",
     "stormEra": "",
     "access": "Event-dependent; check the schedule before visiting.",
     "official": "",
     "learnMore": "",
-    "history": "PHX Arena is the home venue for the Phoenix Suns, Phoenix Mercury, playing in the NBA/WNBA.",
+    "history": "Mortgage Matchup Center (renamed from PHX Arena in a 2025 naming-rights deal) is the home venue for the Phoenix Suns and Phoenix Mercury.",
     "momDad": "A genuine pro sports venue — worth a stop if a game or tour lines up with the trip."
   },
   {
@@ -3771,7 +3771,7 @@ window.EMMA_STOPS = [
   },
   {
     "id": "E-170",
-    "title": "Amalie Arena",
+    "title": "Benchmark International Arena",
     "city": "Tampa",
     "state": "FL",
     "lat": 27.9428,
@@ -3788,7 +3788,7 @@ window.EMMA_STOPS = [
     "access": "Event-dependent; check the schedule before visiting.",
     "official": "",
     "learnMore": "",
-    "history": "Amalie Arena is the home venue for the Tampa Bay Lightning, playing in the NHL.",
+    "history": "Benchmark International Arena (renamed from Amalie Arena) is the home venue for the Tampa Bay Lightning.",
     "momDad": "A genuine pro sports venue — worth a stop if a game or tour lines up with the trip."
   },
   {

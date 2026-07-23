@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v102-emma-nationwide-stadiums";
+const CACHE_NAME = "elskatemm-trip-v103-arena-name-corrections";
 const CORE_ASSETS = [
   "/",
   "/index.html",
