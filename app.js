@@ -7284,7 +7284,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": julesGpsImageName(), "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.5, 6, 0.65, 9, 0.8, 12, 0.95], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "emma") {
@@ -7294,7 +7294,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "emma-gps-agent", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "emma-gps-agent", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.2, 6, 0.28, 9, 0.34, 12, 0.4], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "momdad") {
@@ -7304,7 +7304,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "momdad-gps-photo", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "momdad-gps-photo", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.2, 6, 0.28, 9, 0.34, 12, 0.4], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "elsie") {
@@ -7314,7 +7314,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "elsie-gps-photo", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "elsie-gps-photo", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.2, 6, 0.28, 9, 0.34, 12, 0.4], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "eliette") {
@@ -7324,7 +7324,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "eliette-gps-jeep", "icon-size": 0.3, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "eliette-gps-jeep", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.19, 6, 0.26, 9, 0.32, 12, 0.38], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (FAMILY_LOCATOR_PROFILES.includes(activeProfile)) {
@@ -7334,7 +7334,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "family-gps-marker", "icon-size": 0.26, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "family-gps-marker", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.16, 6, 0.22, 9, 0.28, 12, 0.33], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -7342,7 +7342,7 @@
             id: "current-location-dot",
             type: "circle",
             source: "current-location",
-            paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+            paint: { "circle-color": "#c94f34", "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 5, 6, 7, 9, 9, 12, 11], "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
           });
         }
       } catch { return false; }
@@ -11626,7 +11626,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": julesGpsImageName(), "icon-size": 0.8, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": julesGpsImageName(), "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.5, 6, 0.65, 9, 0.8, 12, 0.95], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "emma") {
@@ -11636,7 +11636,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "emma-gps-agent", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "emma-gps-agent", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.2, 6, 0.28, 9, 0.34, 12, 0.4], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "momdad") {
@@ -11646,7 +11646,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "momdad-gps-photo", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "momdad-gps-photo", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.2, 6, 0.28, 9, 0.34, 12, 0.4], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "elsie") {
@@ -11656,7 +11656,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "elsie-gps-photo", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "elsie-gps-photo", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.2, 6, 0.28, 9, 0.34, 12, 0.4], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "eliette") {
@@ -11666,7 +11666,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "eliette-gps-jeep", "icon-size": 0.3, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "eliette-gps-jeep", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.19, 6, 0.26, 9, 0.32, 12, 0.38], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (FAMILY_LOCATOR_PROFILES.includes(activeProfile)) {
@@ -11676,7 +11676,7 @@
               id: "current-location-dot",
               type: "symbol",
               source: "current-location",
-              layout: { "icon-image": "family-gps-marker", "icon-size": 0.26, "icon-allow-overlap": true, "icon-ignore-placement": true }
+              layout: { "icon-image": "family-gps-marker", "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.16, 6, 0.22, 9, 0.28, 12, 0.33], "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else {
@@ -11684,7 +11684,7 @@
             id: "current-location-dot",
             type: "circle",
             source: "current-location",
-            paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+            paint: { "circle-color": "#c94f34", "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 5, 6, 7, 9, 9, 12, 11], "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
           });
         }
       }
@@ -11902,7 +11902,7 @@
       id: "current-location-dot",
       type: "circle",
       source: "current-location",
-      paint: { "circle-color": "#c94f34", "circle-radius": 9, "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
+      paint: { "circle-color": "#c94f34", "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 5, 6, 7, 9, 9, 12, 11], "circle-stroke-width": 4, "circle-stroke-color": "#fffdf7" }
     });
   }
 
