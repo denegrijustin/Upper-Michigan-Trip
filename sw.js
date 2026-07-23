@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v109-national-parks-layer";
+const CACHE_NAME = "elskatemm-trip-v110-national-parks-offset-fix";
 const CORE_ASSETS = [
   "/",
   "/index.html",

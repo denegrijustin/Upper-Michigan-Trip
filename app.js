@@ -10048,8 +10048,8 @@
       title: "Gateway Arch National Park",
       city: "St. Louis",
       state: "MO",
-      lat: 38.6247,
-      lon: -90.1848,
+      lat: 38.6420,
+      lon: -90.2050,
       summary: "The smallest National Park by land area in the whole system, built around the 630-foot Gateway Arch — the tallest man-made monument in the Western Hemisphere, and exactly as wide as it is tall.",
       question: "This park is only 91 acres — the smallest in the entire National Park system. What do you think makes a place worth protecting as a National Park, if it isn't the size?",
       elsieSpooky: "The Old Cathedral sits right next to the Arch, on the exact site of the city's original 1770s French cemetery — meaning this shiny, modern national park was built directly on top of one of St. Louis's oldest burial grounds."
@@ -10059,8 +10059,8 @@
       title: "Indiana Dunes National Park",
       city: "Porter",
       state: "IN",
-      lat: 41.6533,
-      lon: -87.0524,
+      lat: 41.6680,
+      lon: -87.0720,
       summary: "A national park made of 15 miles of Lake Michigan shoreline and towering sand dunes, formed over thousands of years by retreating glaciers and wind.",
       question: "This park sits right next to steel mills and power plants — one of the only national parks bordering heavy industry. Should a national park have to be completely wild and untouched, or can protected land and industry exist side by side?",
       elsieSpooky: "In 2013, a moving dune here swallowed a 6-year-old boy into a hidden hole that opened up beneath him — he was buried for over three hours before rescuers got him out alive. Scientists still don't fully understand how or why the hole formed."
