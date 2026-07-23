@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v114-fix-games-sheet-scroll-jump";
+const CACHE_NAME = "elskatemm-trip-v115-automatic-breadcrumb-tracking";
 const CORE_ASSETS = [
   "/",
   "/index.html",
