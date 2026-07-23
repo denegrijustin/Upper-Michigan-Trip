@@ -9230,6 +9230,37 @@
   let julesTicTacToe = { board: Array(9).fill(""), turn: "🔵", winner: null };
   const JULES_ISPY_ITEMS = ["🚛", "🚜", "🏍️", "🚌", "🐄", "🐎", "🚂", "⛽", "🌽", "💧", "🚧", "🇺🇸"];
   let julesISpyFound = new Set();
+  let julesRingCount = 0;
+  let julesRingBoard = Array(12).fill("💍");
+  const JULES_MEMORY_ICONS = ["🐱", "🦉", "🦎", "🦌", "🗼", "⛴️", "🌲", "🦃"];
+  let julesMemoryDeck = [];
+  let julesMemoryFlipped = [];
+  let julesMemoryMatched = new Set();
+  let julesMemoryMoves = 0;
+
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(stableRandom(`shuffle-${i}-${a.length}-${Date.now()}`) * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function stableRandom(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return (h % 1000) / 1000;
+  }
+
+  function newJulesMemoryDeck() {
+    const pairs = shuffleArray([...JULES_MEMORY_ICONS, ...JULES_MEMORY_ICONS]);
+    julesMemoryDeck = pairs;
+    julesMemoryFlipped = [];
+    julesMemoryMatched = new Set();
+    julesMemoryMoves = 0;
+  }
+  if (!julesMemoryDeck.length) newJulesMemoryDeck();
 
   function julesCheckWinner(board) {
     const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
@@ -9257,6 +9288,21 @@
         </div>
         <p class="jules-ttt-status">${julesISpyFound.size}/${JULES_ISPY_ITEMS.length} found${julesISpyFound.size === JULES_ISPY_ITEMS.length ? " — 🏆 ALL FOUND!" : ""}</p>
         <button type="button" class="jules-game-reset" data-jules-ispy-reset>🔄 Start over</button>
+        <h4>💍 Ring Dash</h4>
+        <p class="jules-ttt-status">Tap the rings to collect them, just like Sonic! Rings: ${julesRingCount}</p>
+        <div class="jules-ispy-grid">
+          ${julesRingBoard.map((ring, index) => `<button type="button" class="jules-ispy-item" data-jules-ring="${index}" aria-label="Collect ring">${ring}</button>`).join("")}
+        </div>
+        <button type="button" class="jules-game-reset" data-jules-ring-reset>🔄 Start over</button>
+        <h4>🐱🦉 Island Hero Match</h4>
+        <p class="jules-ttt-status">Flip two cards to find a match! Matches: ${julesMemoryMatched.size / 2}/${JULES_MEMORY_ICONS.length}${julesMemoryMatched.size === julesMemoryDeck.length ? " — 🏆 ALL MATCHED!" : ""}</p>
+        <div class="jules-memory-grid">
+          ${julesMemoryDeck.map((icon, index) => {
+            const revealed = julesMemoryFlipped.includes(index) || julesMemoryMatched.has(index);
+            return `<button type="button" class="jules-memory-card ${revealed ? "is-revealed" : ""} ${julesMemoryMatched.has(index) ? "is-matched" : ""}" data-jules-memory="${index}" aria-label="Memory card">${revealed ? icon : "❓"}</button>`;
+          }).join("")}
+        </div>
+        <button type="button" class="jules-game-reset" data-jules-memory-reset>🔄 New game</button>
       </div>`;
   }
 
@@ -9286,6 +9332,44 @@
     }
     if (event.target.closest("[data-jules-ispy-reset]")) {
       julesISpyFound = new Set();
+      openElsieSheet("julesgames");
+      return;
+    }
+    const ring = event.target.closest("[data-jules-ring]");
+    if (ring) {
+      julesRingCount++;
+      openElsieSheet("julesgames");
+      return;
+    }
+    if (event.target.closest("[data-jules-ring-reset]")) {
+      julesRingCount = 0;
+      openElsieSheet("julesgames");
+      return;
+    }
+    const memoryCard = event.target.closest("[data-jules-memory]");
+    if (memoryCard) {
+      const index = Number(memoryCard.dataset.julesMemory);
+      if (julesMemoryMatched.has(index) || julesMemoryFlipped.includes(index) || julesMemoryFlipped.length >= 2) return;
+      julesMemoryFlipped.push(index);
+      if (julesMemoryFlipped.length === 2) {
+        julesMemoryMoves++;
+        const [a, b] = julesMemoryFlipped;
+        if (julesMemoryDeck[a] === julesMemoryDeck[b]) {
+          julesMemoryMatched.add(a);
+          julesMemoryMatched.add(b);
+          julesMemoryFlipped = [];
+          openElsieSheet("julesgames");
+        } else {
+          openElsieSheet("julesgames");
+          setTimeout(() => { julesMemoryFlipped = []; openElsieSheet("julesgames"); }, 850);
+        }
+      } else {
+        openElsieSheet("julesgames");
+      }
+      return;
+    }
+    if (event.target.closest("[data-jules-memory-reset]")) {
+      newJulesMemoryDeck();
       openElsieSheet("julesgames");
       return;
     }

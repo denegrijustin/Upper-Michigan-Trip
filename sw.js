@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v112-zoom-scaled-gps-markers";
+const CACHE_NAME = "elskatemm-trip-v113-jules-two-new-games";
 const CORE_ASSETS = [
   "/",
   "/index.html",

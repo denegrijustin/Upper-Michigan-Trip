@@ -2338,3 +2338,22 @@ body.elsie-map-active #bottomDrawer { display: none; }
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* Jules: Island Hero Match memory game */
+.jules-memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(56px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+.jules-memory-card {
+  font-size: 1.6rem;
+  padding: 12px 4px;
+  border: 3px solid #10265c;
+  border-radius: 14px;
+  background: #10265c;
+  color: #10265c;
+  min-height: 52px;
+}
+.jules-memory-card.is-revealed { background: #fffdf7; }
+.jules-memory-card.is-matched { background: #a5eab9; }
