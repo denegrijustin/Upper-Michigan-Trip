@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v97-eggs-standard-size";
+const CACHE_NAME = "elskatemm-trip-v98-volleyball-momdad-photo";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -14,6 +14,7 @@ const CORE_ASSETS = [
   "/canada-wildfires.js",
   "/golden-egg.png",
   "/nasa-badge.png",
+  "/momdad-gps-photo.png",
   "/jules-gps.png",
   "/jules-gps-f1.png",
   "/family-gps-marker.png",

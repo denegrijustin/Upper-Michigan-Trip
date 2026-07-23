@@ -7297,6 +7297,16 @@
               layout: { "icon-image": "emma-gps-agent", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
+        } else if (activeProfile === "momdad") {
+          registerMomdadGpsPhoto(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "momdad-gps-photo", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
         } else if (activeProfile === "elsie") {
           registerElsieGpsPhoto(homeMap).then(() => {
             if (!homeMap || homeMap.getLayer("current-location-dot")) return;
@@ -9392,6 +9402,7 @@
       case "stadium": return base("#2f6b46", `<path d="M14 30a18 9 0 0 1 36 0v6a18 9 0 0 1-36 0z" fill="#e9f5ec" stroke="#141414" stroke-width="3"/><ellipse cx="32" cy="30" rx="18" ry="9" fill="#bfe3c8" stroke="#141414" stroke-width="3"/><ellipse cx="32" cy="30" rx="9" ry="4.2" fill="#7cc98a" stroke="#141414" stroke-width="2.4"/><path d="M18 26v8M25 23v10M32 22v10M39 23v10M46 26v8" stroke="#141414" stroke-width="1.6"/><path d="M30 12l4-2v6" stroke="#c65c35" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
       case "dress": return base("#f4dceb", `<path d="M26 16h12l-2 7 6 4-4 21H26l-4-21 6-4z" fill="#e07aae" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M26 16l-4 6M38 16l4 6" stroke="#141414" stroke-width="3" stroke-linecap="round"/><path d="M25 33h14M24 39h16" stroke="#141414" stroke-width="1.6"/><circle cx="32" cy="24" r="1.6" fill="#fffdf7"/><path d="M46 40l1.4 3.2 3.2 1.4-3.2 1.4L46 49.2 44.6 46l-3.2-1.4 3.2-1.4z" fill="#ffe25c" stroke="#141414" stroke-width="1.4"/>`);
       case "tornado": return base("#57616e", `<path d="M16 18h32M20 24h24M25 30h16M28 36h10M31 42h6M33 48h3" stroke="#eef2f6" stroke-width="4" stroke-linecap="round"/><path d="M16 18h32M20 24h24M25 30h16M28 36h10M31 42h6M33 48h3" stroke="#141414" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/><circle cx="47" cy="14" r="2" fill="#ffe25c"/><path d="M13 26l-3 2M12 33l-3 1" stroke="#c8d2dc" stroke-width="2" stroke-linecap="round"/>`);
+      case "volleyball": return base("#dbeafe", `<circle cx="32" cy="32" r="16" fill="#fffdf7" stroke="#141414" stroke-width="3.4"/><path d="M20 22q9 4 24 0M18 42q10-4 27 0M32 16v32" stroke="#e0517a" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M23 26q9 3 18 0" stroke="#4f7fd9" stroke-width="2.2" fill="none"/>`);
       default: return base("#4f7fd9", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
     }
   }
@@ -9618,6 +9629,19 @@
     eliette: "https://youtu.be/nUsrYVxrDwI?is=GGbWF9jCwwxdAXhv",
     jules: "https://www.miniplay.com/game/sonic-the-hedgehog-sega/play"
   };
+
+  function registerMomdadGpsPhoto(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("momdad-gps-photo"))) return resolve();
+      const image = new Image(240, 240);
+      image.onload = () => {
+        try { if (!map.hasImage("momdad-gps-photo")) map.addImage("momdad-gps-photo", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/momdad-gps-photo.png";
+    });
+  }
 
   function registerEasterEggIcon(map) {
     return new Promise((resolve) => {
@@ -10614,6 +10638,16 @@
               type: "symbol",
               source: "current-location",
               layout: { "icon-image": "emma-gps-agent", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
+            });
+          });
+        } else if (activeProfile === "momdad") {
+          registerMomdadGpsPhoto(homeMap).then(() => {
+            if (!homeMap || homeMap.getLayer("current-location-dot")) return;
+            homeMap.addLayer({
+              id: "current-location-dot",
+              type: "symbol",
+              source: "current-location",
+              layout: { "icon-image": "momdad-gps-photo", "icon-size": 0.32, "icon-allow-overlap": true, "icon-ignore-placement": true }
             });
           });
         } else if (activeProfile === "elsie") {
