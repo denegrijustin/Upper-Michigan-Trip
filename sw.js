@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v99-volleyball-icon-registration-fix";
+const CACHE_NAME = "elskatemm-trip-v100-eliette-entrepreneurial-sites";
 const CORE_ASSETS = [
   "/",
   "/index.html",

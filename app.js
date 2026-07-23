@@ -7718,8 +7718,14 @@
     }
   }
 
-  const ELIETTE_ICON_OVERRIDES = {};
-  const ELIETTE_ICON_TYPES = ["gem", "magnifier", "craft", "trinket", "butterfly"];
+  const ELIETTE_ICON_OVERRIDES = {
+    "P4-121": "coin",
+    "P4-122": "coin",
+    "P4-123": "coin",
+    "P4-124": "coin",
+    "P4-125": "coin"
+  };
+  const ELIETTE_ICON_TYPES = ["gem", "magnifier", "craft", "trinket", "butterfly", "coin"];
 
   function getElietteIconType(stop) {
     if (!stop) return "";
@@ -7741,6 +7747,7 @@
       case "craft": return base("#a8536b", `<path d="M20 18l16 22M36 18L20 40" stroke="#141414" stroke-width="3.4" stroke-linecap="round"/><circle cx="18" cy="44" r="4.4" fill="#f7c9d8" stroke="#141414" stroke-width="2.6"/><circle cx="30" cy="44" r="4.4" fill="#f7c9d8" stroke="#141414" stroke-width="2.6"/><path d="M40 24q6 2 6 8t-6 8" fill="none" stroke="#ffe25c" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="3 3"/><circle cx="47" cy="42" r="2.6" fill="#ffe25c" stroke="#141414" stroke-width="1.8"/>`);
       case "trinket": return base("#7c5d3a", `<rect x="18" y="28" width="28" height="17" rx="3" fill="#e9cf9f" stroke="#141414" stroke-width="3"/><path d="M18 30a14 8 0 0 1 28 0" fill="#d8b475" stroke="#141414" stroke-width="3"/><rect x="29" y="26" width="6" height="8" rx="1.6" fill="#ffe25c" stroke="#141414" stroke-width="2.2"/><path d="M23 37h4M37 37h4" stroke="#141414" stroke-width="1.6"/><path d="M48 18l1.2 2.8 2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2z" fill="#fffdf7"/>`);
       case "butterfly": return base("#3b6647", `<path d="M32 22v22" stroke="#141414" stroke-width="3.4" stroke-linecap="round"/><path d="M30 20q-2-5-6-4" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M34 20q2-5 6-4" stroke="#141414" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M30 27c-8-8-18-4-15 4 2 6 10 6 15 2zM34 27c8-8 18-4 15 4-2 6-10 6-15 2z" fill="#f4a8c8" stroke="#141414" stroke-width="2.6"/><path d="M30 36c-6-2-12 1-10 6 1.6 4 8 3 10-1zM34 36c6-2 12 1 10 6-1.6 4-8 3-10-1z" fill="#ffd9a8" stroke="#141414" stroke-width="2.6"/>`);
+      case "coin": return base("#8a6d1f", `<circle cx="32" cy="32" r="15" fill="#ffe25c" stroke="#141414" stroke-width="3"/><circle cx="32" cy="32" r="10.5" fill="none" stroke="#8a6d1f" stroke-width="2"/><path d="M32 24v16M27 27h7a3.5 3.5 0 0 1 0 7h-6a3.5 3.5 0 0 0 0 7h8" stroke="#8a6d1f" stroke-width="2.4" fill="none" stroke-linecap="round"/>`);
       default: return base("#5b4aa0", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
     }
   }
@@ -8569,7 +8576,12 @@
     "P4-117": "A tornado hit this small town directly in 2004 — a heavy, real story, and one that changed how seriously people take storm warnings across the whole Midwest today.",
     "P4-118": "TWO separate tornadoes hit this city within five minutes of each other in 2006, damaging over 1,000 buildings — and somehow, nobody died. That's a real warning-system success story.",
     "P4-119": "This is literally the other end of the same tornado that started near Coal City — same storm, nearly 13 miles later, still spinning.",
-    "P4-120": "You can walk on an actual original stretch of Route 66 pavement here — the real road surface people drove on generations ago, preserved instead of paved over."
+    "P4-120": "You can walk on an actual original stretch of Route 66 pavement here — the real road surface people drove on generations ago, preserved instead of paved over.",
+    "P4-121": "An 18-year-old stepped off a train in Kansas City in 1910 with almost no money — just two shoeboxes of postcards. A fire in 1915 destroyed everything he'd built and left him $17,000 in debt. He rebuilt anyway, and that company became Hallmark, the biggest greeting card company in America.",
+    "P4-122": "Two brothers started this company in a small Kansas City office in 1955 — and they literally changed how their last name was spelled (from Bloch to Block) on the sign, just so people wouldn't mispronounce it into a joke.",
+    "P4-123": "A soap and candle maker bought a struggling, nearly-failing brewery almost as an afterthought in 1860. His son-in-law joined a few years later and turned it into one of the biggest beverage companies on the planet.",
+    "P4-124": "In 1876, a shop owner got so annoyed by sawdust on his floor that he invented a mechanical sweeper to fix it. After he died, his wife Anna ran the growing company — becoming one of the first female CEOs in American history.",
+    "P4-125": "A real surgeon kept inventing better medical tools and casts to help his own patients in the 1930s and 40s — so he just started a company to build them himself. That company is now worth billions of dollars."
   };
 
   function eliettePopupContent(item) {
