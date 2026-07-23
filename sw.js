@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v106-italian-heritage-layer";
+const CACHE_NAME = "elskatemm-trip-v107-italian-heritage-always-on-4-stops";
 const CORE_ASSETS = [
   "/",
   "/index.html",

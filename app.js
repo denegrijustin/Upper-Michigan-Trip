@@ -5867,7 +5867,6 @@
       mapTheme: "light",
       smokeEnabled: false,
       wildfiresEnabled: false,
-      italianHeritageEnabled: false,
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5917,7 +5916,6 @@
     if (state.mapTheme !== "light" && state.mapTheme !== "dark") state.mapTheme = "light";
     if (typeof state.smokeEnabled !== "boolean") state.smokeEnabled = false;
     if (typeof state.wildfiresEnabled !== "boolean") state.wildfiresEnabled = false;
-    if (typeof state.italianHeritageEnabled !== "boolean") state.italianHeritageEnabled = false;
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -9896,6 +9894,70 @@
         },
         momdad: "Columbus Park (originally called the North End) was Kansas City's Italian-Sicilian immigrant neighborhood, founded in the 1880s near the railroad and river packing houses — about 85% of residents traced back to Sicily. Holy Rosary Catholic Church anchored the community for generations. Starting mid-century, highway construction (I-35, I-29, the ASB and Paseo bridges) was routed directly through the neighborhood, isolating and shrinking it — a pattern repeated against immigrant and minority neighborhoods in cities nationwide during that era."
       }
+    },
+    {
+      id: "IH-003",
+      title: "Chicago Heights \u2014 The Hill / San Rocco",
+      city: "Chicago Heights",
+      state: "IL",
+      lat: 41.5061,
+      lon: -87.6353,
+      content: {
+        elsie: {
+          history: "Italian immigrants poured into this steel-mill town starting in the 1890s. Almost half settled in a neighborhood literally called 'Hungry Hill,' named for how poor the first residents were. They built their own Catholic church, San Rocco, on the highest point in the neighborhood.",
+          success: "Families here came from the exact same small towns back in Italy and stuck together on purpose — whole blocks of the neighborhood were basically transplanted villages. That tight-knit network is a big part of why the community actually made it.",
+          discrimination: "The factory jobs immigrants got here were brutal by design: steel mills, chemical factories, dye factories — described at the time as endless heat, grime, and stench, with zero safety equipment. Immigrant labor was treated as expendable."
+        },
+        katrina: {
+          history: "Nearly half the Italian immigrants who came to this steel-mill town ended up in one neighborhood, nicknamed 'Hungry Hill' for how poor it was when they arrived. They built their own church at the very top of the hill.",
+          success: "People from the same small Italian towns moved here together on purpose, recreating whole pieces of home inside one American neighborhood — the same street might be full of families who all knew each other back in Italy.",
+          discrimination: "The jobs available to immigrants here were genuinely dangerous — steel mills and chemical plants with no safety equipment at all, described at the time as nonstop heat, grime, and toxic fumes.",
+          quest: "Imagine writing a letter home to Italy about your first week working in one of these factories. What's one detail you'd include?"
+        },
+        emma: {
+          summary: "A real Italian immigrant steel-mill neighborhood nicknamed 'Hungry Hill,' built around San Rocco Catholic Church.",
+          why: "It shows exactly how immigrant communities survived brutal industrial jobs by sticking together — people from the same Italian towns clustered on the same streets on purpose.",
+          momDad: "The 'no safety equipment' detail is real and worth pointing out — this is what unregulated industrial labor looked like before modern workplace safety laws existed."
+        },
+        eliette: "Nearly half the Italian families in this whole town ended up in one neighborhood people literally nicknamed 'Hungry Hill' — and they built their own church right at the very top of it, the highest point around.",
+        jules: {
+          why: "A neighborhood built by families from Italy who worked really hard at big factories — they even built their own special church on top of the hill!",
+          mission: "Point to the highest spot you can see nearby, like where the church was built."
+        },
+        momdad: "Chicago Heights drew a major wave of Italian immigrants starting in the 1890s to work its steel mills, chemical factories, and foundries. Nearly half settled in a neighborhood nicknamed 'Hungry Hill,' anchored by San Rocco Catholic Church, built at the neighborhood's highest point. Families clustered by hometown of origin, recreating village networks on individual streets. Factory conditions were genuinely dangerous — contemporary accounts describe constant heat, grime, and toxic fumes with no safety equipment, typical of unregulated immigrant industrial labor at the time."
+      }
+    },
+    {
+      id: "IH-004",
+      title: "Grand Rapids Little Italy",
+      city: "Grand Rapids",
+      state: "MI",
+      lat: 42.9556,
+      lon: -85.6653,
+      content: {
+        elsie: {
+          history: "Italian immigrants started showing up in Grand Rapids in the 1880s — first wood carvers and stonemasons from northern Italy, then a bigger wave of Sicilians around 1900. By the 1910s they'd built an actual 'Little Italy' full of their own grocery stores and businesses.",
+          success: "A teenager named Giovanni Russo arrived from Sicily in 1902 and opened his own grocery store by 1905. That same family business is still running in Grand Rapids today, over 120 years later.",
+          discrimination: "Immigrants who'd arrived earlier from northern Europe openly looked down on the Sicilians specifically — most Sicilian arrivals had no marketable trade skills like the wood carvers did, so their options were basically limited to laborer or street peddler, no matter how capable they actually were."
+        },
+        katrina: {
+          history: "First it was wood carvers and stonemasons from northern Italy in the 1880s, then a much bigger wave of Sicilian families arrived around 1900 — different regions of the same country, arriving in waves, building the same neighborhood.",
+          success: "A Sicilian teenager named Giovanni Russo showed up in 1902 with basically nothing and opened a small grocery store three years later. That same family's business is still open in Grand Rapids today — three generations plus.",
+          discrimination: "Immigrants who'd arrived a little earlier from northern Europe looked down specifically on the Sicilians, assuming they had no real skills — even though the actual barrier was just opportunity, not ability.",
+          quest: "Write one sentence Giovanni Russo might have said to himself the day he opened his store in 1905."
+        },
+        emma: {
+          summary: "Grand Rapids' real 'Little Italy,' built starting in the 1880s by northern Italian craftsmen and then a larger wave of Sicilian immigrants.",
+          why: "One family's grocery store, opened in 1905 by a teenage Sicilian immigrant, is still open in Grand Rapids under the same family name well over a century later.",
+          momDad: "The internal hierarchy here is worth noting — even within immigrant communities, earlier-arriving northern Italians sometimes looked down on later-arriving Sicilians, showing how prejudice operates on more than one level at once."
+        },
+        eliette: "A teenager named Giovanni arrived here from Sicily in 1902 with basically nothing, and by 1905 he'd opened his own small grocery store. That exact same family business is STILL open in Grand Rapids today — over 120 years later.",
+        jules: {
+          why: "Families from Italy built their own neighborhood here, with their own grocery stores! One store a teenager opened is still open today, over 100 years later!",
+          mission: "Look for any store nearby that might have been run by the same family for a really long time."
+        },
+        momdad: "Grand Rapids' Little Italy formed in two waves: northern Italian wood carvers and stonemasons in the 1880s, then a larger wave of Sicilian immigrants around 1900, settling near S. Division and later the Wealthy St./Madison Ave. corridor. Giovanni Baptista Russo arrived from Sicily in 1902 and opened a grocery store in 1905 — the same family business, G.B. Russo & Son, still operates in the area today. Worth noting: earlier-arriving northern Italian immigrants often looked down on the later-arriving Sicilians, who — lacking the same trade skills as the wood carvers — were largely limited to laborer or peddler work regardless of ability."
+      }
     }
   ];
 
@@ -9940,16 +10002,9 @@
 
   function applyItalianHeritageLayer(map = homeMap) {
     if (!map) return;
-    if (!state.italianHeritageEnabled) {
-      try {
-        if (map.getLayer("elsie-italian-heritage-layer")) map.removeLayer("elsie-italian-heritage-layer");
-        if (map.getSource("elsie-italian-heritage-source")) map.removeSource("elsie-italian-heritage-source");
-      } catch { /* non-critical */ }
-      return;
-    }
     registerItalianHeritageIcon(map).then(() => {
       const currentMap = homeMap;
-      if (!currentMap || !state.italianHeritageEnabled) return;
+      if (!currentMap) return;
       try {
         if (currentMap.getLayer("elsie-italian-heritage-layer")) return;
         const collection = {
@@ -10582,7 +10637,6 @@
           <button type="button" class="elsie-map-fab elsie-gps-fab" data-gps-locate aria-label="Find my location">📍</button>
           <button type="button" class="elsie-map-fab elsie-theme-fab" data-map-theme-toggle aria-label="Switch map to ${state.mapTheme === "dark" ? "light" : "dark"} mode">${state.mapTheme === "dark" ? "☀️" : "🌙"}</button>
           <button type="button" class="elsie-map-fab elsie-smoke-fab ${state.smokeEnabled ? "is-on" : ""}" data-smoke-toggle aria-pressed="${state.smokeEnabled}" aria-label="Smoke and haze layer ${state.smokeEnabled ? "on" : "off"}">💨</button>
-          <button type="button" class="elsie-map-fab elsie-italian-fab ${state.italianHeritageEnabled ? "is-on" : ""}" data-italian-toggle aria-pressed="${state.italianHeritageEnabled}" aria-label="Italian heritage layer ${state.italianHeritageEnabled ? "on" : "off"}">🇮🇹</button>
           <button type="button" class="elsie-map-fab elsie-fire-fab ${state.wildfiresEnabled ? "is-on" : ""}" data-wildfire-toggle aria-pressed="${state.wildfiresEnabled}" aria-label="Active wildfires layer ${state.wildfiresEnabled ? "on" : "off"}">🔥</button>
         </div>
         ${renderElsieRadarMarkup()}
@@ -10732,7 +10786,7 @@
         if (EASTER_EGG_LINKS[activeProfile]) registerEasterEggIcon(homeMap).then(() => addEasterEggLayer(homeMap));
         registerNasaEggIcon(homeMap).then(() => addNasaEggLayer(homeMap));
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
-        if (state.italianHeritageEnabled) applyItalianHeritageLayer(homeMap);
+        applyItalianHeritageLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
@@ -12759,18 +12813,6 @@
       if (fab) {
         fab.classList.toggle("is-on", state.wildfiresEnabled);
         fab.setAttribute("aria-pressed", String(state.wildfiresEnabled));
-      }
-      return;
-    }
-    if (target.dataset.italianToggle !== undefined) {
-      event.preventDefault();
-      state.italianHeritageEnabled = !state.italianHeritageEnabled;
-      saveState();
-      applyItalianHeritageLayer(homeMap);
-      const fab = target.closest(".elsie-italian-fab");
-      if (fab) {
-        fab.classList.toggle("is-on", state.italianHeritageEnabled);
-        fab.setAttribute("aria-pressed", String(state.italianHeritageEnabled));
       }
       return;
     }
