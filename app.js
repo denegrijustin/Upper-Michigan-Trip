@@ -11156,8 +11156,22 @@
     };
   }
 
+  function registerFootprintIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-footprint"))) return resolve();
+      const image = new Image(48, 48);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-footprint")) map.addImage("elsie-footprint", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/sasquatch-footprint.png";
+    });
+  }
+
   function syncBreadcrumbLayers(map = homeMap) {
     if (!map || !map.getStyle) return;
+    registerFootprintIcon(map);
     const visible = isMapProfile() && state.breadcrumbVisible && state.breadcrumbTrail.length > 0;
     const geo = getBreadcrumbGeoJson();
     try {
@@ -11177,9 +11191,9 @@
           source: "elsie-breadcrumb-steps",
           filter: ["<=", ["get", "rank"], ["step", ["zoom"], 1, 7, 2, 10, 3]],
           layout: {
-            "text-field": "👣",
-            "text-size": ["case", ["==", ["get", "rank"], 0], 16, 11],
-            "text-allow-overlap": false
+            "icon-image": "elsie-footprint",
+            "icon-size": ["case", ["==", ["get", "rank"], 0], 0.5, 0.32],
+            "icon-allow-overlap": false
           }
         });
         map.on("click", "elsie-breadcrumb-steps", (event) => {
