@@ -8199,7 +8199,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "This whole company started with a teenager, two shoeboxes, and a room at the YMCA. It's the ultimate 'started with nothing' story.",
+      "eliette": "You already know this feeling — Joyce Hall started with basically nothing (two shoeboxes) and built it up one sale at a time. That's the same hustle as your first lawn, before you had a whole route.",
       "jules": "A quick, interesting business stop.",
       "momdad": "In 1910, Joyce Hall got off a train in Kansas City with almost no money and two shoeboxes of postcards to sell. A 1915 fire destroyed everything and left him $17,000 in debt — he rebuilt anyway. That company became Hallmark."
     },
@@ -8207,7 +8207,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "This whole company started with a teenager, two shoeboxes, and a room at the YMCA. It's the ultimate 'started with nothing' story.",
+      "eliette": "You already know this feeling — Joyce Hall started with basically nothing (two shoeboxes) and built it up one sale at a time. That's the same hustle as your first lawn, before you had a whole route.",
       "jules": "A quick, interesting business stop.",
       "momdad": "In 1910, Joyce Hall got off a train in Kansas City with almost no money and two shoeboxes of postcards to sell. A 1915 fire destroyed everything and left him $17,000 in debt — he rebuilt anyway. That company became Hallmark."
     },
@@ -8242,7 +8242,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "Two brothers, one small office, one very deliberate spelling change — and it grew into a company that does taxes for millions of people every year.",
+      "eliette": "Two brothers, one small office, no shortcuts. Same idea as building your dog-walking client list one neighbor at a time — you earn trust first, then it grows.",
       "jules": "A quick, interesting business stop.",
       "momdad": "Brothers Henry and Richard Bloch started their business in Kansas City in 1955 — they even changed the spelling of their last name from 'Bloch' to 'Block' on the sign so people wouldn't mispronounce it."
     },
@@ -8250,7 +8250,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "Two brothers, one small office, one very deliberate spelling change — and it grew into a company that does taxes for millions of people every year.",
+      "eliette": "Two brothers, one small office, no shortcuts. Same idea as building your dog-walking client list one neighbor at a time — you earn trust first, then it grows.",
       "jules": "A quick, interesting business stop.",
       "momdad": "Brothers Henry and Richard Bloch started their business in Kansas City in 1955 — they even changed the spelling of their last name from 'Bloch' to 'Block' on the sign so people wouldn't mispronounce it."
     },
@@ -8285,7 +8285,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "A soap salesman bought a brewery he wasn't even sure would work — and it became one of the biggest companies in American business history.",
+      "eliette": "Someone bought a business that was struggling and decided to make it work anyway. That's basically what you do every time you take on a yard that's a mess and leave it looking better than when you started.",
       "jules": "A quick, interesting business stop.",
       "momdad": "Soap-maker Eberhard Anheuser bought this failing brewery in 1860 almost as an afterthought. When his son-in-law Adolphus Busch joined the business, they turned it into an empire — introducing pasteurized beer, refrigerated rail cars, and America's first truly national beer brand."
     },
@@ -8293,7 +8293,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "A soap salesman bought a brewery he wasn't even sure would work — and it became one of the biggest companies in American business history.",
+      "eliette": "Someone bought a business that was struggling and decided to make it work anyway. That's basically what you do every time you take on a yard that's a mess and leave it looking better than when you started.",
       "jules": "A quick, interesting business stop.",
       "momdad": "Soap-maker Eberhard Anheuser bought this failing brewery in 1860 almost as an afterthought. When his son-in-law Adolphus Busch joined the business, they turned it into an empire — introducing pasteurized beer, refrigerated rail cars, and America's first truly national beer brand."
     },
@@ -8328,7 +8328,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "He invented it to solve his OWN problem — sawdust in his shop — and it turned into a company still run by his family generations later.",
+      "eliette": "He got annoyed by a real problem (sawdust everywhere) and built something to fix it. You do the same thing every time you notice a lawn getting shaggy or a dog that needs a walk — you see the problem and you handle it.",
       "jules": "A quick, interesting business stop.",
       "momdad": "In 1876, Melville Bissell patented a mechanical carpet sweeper to help clean up sawdust in his own china shop. His wife Anna ran the growing company after his death and became one of the first female CEOs in American history."
     },
@@ -8336,7 +8336,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "He invented it to solve his OWN problem — sawdust in his shop — and it turned into a company still run by his family generations later.",
+      "eliette": "He got annoyed by a real problem (sawdust everywhere) and built something to fix it. You do the same thing every time you notice a lawn getting shaggy or a dog that needs a walk — you see the problem and you handle it.",
       "jules": "A quick, interesting business stop.",
       "momdad": "In 1876, Melville Bissell patented a mechanical carpet sweeper to help clean up sawdust in his own china shop. His wife Anna ran the growing company after his death and became one of the first female CEOs in American history."
     },
@@ -8371,7 +8371,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "A doctor invented things to help his own patients, then just... started a company to build them. Now it's worth billions.",
+      "eliette": "He didn't wait for someone else to build the tool he needed — he just built it himself. That's the same instinct as you grabbing the mower and doing the job instead of waiting around.",
       "jules": "A quick, interesting business stop.",
       "momdad": "Dr. Homer Stryker was a practicing orthopedic surgeon in Kalamazoo who kept inventing better tools and casts for his own patients in the 1930s and 40s. He founded a company just to manufacture his own inventions — it's now a global medical device giant."
     },
@@ -8379,7 +8379,7 @@ window.TRIP_STOPS = [
       "elsie": "A real business-history stop worth a look.",
       "katrina": "Worth reading the founding story here.",
       "emma": "A real company with a real founding story.",
-      "eliette": "A doctor invented things to help his own patients, then just... started a company to build them. Now it's worth billions.",
+      "eliette": "He didn't wait for someone else to build the tool he needed — he just built it himself. That's the same instinct as you grabbing the mower and doing the job instead of waiting around.",
       "jules": "A quick, interesting business stop.",
       "momdad": "Dr. Homer Stryker was a practicing orthopedic surgeon in Kalamazoo who kept inventing better tools and casts for his own patients in the 1930s and 40s. He founded a company just to manufacture his own inventions — it's now a global medical device giant."
     },
