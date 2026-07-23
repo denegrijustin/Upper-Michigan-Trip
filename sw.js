@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v116-fix-footprint-icon";
+const CACHE_NAME = "elskatemm-trip-v117-bois-blanc-island-layer";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -18,6 +18,7 @@ const CORE_ASSETS = [
   "/italian-heritage-icon.png",
   "/national-park-icon.png",
   "/sasquatch-footprint.png",
+  "/island-deco-icon.png",
   "/jules-gps.png",
   "/jules-gps-f1.png",
   "/family-gps-marker.png",

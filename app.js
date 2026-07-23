@@ -9904,6 +9904,106 @@
     });
   }
 
+  /* ---------- Bois Blanc Island deco layer ---------- */
+
+  const BOIS_BLANC_STOPS = [
+    { id: "BB-001", title: "Bois Blanc Light", lat: 45.81139, lon: -84.42083, confidence: "confirmed", summary: "A yellow-brick lighthouse tower on Lighthouse Point, first lit in 1867 and deactivated in 1924. It's privately owned today and closed to the public, but the tower and the open Straits views around it are visible from the shore." },
+    { id: "BB-002", title: "Pointe aux Pins Marina & Township Dock", lat: 45.72768, lon: -84.45256, confidence: "confirmed", summary: "The island's functional front door — the township marina and ferry dock where almost every visitor arrives. Real working harbor, transient boat slips, and the first solid ground most people set foot on." },
+    { id: "BB-003", title: "Bois Blanc Island Museum & Library", lat: 45.73296, lon: -84.47084, confidence: "confirmed", summary: "Run seasonally by the island's historical society, this is the fastest way to get real island context — settlement history, artifacts, and old resort-era photographs in one small building." },
+    { id: "BB-004", title: "Northshore Natural Area", lat: 45.78053, lon: -84.38759, confidence: "confirmed", summary: "A Michigan DNR-protected stretch of the northeast shore inside Mackinaw State Forest, known for old-growth hemlock and white pine standing right along a genuinely wild strip of Great Lakes shoreline." },
+    { id: "BB-005", title: "North Shore Drive Trail", lat: 45.78053, lon: -84.38759, confidence: "confirmed", summary: "The clearest documented access line along the island's north shore, running through forest-edge terrain with long open windows out to the water." },
+    { id: "BB-006", title: "Snake Island & Mud Lake Natural Area", lat: 45.74346, lon: -84.38602, confidence: "confirmed", summary: "One of the island's most biologically rich spots — cobble beach, dune-and-swale terrain, and wetland habitat that Michigan's Natural Features Inventory flags for rare plants and birds." },
+    { id: "BB-007", title: "Lake Mary / Liedel Landing", lat: 45.77481, lon: -84.3976, confidence: "confirmed", summary: "A township-managed boat launch on Lake Mary, in the island's northeast corner — the clearest inland-water counterpoint to the open Great Lakes shoreline everywhere else on the island." },
+    { id: "BB-008", title: "Nichols Point Park", lat: 45.72864, lon: -84.39915, confidence: "confirmed", summary: "A community-backed public park on the south shore facing the Straits of Mackinac, developed in phases by the township as an open-water viewpoint west of the main dock." },
+    { id: "BB-009", title: "Bright Waters Park", lat: 45.81569, lon: -84.58648, confidence: "confirmed", summary: "The island's best-documented west-end public park, tied to the town's kite festival, July 4th fireworks viewing, and a summer 5K run/walk. The best bet for open sunset views." },
+    { id: "BB-010", title: "Packard Point", lat: 45.72167, lon: -84.42, confidence: "confirmed", summary: "A named shore point on the south side used as an official NOAA navigation reference — one of the most concretely documented points on the whole island, even without a formal visitor site built around it." },
+    { id: "BB-011", title: "Bois Blanc Island Airport (6Y1)", lat: 45.7661, lon: -84.5014, confidence: "confirmed", summary: "A small, self-service public airstrip about 3 miles northwest of Pointe aux Pins — one of the island's few major modern facilities, and a real look at how remote this place actually is." },
+    { id: "BB-012", title: "UP House (base cabin)", lat: 45.735, lon: -84.505, confidence: "estimated", summary: "Your home base for the stay, along the Lime Kiln Point Rd corridor on the island's south-southwest side. The exact rooftop couldn't be pinned from public records, so this marker is a reasonable estimate along that road, not a surveyed address point." },
+    { id: "BB-013", title: "Pointe aux Pins (community)", lat: 45.729, lon: -84.454, confidence: "estimated", summary: "The island's best-defined settlement — the historic resort-era plat that grew up around the marina, museum, and W. Huron Drive. Still the practical center of the island today." },
+    { id: "BB-014", title: "Mixed Forest Natural Area", lat: 45.705, lon: -84.4, confidence: "estimated", summary: "A DNR-protected natural area on the island's southeast shoreline — more a habitat than a signed attraction, but one of the core protected landscapes on Bois Blanc." },
+    { id: "BB-015", title: "Michigan Nature Association Trail (Erie St.)", lat: 45.74962, lon: -84.386, confidence: "estimated", summary: "A named nature-walk trailhead near Snake Island's protected lands, referenced in township materials — a quieter way into the same rich habitat as the Snake Island/Mud Lake natural area." },
+    { id: "BB-016", title: "Packard Bay", lat: 45.722, lon: -84.41, confidence: "estimated", summary: "A gentler, more sheltered stretch of shoreline just east of Packard Point — good for calmer water if the open points feel too exposed." },
+    { id: "BB-017", title: "Zela Point", lat: 45.735, lon: -84.508, confidence: "estimated", summary: "A named coastal point on the island's southwest side, about 3 miles west of Pointe aux Pins near the airport corridor, and the source point for the offshore Zela Shoal that NOAA charts as a navigation hazard." },
+    { id: "BB-018", title: "Lime Kiln Point", lat: 45.732, lon: -84.503, confidence: "estimated", summary: "The south-shore point the whole Lime Kiln Point Road corridor is named for — more a geographic anchor for shoreline homes than a developed site, tied to the island's lime-kiln history." },
+    { id: "BB-019", title: "Martin and Reinhardt Jahn Family Nature Preserve", lat: 45.73, lon: -84.5, confidence: "estimated", summary: "A large 165-acre private conservation preserve with real Lake Huron frontage along the Lime Kiln Point corridor, called out specifically in the township's master plan as one of the island's significant protected shorelines." },
+    { id: "BB-020", title: "Sand Bay", lat: 45.75, lon: -84.52, confidence: "estimated", summary: "A wide bay on the island's west side and the site of a former lumber-era settlement — a place where scenery and real 19th-century industrial history overlap." },
+    { id: "BB-021", title: "Lafayette Point", lat: 45.8, lon: -84.3, confidence: "estimated", summary: "The island's documented northeast point, noted in both NOAA charts and historic topographic maps — an angular, wave-cut shoreline with a wide-open northeast horizon." },
+    { id: "BB-022", title: "Point Detachee", lat: 45.805, lon: -84.45, confidence: "estimated", summary: "A named point on the north shore west of the lighthouse, preserved on old maps and still used by NOAA as a shoreline reference marker today." },
+    { id: "BB-023", title: "Woodland Glade Cemetery", lat: 45.755, lon: -84.495, confidence: "estimated", summary: "The island's only active township cemetery, near the airport and township hall — a modest, contemporary burial ground rather than an elaborate historic site. Please treat this stop with the same quiet respect you'd want for any active cemetery." }
+  ];
+
+  function registerIslandDecoIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-island-deco"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-island-deco")) map.addImage("elsie-island-deco", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/island-deco-icon.png";
+    });
+  }
+
+  function openIslandDecoPopup(map, stopId, coordinates) {
+    const stop = BOIS_BLANC_STOPS.find((s) => s.id === stopId);
+    if (!stop) return;
+    const flag = stop.confidence === "estimated"
+      ? `<p class="elsie-popup-angle"><small>\ud83d\udccd Approximate location \u2014 exact coordinates weren't publicly available for this spot.</small></p>`
+      : "";
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 16, className: "elsie-marker-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div class="elsie-popup-card">
+          <small>\ud83c\udfdd\ufe0f Bois Blanc Island</small>
+          <strong>${escapeHtml(stop.title)}</strong>
+          <p>${escapeHtml(stop.summary)}</p>
+          ${flag}
+        </div>`)
+      .addTo(map);
+  }
+
+  function applyIslandDecoLayer(map = homeMap) {
+    if (!map) return;
+    registerIslandDecoIcon(map).then(() => {
+      const currentMap = homeMap;
+      if (!currentMap) return;
+      try {
+        if (currentMap.getLayer("elsie-island-deco-layer")) return;
+        const collection = {
+          type: "FeatureCollection",
+          features: BOIS_BLANC_STOPS.map((s) => ({
+            type: "Feature",
+            properties: { id: s.id },
+            geometry: { type: "Point", coordinates: [s.lon, s.lat] }
+          }))
+        };
+        currentMap.addSource("elsie-island-deco-source", { type: "geojson", data: collection });
+        currentMap.addLayer({
+          id: "elsie-island-deco-layer",
+          type: "symbol",
+          source: "elsie-island-deco-source",
+          layout: {
+            "icon-image": "elsie-island-deco",
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true
+          }
+        });
+        currentMap.on("click", "elsie-island-deco-layer", (event) => {
+          const feature = event.features && event.features[0];
+          if (!feature) return;
+          openIslandDecoPopup(currentMap, feature.properties.id, feature.geometry.coordinates);
+        });
+        currentMap.on("mouseenter", "elsie-island-deco-layer", () => { currentMap.getCanvas().style.cursor = "pointer"; });
+        currentMap.on("mouseleave", "elsie-island-deco-layer", () => { currentMap.getCanvas().style.cursor = ""; });
+      } catch (error) {
+        console.error("Island deco layer render error:", error);
+      }
+    });
+  }
+
   /* ---------- Smoke / haze layer (NASA GIBS Aerosol Optical Depth) ---------- */
 
   function smokeTileDate() {
@@ -11663,6 +11763,7 @@
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
         applyItalianHeritageLayer(homeMap);
         applyNationalParkLayer(homeMap);
+        applyIslandDecoLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
