@@ -9415,12 +9415,13 @@
       case "dress": return base("#f4dceb", `<path d="M26 16h12l-2 7 6 4-4 21H26l-4-21 6-4z" fill="#e07aae" stroke="#141414" stroke-width="3" stroke-linejoin="round"/><path d="M26 16l-4 6M38 16l4 6" stroke="#141414" stroke-width="3" stroke-linecap="round"/><path d="M25 33h14M24 39h16" stroke="#141414" stroke-width="1.6"/><circle cx="32" cy="24" r="1.6" fill="#fffdf7"/><path d="M46 40l1.4 3.2 3.2 1.4-3.2 1.4L46 49.2 44.6 46l-3.2-1.4 3.2-1.4z" fill="#ffe25c" stroke="#141414" stroke-width="1.4"/>`);
       case "tornado": return base("#57616e", `<path d="M16 18h32M20 24h24M25 30h16M28 36h10M31 42h6M33 48h3" stroke="#eef2f6" stroke-width="4" stroke-linecap="round"/><path d="M16 18h32M20 24h24M25 30h16M28 36h10M31 42h6M33 48h3" stroke="#141414" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/><circle cx="47" cy="14" r="2" fill="#ffe25c"/><path d="M13 26l-3 2M12 33l-3 1" stroke="#c8d2dc" stroke-width="2" stroke-linecap="round"/>`);
       case "volleyball": return base("#dbeafe", `<circle cx="32" cy="32" r="16" fill="#fffdf7" stroke="#141414" stroke-width="3.4"/><path d="M20 22q9 4 24 0M18 42q10-4 27 0M32 16v32" stroke="#e0517a" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M23 26q9 3 18 0" stroke="#4f7fd9" stroke-width="2.2" fill="none"/>`);
+      case "pink": return base("#ffd6ea", `<path d="M14 30a18 9 0 0 1 36 0v6a18 9 0 0 1-36 0z" fill="#fff0f7" stroke="#141414" stroke-width="3"/><ellipse cx="32" cy="30" rx="18" ry="9" fill="#ffb3d9" stroke="#141414" stroke-width="3"/><ellipse cx="32" cy="30" rx="9" ry="4.2" fill="#ff7ab8" stroke="#141414" stroke-width="2.4"/><path d="M32 12l3.6 7.4 8.2 1.2-6 5.8 1.4 8.1-7.2-3.8-7.2 3.8 1.4-8.1-6-5.8 8.2-1.2z" fill="#e0517a" stroke="#141414" stroke-width="1.6" opacity="0.9"/>`);
       default: return base("#4f7fd9", `<circle cx="32" cy="32" r="8" fill="#fffdf7" stroke="#141414" stroke-width="3"/>`);
     }
   }
 
   function registerEmmaThemeIcons(map) {
-    const jobs = ["stadium", "dress", "tornado", "volleyball"].map((type) => new Promise((resolve) => {
+    const jobs = ["stadium", "dress", "tornado", "volleyball", "pink"].map((type) => new Promise((resolve) => {
       const name = `emma-theme-${type}`;
       if (!map || (map.hasImage && map.hasImage(name))) return resolve();
       const image = new Image(64, 64);
