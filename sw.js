@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v98-volleyball-momdad-photo";
+const CACHE_NAME = "elskatemm-trip-v99-volleyball-icon-registration-fix";
 const CORE_ASSETS = [
   "/",
   "/index.html",

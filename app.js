@@ -9408,7 +9408,7 @@
   }
 
   function registerEmmaThemeIcons(map) {
-    const jobs = ["stadium", "dress", "tornado"].map((type) => new Promise((resolve) => {
+    const jobs = ["stadium", "dress", "tornado", "volleyball"].map((type) => new Promise((resolve) => {
       const name = `emma-theme-${type}`;
       if (!map || (map.hasImage && map.hasImage(name))) return resolve();
       const image = new Image(64, 64);
