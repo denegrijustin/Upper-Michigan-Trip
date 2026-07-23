@@ -5867,6 +5867,7 @@
       mapTheme: "light",
       smokeEnabled: false,
       wildfiresEnabled: false,
+      italianHeritageEnabled: false,
       profileStopRatings: { elsie: {}, katrina: {}, emma: {} },
       profileCollections: { elsie: {}, katrina: {}, emma: {} },
       pendingAnalyze: false,
@@ -5916,6 +5917,7 @@
     if (state.mapTheme !== "light" && state.mapTheme !== "dark") state.mapTheme = "light";
     if (typeof state.smokeEnabled !== "boolean") state.smokeEnabled = false;
     if (typeof state.wildfiresEnabled !== "boolean") state.wildfiresEnabled = false;
+    if (typeof state.italianHeritageEnabled !== "boolean") state.italianHeritageEnabled = false;
     state.profileStopRatings ||= {};
     state.profileCollections ||= {};
     MAP_PROFILES.forEach((p) => {
@@ -9828,6 +9830,161 @@
     return d.toISOString().slice(0, 10);
   }
 
+  /* ---------- Italian heritage layer ---------- */
+
+  const ITALIAN_HERITAGE_STOPS = [
+    {
+      id: "IH-001",
+      title: "The Hill",
+      city: "St. Louis",
+      state: "MO",
+      lat: 38.6103,
+      lon: -90.2801,
+      content: {
+        elsie: {
+          history: "Italian immigrants — mostly from Lombardy and Sicily — started arriving here in the 1880s to work the clay mines that used to run under this whole neighborhood. They built it from nothing into one of the most intact Italian-American neighborhoods left in the country.",
+          success: "Yogi Berra and Joe Garagiola literally grew up across the street from each other here and both became baseball Hall of Famers. Four of the five St. Louis guys on the 1950 US soccer team that beat England — one of the biggest upsets in World Cup history — were from this exact neighborhood.",
+          discrimination: "During WWII, over 600,000 Italian immigrants nationwide — including plenty of families right here — got officially labeled 'enemy aliens' by the U.S. government. Curfew from 8pm to 6am, banned from traveling more than 5 miles from home, radios and cameras confiscated. Some were sent to internment camps. Most people have never heard about this part of WWII history."
+        },
+        katrina: {
+          history: "This neighborhood was built by immigrants who came here in the 1880s to work in clay mines, then slowly turned it into a self-sufficient little world — bakeries, butchers, tailors, all within walking distance, so a family barely had to leave the neighborhood.",
+          success: "Two kids who grew up across the street from each other on Elizabeth Avenue — Yogi Berra and Joe Garagiola — both became Hall of Fame baseball players. It's the kind of detail a novelist would think was too on-the-nose to be real.",
+          discrimination: "During WWII, the U.S. government labeled over 600,000 Italian immigrants as 'enemy aliens' — including people from neighborhoods just like this one. Curfews, travel restrictions, confiscated belongings. It's a chapter of American history that rarely makes it into the story most people know.",
+          quest: "Imagine you're a kid on this street in the 1940s, suddenly told your own family is an 'enemy alien.' Write two sentences about what that week might have felt like."
+        },
+        emma: {
+          summary: "A real Italian-American neighborhood, self-built by immigrant clay miners starting in the 1880s, still about three-quarters Italian-American today.",
+          why: "It produced actual sports legends — Yogi Berra and Joe Garagiola grew up across the street from each other here, and this neighborhood sent four players to the U.S. team that pulled off a legendary 1950 World Cup upset over England.",
+          momDad: "The WWII 'enemy alien' history here is real and underdiscussed — worth a conversation about how quickly a whole community's citizenship got questioned during wartime, and how that echoes into today."
+        },
+        eliette: "Yogi Berra and Joe Garagiola — both future baseball Hall of Famers — grew up on the exact same street here, houses across from each other. And in 1950, this one small neighborhood sent four guys to the U.S. soccer team that beat England, considered one of the biggest upsets in the sport's history.",
+        jules: {
+          why: "A whole neighborhood built by families who came here from Italy a long time ago — and TWO kids who grew up right across the street from each other both became super famous baseball players!",
+          mission: "Find something red, white, or green — the colors of the Italian flag — somewhere nearby."
+        },
+        momdad: "The Hill is one of the most intact Italian-American neighborhoods in the country, built by clay-mining immigrants starting in the 1880s. Still roughly 75% Italian-American, it produced Yogi Berra and Joe Garagiola. It's also a real, underdiscussed piece of WWII history: over 600,000 Italian immigrants nationwide, likely including families here, were officially designated 'enemy aliens' — curfews, travel restrictions, confiscated property, and in some cases internment."
+      }
+    },
+    {
+      id: "IH-002",
+      title: "Columbus Park (formerly the North End)",
+      city: "Kansas City",
+      state: "MO",
+      lat: 39.1090,
+      lon: -94.5750,
+      content: {
+        elsie: {
+          history: "Italian and Sicilian immigrants built this neighborhood starting in the 1880s, right along the Missouri River near the old city market. About 85% came from Sicily specifically.",
+          success: "Kids growing up here often translated for their grandparents who never fully learned English — running a household in two languages before they were teenagers. Holy Rosary Catholic Church was the actual center of the whole community for generations.",
+          discrimination: "Starting in the mid-1900s, the city ran highways directly through this neighborhood — I-35, I-29, the ASB and Paseo bridges — cutting it off from the rest of Kansas City and shrinking it down. That wasn't random: cutting highways through immigrant and minority neighborhoods happened in cities all over the country during this era, and it's a big reason this neighborhood is so much smaller today than it used to be."
+        },
+        katrina: {
+          history: "This whole neighborhood started because of a railroad — Italian and Sicilian families settled here in the 1880s specifically because it was close to the train lines and the packing houses where they could find work.",
+          success: "Picture being 10 years old and being the one who has to translate everything for your own grandparents — that was just normal life for kids growing up here, running between two languages every single day.",
+          discrimination: "Later on, the city built highways straight through the middle of this neighborhood, splitting it apart and shrinking it. It wasn't an accident — this happened to immigrant neighborhoods in cities across the whole country during the same era.",
+          quest: "If you had to design a highway route through your own town, what's one neighborhood you'd refuse to cut through, and why?"
+        },
+        emma: {
+          summary: "Kansas City's original Italian and Sicilian immigrant neighborhood, founded in the 1880s along the Missouri River.",
+          why: "It's a real story about a community that built itself from nothing near the railroad and packing houses, then had highways deliberately routed straight through it decades later, cutting it off and shrinking it for good.",
+          momDad: "The highway history here is a real, concrete example of a pattern repeated in cities nationwide — worth pointing out that infrastructure decisions weren't neutral, and this neighborhood is smaller today because of it."
+        },
+        eliette: "About 85% of the families who built this neighborhood came from Sicily specifically — and kids here often had to translate everything for their own grandparents, running two languages at once before they were even teenagers.",
+        jules: {
+          why: "A neighborhood built by families from Italy, right next to the river! Kids here helped their grandparents talk to people since they knew both English and Italian.",
+          mission: "Say hello in Italian: 'Ciao!' Try it out loud."
+        },
+        momdad: "Columbus Park (originally called the North End) was Kansas City's Italian-Sicilian immigrant neighborhood, founded in the 1880s near the railroad and river packing houses — about 85% of residents traced back to Sicily. Holy Rosary Catholic Church anchored the community for generations. Starting mid-century, highway construction (I-35, I-29, the ASB and Paseo bridges) was routed directly through the neighborhood, isolating and shrinking it — a pattern repeated against immigrant and minority neighborhoods in cities nationwide during that era."
+      }
+    }
+  ];
+
+  function registerItalianHeritageIcon(map) {
+    return new Promise((resolve) => {
+      if (!map || (map.hasImage && map.hasImage("elsie-italian-heritage"))) return resolve();
+      const image = new Image(64, 64);
+      image.onload = () => {
+        try { if (!map.hasImage("elsie-italian-heritage")) map.addImage("elsie-italian-heritage", image, { pixelRatio: 2 }); } catch {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = "/italian-heritage-icon.png";
+    });
+  }
+
+  function openItalianHeritagePopup(map, stopId, coordinates) {
+    const stop = ITALIAN_HERITAGE_STOPS.find((s) => s.id === stopId);
+    if (!stop) return;
+    const profile = activeProfile;
+    const c = stop.content[profile] || stop.content.momdad;
+    let bodyHtml;
+    if (profile === "jules") {
+      bodyHtml = `<p>${escapeHtml(c.why)}</p><p class="elsie-popup-angle">🎯 ${escapeHtml(c.mission)}</p>`;
+    } else if (profile === "eliette") {
+      bodyHtml = `<p class="elsie-popup-angle">${escapeHtml(c)}</p>`;
+    } else if (profile === "emma") {
+      bodyHtml = `<p>${escapeHtml(c.summary)}</p><p class="elsie-popup-angle"><strong>Why it matters:</strong> ${escapeHtml(c.why)}</p><p class="elsie-popup-angle">${escapeHtml(c.momDad)}</p>`;
+    } else if (profile === "elsie") {
+      bodyHtml = `<p>${escapeHtml(c.history)}</p><p class="elsie-popup-angle"><strong>Success story:</strong> ${escapeHtml(c.success)}</p><p class="elsie-popup-angle"><strong>What they faced:</strong> ${escapeHtml(c.discrimination)}</p>`;
+    } else if (profile === "katrina") {
+      bodyHtml = `<p>${escapeHtml(c.history)}</p><p class="elsie-popup-angle"><strong>Success story:</strong> ${escapeHtml(c.success)}</p><p class="elsie-popup-angle"><strong>What they faced:</strong> ${escapeHtml(c.discrimination)}</p><p class="elsie-popup-angle">✍️ ${escapeHtml(c.quest)}</p>`;
+    } else {
+      bodyHtml = `<p>${escapeHtml(typeof c === "string" ? c : JSON.stringify(c))}</p>`;
+    }
+    if (elsieMarkerPopup) elsieMarkerPopup.remove();
+    elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 16, className: "elsie-marker-popup" })
+      .setLngLat(coordinates)
+      .setHTML(`<div class="elsie-popup-card"><small>🇮🇹 Italian Heritage</small><strong>${escapeHtml(stop.title)}</strong>${bodyHtml}</div>`)
+      .addTo(map);
+  }
+
+  function applyItalianHeritageLayer(map = homeMap) {
+    if (!map) return;
+    if (!state.italianHeritageEnabled) {
+      try {
+        if (map.getLayer("elsie-italian-heritage-layer")) map.removeLayer("elsie-italian-heritage-layer");
+        if (map.getSource("elsie-italian-heritage-source")) map.removeSource("elsie-italian-heritage-source");
+      } catch { /* non-critical */ }
+      return;
+    }
+    registerItalianHeritageIcon(map).then(() => {
+      const currentMap = homeMap;
+      if (!currentMap || !state.italianHeritageEnabled) return;
+      try {
+        if (currentMap.getLayer("elsie-italian-heritage-layer")) return;
+        const collection = {
+          type: "FeatureCollection",
+          features: ITALIAN_HERITAGE_STOPS.map((s) => ({
+            type: "Feature",
+            properties: { id: s.id },
+            geometry: { type: "Point", coordinates: [s.lon, s.lat] }
+          }))
+        };
+        currentMap.addSource("elsie-italian-heritage-source", { type: "geojson", data: collection });
+        currentMap.addLayer({
+          id: "elsie-italian-heritage-layer",
+          type: "symbol",
+          source: "elsie-italian-heritage-source",
+          layout: {
+            "icon-image": "elsie-italian-heritage",
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.34, 6, 0.5, 9, 0.62, 12, 0.72],
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true
+          }
+        });
+        currentMap.on("click", "elsie-italian-heritage-layer", (event) => {
+          const feature = event.features && event.features[0];
+          if (!feature) return;
+          openItalianHeritagePopup(currentMap, feature.properties.id, feature.geometry.coordinates);
+        });
+        currentMap.on("mouseenter", "elsie-italian-heritage-layer", () => { currentMap.getCanvas().style.cursor = "pointer"; });
+        currentMap.on("mouseleave", "elsie-italian-heritage-layer", () => { currentMap.getCanvas().style.cursor = ""; });
+      } catch (error) {
+        console.error("Italian heritage layer render error:", error);
+      }
+    });
+  }
+
   function applySmokeLayer(map = homeMap) {
     if (!map) return;
     try {
@@ -10425,6 +10582,7 @@
           <button type="button" class="elsie-map-fab elsie-gps-fab" data-gps-locate aria-label="Find my location">📍</button>
           <button type="button" class="elsie-map-fab elsie-theme-fab" data-map-theme-toggle aria-label="Switch map to ${state.mapTheme === "dark" ? "light" : "dark"} mode">${state.mapTheme === "dark" ? "☀️" : "🌙"}</button>
           <button type="button" class="elsie-map-fab elsie-smoke-fab ${state.smokeEnabled ? "is-on" : ""}" data-smoke-toggle aria-pressed="${state.smokeEnabled}" aria-label="Smoke and haze layer ${state.smokeEnabled ? "on" : "off"}">💨</button>
+          <button type="button" class="elsie-map-fab elsie-italian-fab ${state.italianHeritageEnabled ? "is-on" : ""}" data-italian-toggle aria-pressed="${state.italianHeritageEnabled}" aria-label="Italian heritage layer ${state.italianHeritageEnabled ? "on" : "off"}">🇮🇹</button>
           <button type="button" class="elsie-map-fab elsie-fire-fab ${state.wildfiresEnabled ? "is-on" : ""}" data-wildfire-toggle aria-pressed="${state.wildfiresEnabled}" aria-label="Active wildfires layer ${state.wildfiresEnabled ? "on" : "off"}">🔥</button>
         </div>
         ${renderElsieRadarMarkup()}
@@ -10574,6 +10732,7 @@
         if (EASTER_EGG_LINKS[activeProfile]) registerEasterEggIcon(homeMap).then(() => addEasterEggLayer(homeMap));
         registerNasaEggIcon(homeMap).then(() => addNasaEggLayer(homeMap));
         if (state.wildfiresEnabled) applyWildfireLayer(homeMap);
+        if (state.italianHeritageEnabled) applyItalianHeritageLayer(homeMap);
         if (!islandMode) refreshActiveRoute();
         if (!islandMode) try {
           if (!homeMap.getLayer("elsie-day2-preview-line")) {
@@ -12600,6 +12759,18 @@
       if (fab) {
         fab.classList.toggle("is-on", state.wildfiresEnabled);
         fab.setAttribute("aria-pressed", String(state.wildfiresEnabled));
+      }
+      return;
+    }
+    if (target.dataset.italianToggle !== undefined) {
+      event.preventDefault();
+      state.italianHeritageEnabled = !state.italianHeritageEnabled;
+      saveState();
+      applyItalianHeritageLayer(homeMap);
+      const fab = target.closest(".elsie-italian-fab");
+      if (fab) {
+        fab.classList.toggle("is-on", state.italianHeritageEnabled);
+        fab.setAttribute("aria-pressed", String(state.italianHeritageEnabled));
       }
       return;
     }

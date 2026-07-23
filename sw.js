@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v105-legend-icon-distinct";
+const CACHE_NAME = "elskatemm-trip-v106-italian-heritage-layer";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -15,6 +15,7 @@ const CORE_ASSETS = [
   "/golden-egg.png",
   "/nasa-badge.png",
   "/momdad-gps-photo.png",
+  "/italian-heritage-icon.png",
   "/jules-gps.png",
   "/jules-gps-f1.png",
   "/family-gps-marker.png",
