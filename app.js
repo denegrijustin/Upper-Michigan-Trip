@@ -7617,10 +7617,10 @@
   }
 
   const ELSIE_ICON_OVERRIDES = {
-    // "stop-id": "spooky"
+    "P1-012": "legend"
   };
 
-  const ELSIE_ICON_TYPES = ["spooky", "strange-history", "weird-stop", "science", "stars", "anime-vibe", "music-energy", "mystery", "animal-watch"];
+  const ELSIE_ICON_TYPES = ["spooky", "strange-history", "weird-stop", "science", "stars", "anime-vibe", "music-energy", "mystery", "animal-watch", "legend"];
 
   function getElsieIconType(stop) {
     if (!stop) return "";
@@ -7681,6 +7681,7 @@
   function elsieIconSvg(type) {
     const base = (fill, inner) => `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="${fill}" stroke="#141414" stroke-width="4"/>${inner}</svg>`;
     switch (type) {
+      case "legend": return `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29.5" fill="#fffdf7"/><circle cx="32" cy="32" r="27" fill="#c9a24b" stroke="#7a1f00" stroke-width="4" stroke-dasharray="5 3"/><path d="M18 20l10 4 8-5 10 5v22l-10-5-8 5-10-4z" fill="#f3e3ba" stroke="#7a1f00" stroke-width="2.4" stroke-linejoin="round"/><path d="M28 24v22M36 19v22" stroke="#7a1f00" stroke-width="1.6" fill="none" stroke-dasharray="2 2"/><path d="M40 24l6 6M46 24l-6 6" stroke="#c81e1e" stroke-width="3.4" stroke-linecap="round"/><circle cx="24" cy="34" r="1.6" fill="#c81e1e"/></svg>`;
       case "spooky": return base("#3a2a54", `<path d="M32 16c-8 0-12 7-12 14v14l4-3 4 3 4-3 4 3 4-3 4 3V30c0-7-4-14-12-14z" fill="#efe6ff" stroke="#141414" stroke-width="3"/><circle cx="27" cy="30" r="2.6" fill="#141414"/><circle cx="37" cy="30" r="2.6" fill="#141414"/><circle cx="27.9" cy="29.1" r="0.9" fill="#fff"/><path d="M45 15a6 6 0 1 0 4 10 8 8 0 0 1-4-10z" fill="#cbb7f2" stroke="#141414" stroke-width="2.5"/>`);
       case "strange-history": return base("#8a5a2b", `<rect x="20" y="18" width="24" height="30" rx="3" fill="#f2e3c2" stroke="#141414" stroke-width="3"/><path d="M24 26h16M24 32h16M24 38h11" stroke="#141414" stroke-width="2.5" stroke-linecap="round"/><path d="M44 18l6-4M44 48l6 4" stroke="#141414" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="42" r="4.5" fill="#e0aa3e" stroke="#141414" stroke-width="2.5"/>`);
       case "weird-stop": return base("#7a3fa0", `<g transform="rotate(-8 32 32)"><rect x="18" y="22" width="28" height="16" rx="3" fill="#f7c948" stroke="#141414" stroke-width="3"/><path d="M32 38v10" stroke="#141414" stroke-width="4"/><circle cx="32" cy="30" r="5.5" fill="none" stroke="#141414" stroke-width="3"/><circle cx="32" cy="30" r="1.8" fill="#141414"/></g><path d="M50 14l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ff8b3d" stroke="#141414" stroke-width="2"/>`);
