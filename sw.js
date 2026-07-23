@@ -1,4 +1,4 @@
-const CACHE_NAME = "elskatemm-trip-v117-bois-blanc-island-layer";
+const CACHE_NAME = "elskatemm-trip-v118-duplicate-cleanup";
 const CORE_ASSETS = [
   "/",
   "/index.html",

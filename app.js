@@ -8053,7 +8053,6 @@
     "P3-037": { whyAngle: "A state park protecting ancient earthworks.", hiddenFact: "The mounds were built around 160 BC — nearly 2,000 years before Columbus." },
     "P3-038": { whyAngle: "A small-town gym turned movie filming location.", hiddenFact: "It's the actual gym used in the basketball movie Hoosiers." },
     "P3-039": { whyAngle: "Indiana's basketball hall of fame.", hiddenFact: "It sits in the town with the largest high school gym in the entire world." },
-    "P3-040": { whyAngle: "The other Levi and Catharine Coffin site on this route.", hiddenFact: "Over 1,000 freedom seekers passed through safely — none were ever caught." },
     "P3-041": { whyAngle: "A museum dedicated to Ford's Model T.", hiddenFact: "This town actually built its own cars before the Model T ever existed." },
     "P3-042": { whyAngle: "A walk honoring a small but historically important record label.", hiddenFact: "Legends like Louis Armstrong recorded some of their earliest music at this tiny label." },
     "P3-043": { whyAngle: "A national park honoring the Wright brothers' later work.", hiddenFact: "They came back to Dayton after Kitty Hawk to actually perfect controlled flight here." },
@@ -8293,7 +8292,6 @@
     "P3-037": { whyGo: "A state park protecting ancient Native American earthworks.", funFact: "The mounds were built around 160 BC — nearly 2,000 years before Columbus." },
     "P3-038": { whyGo: "A small-town gym that became a movie filming location.", funFact: "It's the actual gym used in the basketball movie Hoosiers." },
     "P3-039": { whyGo: "Indiana's basketball hall of fame.", funFact: "It's located in the town with the largest high school gymnasium in the world." },
-    "P3-040": { whyGo: "The other Levi and Catharine Coffin historic site on this route.", funFact: "Over 1,000 freedom seekers passed through the Coffins' home safely — none were ever caught." },
     "P3-041": { whyGo: "A museum dedicated to Ford's Model T.", funFact: "This town actually built its own cars before the Model T existed." },
     "P3-042": { whyGo: "A walk honoring a small but historically important record label.", funFact: "Legends like Louis Armstrong recorded some of their earliest music at this tiny label." },
     "P3-043": { whyGo: "A national park honoring the Wright brothers' early flight work.", funFact: "They came back to Dayton after Kitty Hawk to actually perfect controlled flight here." },
@@ -9907,9 +9905,7 @@
   /* ---------- Bois Blanc Island deco layer ---------- */
 
   const BOIS_BLANC_STOPS = [
-    { id: "BB-001", title: "Bois Blanc Light", lat: 45.81139, lon: -84.42083, confidence: "confirmed", summary: "A yellow-brick lighthouse tower on Lighthouse Point, first lit in 1867 and deactivated in 1924. It's privately owned today and closed to the public, but the tower and the open Straits views around it are visible from the shore." },
     { id: "BB-002", title: "Pointe aux Pins Marina & Township Dock", lat: 45.72768, lon: -84.45256, confidence: "confirmed", summary: "The island's functional front door — the township marina and ferry dock where almost every visitor arrives. Real working harbor, transient boat slips, and the first solid ground most people set foot on." },
-    { id: "BB-003", title: "Bois Blanc Island Museum & Library", lat: 45.73296, lon: -84.47084, confidence: "confirmed", summary: "Run seasonally by the island's historical society, this is the fastest way to get real island context — settlement history, artifacts, and old resort-era photographs in one small building." },
     { id: "BB-004", title: "Northshore Natural Area", lat: 45.78053, lon: -84.38759, confidence: "confirmed", summary: "A Michigan DNR-protected stretch of the northeast shore inside Mackinaw State Forest, known for old-growth hemlock and white pine standing right along a genuinely wild strip of Great Lakes shoreline." },
     { id: "BB-005", title: "North Shore Drive Trail", lat: 45.78053, lon: -84.38759, confidence: "confirmed", summary: "The clearest documented access line along the island's north shore, running through forest-edge terrain with long open windows out to the water." },
     { id: "BB-006", title: "Snake Island & Mud Lake Natural Area", lat: 45.74346, lon: -84.38602, confidence: "confirmed", summary: "One of the island's most biologically rich spots — cobble beach, dune-and-swale terrain, and wetland habitat that Michigan's Natural Features Inventory flags for rare plants and birds." },
@@ -9917,7 +9913,6 @@
     { id: "BB-008", title: "Nichols Point Park", lat: 45.72864, lon: -84.39915, confidence: "confirmed", summary: "A community-backed public park on the south shore facing the Straits of Mackinac, developed in phases by the township as an open-water viewpoint west of the main dock." },
     { id: "BB-009", title: "Bright Waters Park", lat: 45.81569, lon: -84.58648, confidence: "confirmed", summary: "The island's best-documented west-end public park, tied to the town's kite festival, July 4th fireworks viewing, and a summer 5K run/walk. The best bet for open sunset views." },
     { id: "BB-010", title: "Packard Point", lat: 45.72167, lon: -84.42, confidence: "confirmed", summary: "A named shore point on the south side used as an official NOAA navigation reference — one of the most concretely documented points on the whole island, even without a formal visitor site built around it." },
-    { id: "BB-011", title: "Bois Blanc Island Airport (6Y1)", lat: 45.7661, lon: -84.5014, confidence: "confirmed", summary: "A small, self-service public airstrip about 3 miles northwest of Pointe aux Pins — one of the island's few major modern facilities, and a real look at how remote this place actually is." },
     { id: "BB-012", title: "UP House (base cabin)", lat: 45.735, lon: -84.505, confidence: "estimated", summary: "Your home base for the stay, along the Lime Kiln Point Rd corridor on the island's south-southwest side. The exact rooftop couldn't be pinned from public records, so this marker is a reasonable estimate along that road, not a surveyed address point." },
     { id: "BB-013", title: "Pointe aux Pins (community)", lat: 45.729, lon: -84.454, confidence: "estimated", summary: "The island's best-defined settlement — the historic resort-era plat that grew up around the marina, museum, and W. Huron Drive. Still the practical center of the island today." },
     { id: "BB-014", title: "Mixed Forest Natural Area", lat: 45.705, lon: -84.4, confidence: "estimated", summary: "A DNR-protected natural area on the island's southeast shoreline — more a habitat than a signed attraction, but one of the core protected landscapes on Bois Blanc." },
@@ -9930,6 +9925,7 @@
     { id: "BB-021", title: "Lafayette Point", lat: 45.8, lon: -84.3, confidence: "estimated", summary: "The island's documented northeast point, noted in both NOAA charts and historic topographic maps — an angular, wave-cut shoreline with a wide-open northeast horizon." },
     { id: "BB-022", title: "Point Detachee", lat: 45.805, lon: -84.45, confidence: "estimated", summary: "A named point on the north shore west of the lighthouse, preserved on old maps and still used by NOAA as a shoreline reference marker today." },
     { id: "BB-023", title: "Woodland Glade Cemetery", lat: 45.755, lon: -84.495, confidence: "estimated", summary: "The island's only active township cemetery, near the airport and township hall — a modest, contemporary burial ground rather than an elaborate historic site. Please treat this stop with the same quiet respect you'd want for any active cemetery." }
+
   ];
 
   function registerIslandDecoIcon(map) {
