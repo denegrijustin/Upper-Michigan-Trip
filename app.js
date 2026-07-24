@@ -9923,7 +9923,14 @@
     { id: "BB-019", title: "Martin and Reinhardt Jahn Family Nature Preserve", lat: 45.73, lon: -84.5, confidence: "estimated", summary: "A large 165-acre private conservation preserve with real Lake Huron frontage along the Lime Kiln Point corridor, called out specifically in the township's master plan as one of the island's significant protected shorelines." },
     { id: "BB-020", title: "Sand Bay", lat: 45.75, lon: -84.52, confidence: "estimated", summary: "A wide bay on the island's west side and the site of a former lumber-era settlement — a place where scenery and real 19th-century industrial history overlap." },
     { id: "BB-021", title: "Lafayette Point", lat: 45.8, lon: -84.3, confidence: "estimated", summary: "The island's documented northeast point, noted in both NOAA charts and historic topographic maps — an angular, wave-cut shoreline with a wide-open northeast horizon." },
-    { id: "BB-022", title: "Point Detachee", lat: 45.805, lon: -84.45, confidence: "estimated", summary: "A named point on the north shore west of the lighthouse, preserved on old maps and still used by NOAA as a shoreline reference marker today." },
+    { id: "BB-022", title: "Point Detachee", lat: 45.8115, lon: -84.535, confidence: "estimated", category: "Local Landmark", summary: "A real NOAA-named point on the northwest shoreline that separates the long north-shore stretch from the island's west end. Biological surveys note unusual coastal fen habitat around it." },
+    { id: "BB-030", title: "North Shore Drive Scenic Corridor", lat: 45.8103, lon: -84.5031, confidence: "confirmed", category: "Scenic Stretch", summary: "Roughly 6.5 miles of shoreline road identified by the township as a single scenic corridor rather than one stop. Watch for Mackinac Island across the water, occasional bridge views, rocky beach, driftwood, and beach glass along the way." },
+    { id: "BB-024", title: "Bible Road Primitive Camping Area", lat: 45.815, lon: -84.545, confidence: "estimated", category: "Primitive Recreation", summary: "About six rustic campsites in the woods near the northwest rocky shoreline, reached by Bible Road \u2014 no electricity, historically very limited facilities. Look for the wooden Bible Road sign, short paths through the trees, and Mackinac Island's lights after dark." },
+    { id: "BB-025", title: "Point Detachee Fen Area", lat: 45.811, lon: -84.538, confidence: "estimated", category: "Sensitive Habitat", summary: "Biological surveys identify real fens around Point Detachee, including habitat for rare shoreline plants. This is a sensitive nature zone, not an unrestricted hiking attraction \u2014 low wet limestone shoreline, small flowering plants, and cedar rather than a maintained trail." },
+    { id: "BB-026", title: "Historic Bible Farm", lat: 45.814, lon: -84.548, confidence: "estimated", category: "Historic Landscape", summary: "Bible Road appears to be named for the family that farmed this area. The remaining property is private, but the historic landscape and road name are worth knowing \u2014 old clearings, apple trees, and fence lines inside otherwise unbroken forest." },
+    { id: "BB-027", title: "West End Shoreline", lat: 45.812, lon: -84.575, confidence: "estimated", category: "Scenic Stretch", summary: "The open shoreline beyond Bright Waters Park itself \u2014 one of the island's best sunset and open-water stretches. Long evening light, Mackinac-bound boats, and shallow rocky water rather than a single building or attraction." },
+    { id: "BB-028", title: "North Shore View of Mackinac Island", lat: 45.813, lon: -84.51, confidence: "estimated", category: "Scenic Stretch", summary: "A shoreline stretch repeatedly described as a place to see Mackinac Island and, from some openings, the Mackinac Bridge itself. In clear weather look for the Grand Hotel or island buildings, ferry traffic, and lights after sunset." },
+    { id: "BB-029", title: "North Shore \"Cross\" Landmark", lat: 45.816, lon: -84.55, confidence: "estimated", category: "Local Landmark", summary: "Township records reference a recognized landmark near the north-shore camping spots known locally as \"the cross.\" A modest roadside or shoreline marker, easy to drive past without knowing it's locally known." },
     { id: "BB-023", title: "Woodland Glade Cemetery", lat: 45.755, lon: -84.495, confidence: "estimated", summary: "The island's only active township cemetery, near the airport and township hall — a modest, contemporary burial ground rather than an elaborate historic site. Please treat this stop with the same quiet respect you'd want for any active cemetery." }
 
   ];
@@ -9947,12 +9954,13 @@
     const flag = stop.confidence === "estimated"
       ? `<p class="elsie-popup-angle"><small>\ud83d\udccd Approximate location \u2014 exact coordinates weren't publicly available for this spot.</small></p>`
       : "";
+    const categoryLine = stop.category ? `<small>\ud83c\udfdd\ufe0f Bois Blanc Island \u00b7 ${escapeHtml(stop.category)}</small>` : `<small>\ud83c\udfdd\ufe0f Bois Blanc Island</small>`;
     if (elsieMarkerPopup) elsieMarkerPopup.remove();
     elsieMarkerPopup = new maplibregl.Popup({ closeButton: true, maxWidth: "270px", offset: 16, className: "elsie-marker-popup" })
       .setLngLat(coordinates)
       .setHTML(`
         <div class="elsie-popup-card">
-          <small>\ud83c\udfdd\ufe0f Bois Blanc Island</small>
+          ${categoryLine}
           <strong>${escapeHtml(stop.title)}</strong>
           <p>${escapeHtml(stop.summary)}</p>
           ${flag}
