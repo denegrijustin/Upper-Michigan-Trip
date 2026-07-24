@@ -14027,11 +14027,12 @@
   registerServiceWorker();
   render();
 
-  // Automatic Sasquatch trail tracking: a gentle periodic GPS poll (not continuous watchPosition)
-  // so the breadcrumb trail builds itself while the app is open, instead of requiring a manual
-  // tap of the locate button every time. Only runs while the tab is visible/foregrounded and on
-  // a map profile's home map page, since browsers throttle/suspend JS timers otherwise anyway.
-  setInterval(() => {
+  // Automatic Sasquatch trail + live ETA tracking: a gentle periodic GPS poll (not continuous
+  // watchPosition) so the breadcrumb trail and the ETA pill both update on their own, instead of
+  // requiring a manual tap of the locate button every time. Only runs while the tab is
+  // visible/foregrounded and on a map profile's home map page, since browsers throttle/suspend
+  // JS timers otherwise anyway.
+  function backgroundLocationPoll() {
     if (document.visibilityState !== "visible") return;
     if (!isMapProfile() || !isHomeMapPage()) return;
     if (!navigator.geolocation || !window.isSecureContext) return;
@@ -14040,5 +14041,7 @@
       () => { /* silent: this is a background convenience poll, not a user-initiated request */ },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
-  }, 180000);
+  }
+  setTimeout(backgroundLocationPoll, 4000); // first fix shortly after load, not a full 3 min later
+  setInterval(backgroundLocationPoll, 180000);
 })();
